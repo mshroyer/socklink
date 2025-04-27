@@ -9,8 +9,6 @@
 
 set -e
 
-umask 700
-
 TSOCKDIR="/tmp/tsock-$(id -u)"
 SESSIONSDIR="$TSOCKDIR/sessions"
 TTYSDIR="$TSOCKDIR/ttys"
@@ -26,7 +24,7 @@ stat_mode() {
 
 ensure_dir() {
 	if [ ! -d $1 ]; then
-		mkdir $1
+		mkdir -m700 $1
 	fi
 	if [ ! -O $1 ]; then
 		echo "expected $1 to be owned by $(id -u)" >&2
