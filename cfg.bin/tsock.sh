@@ -10,7 +10,7 @@
 set -e
 
 TSOCKDIR="/tmp/tsock-$(id -u)"
-SESSIONSDIR="$TSOCKDIR/sessions"
+SERVERSDIR="$TSOCKDIR/servers"
 TTYSDIR="$TSOCKDIR/ttys"
 UNAME="$(uname)"
 
@@ -55,12 +55,21 @@ get_filename_device() {
 	echo "/$(echo $1 | tr + /)"
 }
 
-set_tty_link() {
-	path="$TTYSDIR/$(get_device_filename $(tty))"
-	if [ -e $path ]; then
-		rm $path
+set_symlink() {
+	if [ -e "$2" ]; then
+		rm "$2"
 	fi
-	ln -s $SSH_AUTH_SOCK $path
+	ln -s "$1" "$2"
+}
+
+get_tty_link_path() {
+	echo "$TTYSDIR/$(get_device_filename $1)"
+}
+
+set_tty_link() {
+	if [ ! -z "$SSH_AUTH_SOCK" ] && [ -O "$SSH_AUTH_SOCK" ]; then
+		set_symlink $SSH_AUTH_SOCK "$(get_tty_link_path $(tty))"
+	fi
 }
 
 # Clean up any of the tty links that no longer both refer to an existing tty
@@ -70,7 +79,7 @@ gc_tty_links() {
 	for ttylink in *; do
 		if [ ! -O "$(get_filename_device $ttylink)" ] \
 			   || [ ! -O "$(readlink $ttylink)" ]; then
-			rm -f $ttylink
+			rm $ttylink
 		fi
 	done
 }
@@ -81,14 +90,30 @@ tsock.sh - Wrangle SSH agent sockets for tmux sessions
 
 Usage:
     tsock.sh set-tty-link
+    tsock.sh show-server-link
     tsock.sh help
 EOF
 }
 
 ensure_dirs() {
 	ensure_dir "$TSOCKDIR"
-	ensure_dir "$SESSIONSDIR"
+	ensure_dir "$SERVERSDIR"
 	ensure_dir "$TTYSDIR"
+}
+
+get_active_client_tty() {
+	tmux list-clients -F '#{client_activity} #{client_tty}' \
+		| sort -r \
+		| awk 'NR==1 { print $2; }'
+}
+
+get_server_link_path() {
+	echo "$SERVERSDIR/$(tmux list-sessions -F '#{pid}' | head -n1)"
+}
+
+set_server_link() {
+	set_symlink "$(get_tty_link_path $(get_active_client_tty))" \
+		    "$(get_server_link_path)"
 }
 
 if [ "$1" = "-h" ] || [ "$1" = "help" ]; then
@@ -97,6 +122,10 @@ elif [ "$1" = "set-tty-link" ]; then
 	ensure_dirs
 	gc_tty_links
 	set_tty_link
+elif [ "$1" = "set-server-link" ]; then
+	set_server_link
+elif [ "$1" = "show-server-link" ]; then
+	get_server_link_path
 else
 	show_usage
 	exit 1
