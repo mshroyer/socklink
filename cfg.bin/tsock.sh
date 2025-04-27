@@ -75,11 +75,10 @@ set_tty_link() {
 # Clean up any of the tty links that no longer both refer to an existing tty
 # owned by us, and point to a still-present authentication socket.
 gc_tty_links() {
-	cd $TTYSDIR
-	for ttylink in *; do
+	for ttylink in $(ls $TTYSDIR); do
 		if [ ! -O "$(get_filename_device $ttylink)" ] \
-			   || [ ! -O "$(readlink $ttylink)" ]; then
-			rm $ttylink
+			   || [ ! -O "$(readlink $TTYSDIR/$ttylink)" ]; then
+			rm "$TTYSDIR/$ttylink"
 		fi
 	done
 }
