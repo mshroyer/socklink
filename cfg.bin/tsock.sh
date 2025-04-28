@@ -89,6 +89,7 @@ tsock.sh - Wrangle SSH agent sockets for tmux sessions
 
 Usage:
     tsock.sh set-tty-link
+    tsock.sh set-server-link tty
     tsock.sh show-server-link
     tsock.sh help
 EOF
@@ -111,8 +112,7 @@ get_server_link_path() {
 }
 
 set_server_link() {
-	set_symlink "$(get_tty_link_path $(get_active_client_tty))" \
-		    "$(get_server_link_path)"
+	set_symlink "$(get_tty_link_path $1)" "$(get_server_link_path)"
 }
 
 if [ "$1" = "-h" ] || [ "$1" = "help" ]; then
@@ -122,7 +122,11 @@ elif [ "$1" = "set-tty-link" ]; then
 	gc_tty_links
 	set_tty_link
 elif [ "$1" = "set-server-link" ]; then
-	set_server_link
+	if [ -z "$2" ]; then
+		show_usage
+		exit 1
+	fi
+	set_server_link "$2"
 elif [ "$1" = "show-server-link" ]; then
 	get_server_link_path
 else
