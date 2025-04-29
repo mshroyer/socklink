@@ -116,10 +116,10 @@ set_tty_link() {
 }
 
 get_active_client_tty() {
-	# tmux list-clients -F '#{client_activity} #{client_tty}' \
-	# 	| sort -r \
-	# 	| awk 'NR==1 { print $2; }'
-	tmux run-shell 'echo #{client_tty}'
+	tmux list-clients -F '#{client_activity} #{client_tty}' \
+		| sort -r \
+		| awk 'NR==1 { print $2; }'
+	# tmux run-shell 'echo #{client_tty}'
 }
 
 get_server_link_path() {
