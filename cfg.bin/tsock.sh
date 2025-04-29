@@ -127,7 +127,13 @@ log() {
 }
 
 set_server_link() {
-	set_symlink "$(get_tty_link_path $1)" "$(get_server_link_path)"
+	ttylink="$(get_tty_link_path $1)"
+	serverlink="$(get_server_link_path)"
+	if [ -L $serverlink ] && [ "$(readlink $serverlink)" = "$ttylink" ]; then
+		return
+	fi
+	ensure_dirs
+	set_symlink "$ttylink" "$serverlink"
 }
 
 if [ "$1" = "-h" ] || [ "$1" = "help" ]; then
