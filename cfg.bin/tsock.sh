@@ -14,9 +14,13 @@ LOGFILE=
 TSOCKDIR="/tmp/tsock-$(id -u)"
 SERVERSDIR="$TSOCKDIR/servers"
 TTYSDIR="$TSOCKDIR/ttys"
-UNAME="$(uname)"
+
+UNAME=
 
 stat_mode() {
+	if [ -z "$UNAME" ]; then
+		UNAME="$(uname)"
+	fi
 	if [ "$UNAME" = "Linux" ]; then
 		stat -c '%a' "$1"
 	else
