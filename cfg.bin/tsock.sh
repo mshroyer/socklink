@@ -16,7 +16,6 @@ SERVERSDIR="$TSOCKDIR/servers"
 TTYSDIR="$TSOCKDIR/ttys"
 
 UNAME=
-
 stat_mode() {
 	if [ -z "$UNAME" ]; then
 		UNAME="$(uname)"
@@ -41,22 +40,21 @@ ensure_dir() {
 	fi
 }
 
+# Converts absolute path to a device node into a string that can be used as a
+# filename: /dev/pts/98 -> dev+pts+98
 get_device_filename() {
 	echo "$1" | grep -q '^/dev/' || {
 		echo "expected path starting with /dev/" >&2
 		exit 1
 	}
-	if echo "$1" | grep -q +; then
-		echo "device name $1 containing '+' is unsupported" >&2
-		exit 1
-	fi
-	if echo "$1" | grep -q ' '; then
-		echo "device name $1 containing a space is unsupported" >&2
+	if echo "$1" | grep -q '[+ ]'; then
+		echo "device name $1 containing '+' or space is unsupported" >&2
 		exit 1
 	fi
 	echo $1 | cut -c2- | tr / +
 }
 
+# Reverses get_device_filename
 get_filename_device() {
 	echo "/$(echo $1 | tr + /)"
 }
