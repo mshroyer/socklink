@@ -29,7 +29,7 @@ EOF
 }
 
 log() {
-	if [ ! -z "$LOGFILE" ]; then
+	if [ -n "$LOGFILE" ]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') $1" >>"$LOGFILE"
 	fi
 }
@@ -110,7 +110,7 @@ set_tty_link() {
 	gc_tty_links
 	gc_server_links
 
-	if [ ! -z "$SSH_AUTH_SOCK" ] && [ -O "$SSH_AUTH_SOCK" ]; then
+	if [ -n "$SSH_AUTH_SOCK" ] && [ -O "$SSH_AUTH_SOCK" ]; then
 		set_symlink "$SSH_AUTH_SOCK" "$(get_tty_link_path $(tty))"
 	fi
 }
