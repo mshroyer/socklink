@@ -11,7 +11,8 @@ set -e
 
 LOGFILE=
 
-TSOCKDIR="/tmp/tsock-$(id -u)"
+MYUID="$(id -u)"
+TSOCKDIR="/tmp/tsock-$MYUID"
 SERVERSDIR="$TSOCKDIR/servers"
 TTYSDIR="$TSOCKDIR/ttys"
 
@@ -102,10 +103,12 @@ get_tty_link_path() {
 set_tty_link() {
 	ensure_dir "$TSOCKDIR"
 	ensure_dir "$TTYSDIR"
+	ensure_dir "$SERVERSDIR"
 
 	# Since this will be called infrequently, typically when new SSH
 	# clients connect, it's a good place to GC old symlinks.
 	gc_tty_links
+	gc_server_links
 
 	if [ ! -z "$SSH_AUTH_SOCK" ] && [ -O "$SSH_AUTH_SOCK" ]; then
 		set_symlink "$SSH_AUTH_SOCK" "$(get_tty_link_path $(tty))"
@@ -130,13 +133,26 @@ set_server_link() {
 	# This may be called frequently, as a ZSH hook or periodically, so
 	# let's optimize the happy path where the link is already set
 	# correctly.
-	if [ -L $serverlink ] && [ "$(readlink $serverlink)" = "$ttylink" ]; then
+	if [ -L "$serverlink" ] && [ "$(readlink $serverlink)" = "$ttylink" ]; then
 		return
 	fi
 
 	ensure_dir "$TSOCKDIR"
 	ensure_dir "$SERVERSDIR"
 	set_symlink "$ttylink" "$serverlink"
+}
+
+get_pid_uid() {
+	ps -o uid -p "$1" | awk 'NR==2 { print $1; }'
+}
+
+gc_server_links() {
+	for link in $(ls $SERVERSDIR); do
+		pid_uid="$(get_pid_uid $link)"
+		if [ -z "$pid_uid" ] || [ "$pid_uid" != "$MYUID" ]; then
+			rm "$SERVERSDIR/$link"
+		fi
+	done
 }
 
 if [ "$1" = "-h" ] || [ "$1" = "help" ]; then
