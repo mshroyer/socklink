@@ -93,12 +93,16 @@ stat_mode() {
 	fi
 }
 
+get_pid_uid() {
+	ps -o uid -p "$1" | awk 'NR==2 { print $1; }'
+}
+
 ensure_dir() {
 	if [ ! -d "$1" ]; then
 		mkdir -m700 "$1"
 	fi
 	if [ ! -O "$1" ]; then
-		echo "expected $1 to be owned by $(id -u)" >&2
+		echo "expected $1 to be owned by UID $MYUID" >&2
 		exit 1
 	fi
 	if [ "$(stat_mode "$1")" != 700 ]; then
@@ -173,10 +177,6 @@ set_server_link() {
 	ensure_dir "$TSOCKDIR"
 	ensure_dir "$SERVERSDIR"
 	set_symlink "$ttylink" "$serverlink"
-}
-
-get_pid_uid() {
-	ps -o uid -p "$1" | awk 'NR==2 { print $1; }'
 }
 
 gc_server_links() {
