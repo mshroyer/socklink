@@ -15,8 +15,9 @@ Usage:
 EOF
 }
 
-TV_NUMBER="$(tmux -V | sed -E 's/^tmux ((.*)-)?([0-9]\.[0-9])(.*)/\3/')"
-TV_PREFIX="$(tmux -V | sed -E 's/^tmux ((.*)-)?([0-9]\.[0-9])(.*)/\2/')"
+TV="$(tmux -V)"
+TV_PREFIX="$(echo "$TV" | sed -E 's/^tmux ((.*)-)?([0-9]+\.[0-9]+)(.*)/\2/')"
+TV_NUMBER="$(echo "$TV" | sed -E 's/^tmux ((.*)-)?([0-9]+\.[0-9]+)(.*)/\3/')"
 
 check_number_at_least() {
 	if [ "$(echo "$TV_NUMBER >= $1" | bc)" != "1" ]; then
