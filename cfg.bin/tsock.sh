@@ -2,10 +2,33 @@
 
 # tmux SSH authentication socket wrangler
 #
-# Through integration into shell init and tmux hooks, this script maintains a
-# tmp directory to maintain a symlink map of our tty device names to the SSH
-# authentication sockets associated with them, and another set of symlinks
-# mapping tmux session names to those tty symlinks.
+# This script maintains a two-level map of a user's tmux server PIDs to the
+# SSH_AUTH_SOCKs they opened their current clients with.  The first level maps
+# the server PID to a filename representing a client tty/pty; the second level
+# maps that tty filename to the original auth socket.  The second level may be
+# missing if, for example, the client logged in without SSH agent forwarding.
+# This is intentional and seems to result in desired behavior from OpenSSH.
+#
+# The purpose is that when hooked up correctly, this script will make SSH
+# authentication requests "just work", in that they'll be directed to the
+# user's currently active tmux client--even if the user is connected
+# simultaneously from multiple clients.  This behavior is helpful when using a
+# hardware authenticator at your physical workstation, such as a YubiKey with
+# touch enabled.
+#
+# set-tty-link saves the client tty -> auth socket link.  This should be
+# called when starting a non-tmux interactive shell before it starts a tmux
+# client.
+#
+# set-server-link saves the server PID -> client tty link.  This should be
+# called when the active client changes.  If called without an argument, it
+# will look up the most-recent client automatically.
+#
+# show-server-link gets the path to the server's PID link.  This should be
+# used to set SSH_AUTH_SOCK in new shells created within tmux.
+#
+# Works on Debian 12, AlmaLinux 9, OpenBSD 7.6, FreeBSD 14.2, NetBSD 9.3, and
+# macOS Sequoia 15.4.
 
 set -e
 
@@ -89,8 +112,8 @@ set_symlink() {
 # owned by us, and point to a still-present authentication socket.
 gc_tty_links() {
 	for ttylink in $(ls "$TTYSDIR"); do
-		if [ ! -O "$(get_filename_device $ttylink)" ] \
-			   || [ ! -O "$(readlink $TTYSDIR/$ttylink)" ]; then
+		if [ ! -O "$(get_filename_device "$ttylink")" ] \
+			   || [ ! -O "$(readlink "$TTYSDIR/$ttylink")" ]; then
 			rm "$TTYSDIR/$ttylink"
 		fi
 	done
@@ -119,7 +142,12 @@ get_active_client_tty() {
 	tmux list-clients -F '#{client_activity} #{client_tty}' \
 		| sort -r \
 		| awk 'NR==1 { print $2; }'
-	# tmux run-shell 'echo #{client_tty}'
+
+	# In theory `tmux run-shell` should tell us what we need, but on
+	# Raspbian it takes over the entire tmux session in view mode and I
+	# don't know why:
+
+	#tmux run-shell 'echo #{client_tty}'
 }
 
 get_server_link_path() {
@@ -134,7 +162,7 @@ set_server_link() {
 	# let's optimize the happy path where the link is already set
 	# correctly.
 	if [ -L "$serverlink" ] && [ "$(readlink "$serverlink")" = "$ttylink" ]; then
-		return
+		exit 0
 	fi
 
 	ensure_dir "$TSOCKDIR"
@@ -148,7 +176,7 @@ get_pid_uid() {
 
 gc_server_links() {
 	for link in $(ls "$SERVERSDIR"); do
-		pid_uid="$(get_pid_uid $link)"
+		pid_uid="$(get_pid_uid "$link")"
 		if [ -z "$pid_uid" ] || [ "$pid_uid" != "$MYUID" ]; then
 			rm "$SERVERSDIR/$link"
 		fi
