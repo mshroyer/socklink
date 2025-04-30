@@ -73,7 +73,7 @@ ensure_dir() {
 		echo "expected $1 to be owned by $(id -u)" >&2
 		exit 1
 	fi
-	if [ "$(stat_mode $1)" != 700 ]; then
+	if [ "$(stat_mode "$1")" != 700 ]; then
 		chmod 700 "$1"
 	fi
 }
@@ -88,7 +88,7 @@ set_symlink() {
 # Clean up any of the tty links that no longer both refer to an existing tty
 # owned by us, and point to a still-present authentication socket.
 gc_tty_links() {
-	for ttylink in $(ls $TTYSDIR); do
+	for ttylink in $(ls "$TTYSDIR"); do
 		if [ ! -O "$(get_filename_device $ttylink)" ] \
 			   || [ ! -O "$(readlink $TTYSDIR/$ttylink)" ]; then
 			rm "$TTYSDIR/$ttylink"
@@ -97,7 +97,7 @@ gc_tty_links() {
 }
 
 get_tty_link_path() {
-	echo "$TTYSDIR/$(get_device_filename $1)"
+	echo "$TTYSDIR/$(get_device_filename "$1")"
 }
 
 set_tty_link() {
@@ -127,13 +127,13 @@ get_server_link_path() {
 }
 
 set_server_link() {
-	ttylink="$(get_tty_link_path $1)"
+	ttylink="$(get_tty_link_path "$1")"
 	serverlink="$(get_server_link_path)"
 
 	# This may be called frequently, as a ZSH hook or periodically, so
 	# let's optimize the happy path where the link is already set
 	# correctly.
-	if [ -L "$serverlink" ] && [ "$(readlink $serverlink)" = "$ttylink" ]; then
+	if [ -L "$serverlink" ] && [ "$(readlink "$serverlink")" = "$ttylink" ]; then
 		return
 	fi
 
@@ -147,7 +147,7 @@ get_pid_uid() {
 }
 
 gc_server_links() {
-	for link in $(ls $SERVERSDIR); do
+	for link in $(ls "$SERVERSDIR"); do
 		pid_uid="$(get_pid_uid $link)"
 		if [ -z "$pid_uid" ] || [ "$pid_uid" != "$MYUID" ]; then
 			rm "$SERVERSDIR/$link"
