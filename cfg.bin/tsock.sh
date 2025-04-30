@@ -150,7 +150,8 @@ set_tty_link() {
 get_active_client_tty() {
 	tmux list-clients -F '#{client_activity} #{client_tty}' \
 		| sort -r \
-		| awk 'NR==1 { print $2; }'
+		| awk 'NR==1 { print $2; }' \
+		|| echo ""
 
 	# In theory `tmux run-shell` should tell us what we need, but on
 	# Raspbian it takes over the entire tmux session in view mode and I
@@ -199,7 +200,10 @@ elif [ "$1" = "set-server-link" ]; then
 	if [ -n "$1" ]; then
 		set_server_link "$1"
 	else
-		set_server_link "$(get_active_client_tty)"
+		client_tty="$(get_active_client_tty)"
+		if [ -n "$client_tty" ]; then
+			set_server_link "$client_tty"
+		fi
 	fi
 elif [ "$1" = "show-server-link" ]; then
 	get_server_link_path
