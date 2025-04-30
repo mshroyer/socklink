@@ -2,7 +2,7 @@
 
 # tmux SSH authentication socket wrangler
 #
-# This script maintains a two-level map of a user's tmux server PIDs to the
+# This maintains a two-level symlink map of a user's tmux server PIDs to the
 # SSH_AUTH_SOCKs they opened their current clients with.  The first level maps
 # the server PID to a filename representing a client tty/pty; the second level
 # maps that tty filename to the original auth socket.  The second level may be
@@ -16,13 +16,17 @@
 # hardware authenticator at your physical workstation, such as a YubiKey with
 # touch enabled.
 #
+# (Ideally we might have per-session accounting of the active client and then
+# per-pane mappings to original SSH_AUTH_SOCKs, allowing for the panes to be
+# moved between sessions.  But that's a heck of a lot more bookkeeping!)
+#
 # set-tty-link saves the client tty -> auth socket link.  This should be
-# called when starting a non-tmux interactive shell before it starts a tmux
+# called when starting a non-tmux interactive shell, before it starts a tmux
 # client.
 #
 # set-server-link saves the server PID -> client tty link.  This should be
-# called when the active client changes.  If called without an argument, it
-# will look up the most-recent client automatically.
+# called with the new client's tty when the active client changes.  If called
+# without an argument, it will look up the most-recent client automatically.
 #
 # show-server-link gets the path to the server's PID link.  This should be
 # used to set SSH_AUTH_SOCK in new shells created within tmux.
@@ -34,6 +38,7 @@ set -e
 
 LOGFILE=
 
+# $UID is not portable
 MYUID="$(id -u)"
 TSOCKDIR="/tmp/tsock-$MYUID"
 SERVERSDIR="$TSOCKDIR/servers"
@@ -191,10 +196,10 @@ elif [ "$1" = "set-tty-link" ]; then
 elif [ "$1" = "set-server-link" ]; then
 	log "$@"
 	shift
-	if [ -z "$1" ]; then
-		set_server_link "$(get_active_client_tty)"
-	else
+	if [ -n "$1" ]; then
 		set_server_link "$1"
+	else
+		set_server_link "$(get_active_client_tty)"
 	fi
 elif [ "$1" = "show-server-link" ]; then
 	get_server_link_path
