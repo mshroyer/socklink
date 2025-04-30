@@ -161,12 +161,17 @@ get_active_client_tty() {
 }
 
 get_server_link_path() {
-	echo "$SERVERSDIR/$(tmux list-sessions -F '#{pid}' | head -n1)"
+	session_pids="$(tmux list-sessions -F '#{pid}')" || return
+	echo "$SERVERSDIR/$(echo $session_pids | head -n1)"
 }
 
 set_server_link() {
 	ttylink="$(get_tty_link_path "$1")"
 	serverlink="$(get_server_link_path)"
+
+	if [ -z "$serverlink" ]; then
+		return
+	fi
 
 	# This may be called frequently, as a ZSH hook or periodically, so
 	# let's optimize the happy path where the link is already set
