@@ -1,6 +1,15 @@
 #!/bin/sh
 
 # Query available tmux features
+#
+# Intended to be used in .tmux.conf via if-shell so we don't attempt to set
+# unavailable features (and cause annoying error messages) on systems with old
+# versions of tmux.
+#
+# Note that on OpenBSD, tmux is in the base system and its version gets
+# reported as openbsd-7.6, with the OS version instead of a tmux version
+# number.  So version number-based checks have to consider two possible ranges
+# of versions.
 
 set -e
 
@@ -25,7 +34,9 @@ check_number_at_least() {
 	fi
 }
 
-check_client_active_hook() {
+if [ "$1" = "-h" ] || [ "$1" = "help" ]; then
+	show_usage
+elif [ "$1" = "client-active-hook" ]; then
 	if [ -z "$TV_PREFIX" ]; then
 		check_number_at_least 3.3
 	elif [ "$TV_PREFIX" = "openbsd" ]; then
@@ -33,12 +44,6 @@ check_client_active_hook() {
 	else
 		exit 1
 	fi
-}
-
-if [ "$1" = "-h" ] || [ "$1" = "help" ]; then
-	show_usage
-elif [ "$1" = "client-active-hook" ]; then
-	check_client_active_hook
 else
 	show_usage
 	exit 1
