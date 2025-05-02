@@ -59,8 +59,12 @@ EOF
 }
 
 log() {
+	msg="$(date +'%Y-%m-%d %H:%M:%S') $1"
 	if [ -n "$LOGFILE" ]; then
-		echo "$(date +'%Y-%m-%d %H:%M:%S') $1" >>"$LOGFILE"
+		echo "$msg" >>"$LOGFILE"
+	fi
+	if [ -n "$2" ]; then
+		echo "$msg" >&2
 	fi
 }
 
@@ -125,6 +129,7 @@ gc_tty_links() {
 	for ttylink in $(ls "$TTYSDIR"); do
 		if [ ! -O "$(get_filename_device "$ttylink")" ] \
 			   || [ ! -O "$(readlink "$TTYSDIR/$ttylink")" ]; then
+			log "gc_tty_links: removing $TTYSDIR/$ttylink"
 			rm "$TTYSDIR/$ttylink"
 		fi
 	done
@@ -185,32 +190,33 @@ take_lock() {
 		sleep 0.1
 		n="$(expr "$n" - 1)"
 		if [ "$(get_pid_uid $(cat "$LOCKFILE"))" != "$MYUID" ]; then
-			echo "removing stale lockfile $LOCKFILE" >&2
+			log "removing stale lockfile $LOCKFILE" t
 			rm -f "$LOCKFILE"
 		fi
 	done
 
 	if [ -z "$locked" ]; then
-		echo "can't take lockfile $LOCKFILE: alrady locked by PID $(cat "$LOCKFILE")" >&2
+		log "can't take lockfile $LOCKFILE: locked by PID $(cat "$LOCKFILE")" t
 		exit 1
 	fi
 	trap release_lock INT TERM EXIT
 }
 
 set_server_link() {
-	ttylink="$(get_tty_link_path "$1")"
 	serverlink="$(get_server_link_path)"
-
 	if [ -z "$serverlink" ]; then
 		return
 	fi
+	ttylink="$(get_tty_link_path "$1")"
 
 	# This may be called frequently, as a ZSH hook or periodically, so
 	# let's optimize the happy path where the link is already set
 	# correctly.
-	if [ -L "$serverlink" ] && [ "$(readlink "$serverlink")" = "$ttylink" ]; then
+	if [ "$(readlink "$serverlink")" = "$ttylink" ]; then
 		exit 0
 	fi
+
+	log "set_server_link: changing $serverlink -> $ttylink"
 
 	ensure_dir "$TSOCKDIR"
 	ensure_dir "$SERVERSDIR"
@@ -223,6 +229,7 @@ gc_server_links() {
 	for link in $(ls "$SERVERSDIR"); do
 		pid_uid="$(get_pid_uid "$link")"
 		if [ -z "$pid_uid" ] || [ "$pid_uid" != "$MYUID" ]; then
+			log "gc_server_links: removing $SERVERSDIR/$link"
 			rm "$SERVERSDIR/$link"
 		fi
 	done
