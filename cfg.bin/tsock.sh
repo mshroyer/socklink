@@ -178,7 +178,7 @@ take_lock() {
 	n=10
 	locked=""
 	while [ "$n" -gt "0" ]; do
-		if ( echo $$ >"$LOCKFILE" ) 2>/dev/null; then
+		if ( echo $$ >"$LOCKFILE" ) 2>>/dev/null; then
 			locked=1
 			break
 		fi
