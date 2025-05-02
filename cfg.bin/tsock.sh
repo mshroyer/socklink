@@ -160,7 +160,7 @@ set_tty_link() {
 }
 
 get_active_client_tty() {
-	tmux list-clients -F '#{client_activity} #{client_tty}' 2>/dev/null \
+	tmux list-clients -F '#{client_activity} #{client_tty}' 2>>/dev/null \
 		| sort -r \
 		| awk 'NR==1 { print $2; }' \
 		|| return
@@ -173,7 +173,7 @@ get_active_client_tty() {
 }
 
 get_server_link_path() {
-	session_pids="$(tmux list-sessions -F '#{pid}' 2>/dev/null)" || return
+	session_pids="$(tmux list-sessions -F '#{pid}' 2>>/dev/null)" || return
 	echo "$SERVERSDIR/$(echo $session_pids | head -n1)"
 }
 
