@@ -241,18 +241,18 @@ gc_server_links() {
 if [ "$1" = "-h" ] || [ "$1" = "help" ]; then
 	show_usage
 elif [ "$1" = "set-tty-link" ]; then
-	log "$@"
+	log "$1 $2"
 	set_tty_link
 elif [ "$1" = "set-server-link" ]; then
-	log "$@"
+	log "$1 $2 $3"
 	shift
-	if [ -n "$1" ]; then
-		set_server_link "$1"
-	else
+	if [ -z "$1" ] || [ "$1" = "-" ]; then
 		client_tty="$(get_active_client_tty)"
 		if [ -n "$client_tty" ]; then
 			set_server_link "$client_tty"
 		fi
+	else
+		set_server_link "$1"
 	fi
 elif [ "$1" = "show-server-link" ]; then
 	get_server_link_path
