@@ -35,6 +35,7 @@
 # macOS Sequoia 15.4.
 
 set -e
+set -C  # noclobber for lock file
 
 LOGFILE=
 
@@ -43,6 +44,7 @@ MYUID="$(id -u)"
 TSOCKDIR="/tmp/tsock-$MYUID"
 SERVERSDIR="$TSOCKDIR/servers"
 TTYSDIR="$TSOCKDIR/ttys"
+LOCKFILE="$TSOCKDIR/lock"
 
 show_usage() {
 cat <<'EOF'
@@ -78,7 +80,7 @@ get_device_filename() {
 
 # Reverses get_device_filename
 get_filename_device() {
-	echo "/$(echo $1 | tr + /)"
+	echo "/$(echo "$1" | tr + /)"
 }
 
 UNAME=
@@ -137,6 +139,8 @@ set_tty_link() {
 	ensure_dir "$TTYSDIR"
 	ensure_dir "$SERVERSDIR"
 
+	take_lock
+
 	# Since this will be called infrequently, typically when new SSH
 	# clients connect, it's a good place to GC old symlinks.
 	gc_tty_links
@@ -165,6 +169,34 @@ get_server_link_path() {
 	echo "$SERVERSDIR/$(echo $session_pids | head -n1)"
 }
 
+release_lock() {
+	rm -f "$LOCKFILE"
+	exit
+}
+
+take_lock() {
+	n=10
+	locked=""
+	while [ "$n" -gt "0" ]; do
+		if ( echo $$ >"$LOCKFILE" ) 2>/dev/null; then
+			locked=1
+			break
+		fi
+		sleep 0.1
+		n="$(expr "$n" - 1)"
+		if [ "$(get_pid_uid $(cat "$LOCKFILE"))" != "$MYUID" ]; then
+			echo "removing stale lockfile $LOCKFILE" >&2
+			rm -f "$LOCKFILE"
+		fi
+	done
+
+	if [ -z "$locked" ]; then
+		echo "can't take lockfile $LOCKFILE: alrady locked by PID $(cat "$LOCKFILE")" >&2
+		exit 1
+	fi
+	trap release_lock INT TERM EXIT
+}
+
 set_server_link() {
 	ttylink="$(get_tty_link_path "$1")"
 	serverlink="$(get_server_link_path)"
@@ -182,6 +214,8 @@ set_server_link() {
 
 	ensure_dir "$TSOCKDIR"
 	ensure_dir "$SERVERSDIR"
+
+	take_lock
 	set_symlink "$ttylink" "$serverlink"
 }
 
