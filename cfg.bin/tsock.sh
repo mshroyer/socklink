@@ -38,6 +38,9 @@ set -e
 set -C  # noclobber for lock file
 
 LOGFILE=
+if [ -f "$HOME/.tsock.conf" ]; then
+	. "$HOME/.tsock.conf"
+fi
 
 # $UID is not portable
 MYUID="$(id -u)"
