@@ -34,9 +34,9 @@
 # Works on Debian 12, AlmaLinux 9, OpenBSD 7.6, FreeBSD 14.2, NetBSD 9.3, and
 # macOS Sequoia 15.4.
 #
-# For latest version see:
+# For the latest version see:
 # https://github.com/mshroyer/config/blob/master/cfg.bin/tsock.sh
-# or ~mshroyer/cfg.bin/tsock.sh on the SDF cluster
+# or ~mshroyer/cfg.bin/tsock.sh on the sdf.org cluster or MetaArray
 
 set -e
 set -C  # noclobber for lock file
