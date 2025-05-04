@@ -66,12 +66,11 @@ EOF
 }
 
 log() {
-	msg="$(date +'%Y-%m-%d %H:%M:%S') $1"
 	if [ -n "$LOGFILE" ]; then
-		echo "$msg" >>"$LOGFILE"
+		echo "$(date +'%Y-%m-%d %H:%M:%S') $1" >>"$LOGFILE"
 	fi
 	if [ -n "$2" ]; then
-		echo "$msg" >&2
+		echo "$1" >&2
 	fi
 }
 
@@ -235,7 +234,7 @@ set_server_link() {
 gc_server_links() {
 	for link in $(ls "$SERVERSDIR"); do
 		pid_uid="$(get_pid_uid "$link")"
-		if [ -z "$pid_uid" ] || [ "$pid_uid" != "$MYUID" ]; then
+		if [ "$pid_uid" != "$MYUID" ]; then
 			log "gc_server_links: removing $SERVERSDIR/$link"
 			rm "$SERVERSDIR/$link"
 		fi
