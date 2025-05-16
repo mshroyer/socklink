@@ -176,8 +176,8 @@ get_active_client_tty() {
 }
 
 get_server_link_path() {
-	session_pids="$(tmux list-sessions -F '#{pid}' 2>>/dev/null)" || return
-	echo "$SERVERSDIR/$(echo $session_pids | head -n1)"
+	session_pid="$(tmux list-sessions -F '#{pid}' | head -n1 2>>/dev/null)" || return
+	echo "$SERVERSDIR/$session_pid"
 }
 
 release_lock() {
