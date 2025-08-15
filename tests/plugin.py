@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Generator
 
 import pytest
 
@@ -11,5 +12,6 @@ def sandbox(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Sandbox:
 
 
 @pytest.fixture
-def terminal(sandbox) -> Terminal:
-    return Terminal(sandbox)
+def terminal(sandbox) -> Generator[Terminal, None, None]:
+    with Terminal(sandbox) as t:
+        yield t
