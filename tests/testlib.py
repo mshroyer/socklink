@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+import subprocess
 import tempfile
 from threading import Thread
 from time import sleep
@@ -17,7 +18,7 @@ import pytest
 PROMPT_MAGIC = "%-%-%-%"
 
 # Time to sleep between attempts to read, in seconds.
-PAUSE_SECONDS = 0.05
+PAUSE_SECONDS = 0.1
 
 
 class Sandbox:
@@ -41,6 +42,8 @@ class Sandbox:
         monkeypatch.setenv("HOME", str(root / "home"))
         monkeypatch.setenv("TERM", "xterm")
         monkeypatch.setenv("TMUX_TMPDIR", str(root / "tmp" / "tmux"))
+
+        monkeypatch.delenv("SSH_AUTH_SOCK", raising=False)
         monkeypatch.delenv("TMUX", raising=False)
 
         os.mkfifo(root / "output.fifo")
@@ -48,16 +51,61 @@ class Sandbox:
         self._setup_dotfiles()
         os.chdir(root)
 
-    def make_unique_file(self, prefix: str) -> Path:
+    def make_unique_file(self, prefix: str, subdir: Optional[str] = None) -> Path:
         """Returns the path to a new, unique file in the sandbox"""
 
-        fd, filename = tempfile.mkstemp(prefix=prefix, dir=self.root)
+        if subdir is not None:
+            dir = self.root / subdir
+        else:
+            dir = self.root
+
+        fd, filename = tempfile.mkstemp(prefix=prefix, dir=dir)
         os.close(fd)
         return Path(filename)
 
+    def write_debug(self, msg):
+        with open(self.root / "debug.txt", "a") as f:
+            print(msg, file=f)
+            f.flush()
+
     def _setup_dotfiles(self):
-        with open(self.root / "home" / ".bashrc", "w+") as f:
+        with open(self.root / "home" / ".bashrc", "a") as f:
             print(f'PS1="{PROMPT_MAGIC}\\n"', file=f)
+
+        with open(self.root / "home" / ".tmux.conf", "a") as f:
+            print('set -g default-command "/bin/bash"', file=f)
+
+
+class SocketManager:
+    """A container for tmux sockets"""
+
+    sandbox: Sandbox
+    _sockets: List[Path]
+
+    def __init__(self, sandbox):
+        self.sandbox = sandbox
+        self._sockets = []
+
+    def reserve_unique(self) -> Path:
+        path = self.sandbox.make_unique_file("tmux-server-")
+        path.unlink()
+        self._sockets.append(path)
+        return path
+
+    def _shutdown(self, socket: Path):
+        if socket.exists():
+            subprocess.run(["tmux", "-S", str(socket), "kill-server"], check=True)
+
+    def shutdown_all(self):
+        for socket in self._sockets:
+            self._shutdown(socket)
+        self._sockets = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.shutdown_all()
 
 
 class Terminal:
@@ -77,7 +125,10 @@ class Terminal:
     _fifo_w: TextIO
 
     def __init__(
-        self, sandbox: Sandbox, shell: str = "/bin/bash", has_ssh_auth_sock: bool = True
+        self,
+        sandbox: Sandbox,
+        shell: str = "/bin/bash",
+        login_sock: bool = True,
     ):
         self.sandbox = sandbox
         self.shell = shell
@@ -85,16 +136,15 @@ class Terminal:
         self.child = pexpect.spawn(shell)
         self.child.setecho(False)
 
-        tty, tty_file = self._write_tty_file(
-            "auth_sock-" if has_ssh_auth_sock else "tty-"
-        )
-        self.tty = tty
-        if has_ssh_auth_sock:
-            self.ssh_auth_sock = tty_file
-        else:
-            self.ssh_auth_sock = None
-
         self._output_lines = []
+
+        self.start_reader_thread()
+        self.tty = self.run("tty", stdout=True) or ""
+
+        if login_sock:
+            self._setup_login_ssh_auth_sock()
+
+        self.sandbox.write_debug("Finished init")
 
     def run(self, command: str, stdout: bool = False) -> Optional[str]:
         """Sends a command to the pexpect child
@@ -119,20 +169,21 @@ class Terminal:
             self._output_lines = []
             return output
 
+    def get_ssh_auth_sock(self) -> Optional[str]:
+        sock = self.run("echo $SSH_AUTH_SOCK", stdout=True)
+        if sock != "":
+            return sock
+
+    def _setup_login_ssh_auth_sock(self):
+        path = self.sandbox.make_unique_file("auth_sock-", subdir="home")
+        self.run(f"SSH_AUTH_SOCK={path}")
+        self.run("export SSH_AUTH_SOCK")
+
     def _wait_for_prompt(self):
         while True:
             line = self.child.readline().decode("utf-8")
             if PROMPT_MAGIC in line:
                 return
-
-    def _write_tty_file(self, prefix: str) -> Tuple[str, Path]:
-        filename = self.sandbox.make_unique_file(prefix)
-        self.child.sendline(f"tty > {filename}")
-        sleep(PAUSE_SECONDS)
-        with open(filename, "r") as f:
-            tty = f.read().rstrip()
-
-        return (tty, filename)
 
     def _read_fifo(self):
         with open(self.sandbox.root / "output.fifo", "r") as f:
@@ -151,8 +202,8 @@ class Terminal:
         self._reader_thread.join()
 
     def __enter__(self):
-        self.start_reader_thread()
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.child.close()
         self.stop_reader_thread()
