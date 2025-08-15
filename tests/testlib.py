@@ -17,9 +17,6 @@ import pytest
 # completed.
 PROMPT_MAGIC = "%-%-%-%"
 
-# Time to sleep between attempts to read, in seconds.
-PAUSE_SECONDS = 0.1
-
 
 class Sandbox:
     """A sandbox for running a test case
@@ -45,8 +42,6 @@ class Sandbox:
 
         monkeypatch.delenv("SSH_AUTH_SOCK", raising=False)
         monkeypatch.delenv("TMUX", raising=False)
-
-        os.mkfifo(root / "output.fifo")
 
         self._setup_dotfiles()
         os.chdir(root)
@@ -121,7 +116,6 @@ class Terminal:
     tty: str
     ssh_auth_sock: Optional[Path]
     _reader_thread: Thread
-    _output_lines: List[str]
     _fifo_w: TextIO
 
     def __init__(
@@ -138,7 +132,6 @@ class Terminal:
 
         self._output_lines = []
 
-        self.start_reader_thread()
         self.tty = self.run("tty", stdout=True) or ""
 
         if login_sock:
@@ -154,20 +147,20 @@ class Terminal:
 
         """
 
+        output_txt = self.sandbox.root / "output.txt"
+
         if stdout:
-            command = "{} >{}".format(command, self.sandbox.root / "output.fifo")
+            # Instead of capturing output with pexpect, pipe it into a file so
+            # we don't have to deal with tmux window decorations.
+            command = "{} >{}".format(command, output_txt)
 
         self.child.sendline(command)
         self._wait_for_prompt()
 
         if stdout:
-            # Even with the fifo we still need to wait to get the completed
-            # command's output for some reason.
-            sleep(PAUSE_SECONDS)
-
-            output = "\n".join(self._output_lines)
-            self._output_lines = []
-            return output
+            subprocess.run(["sync"], check=True)
+            with open(output_txt, "r") as f:
+                return f.read().rstrip("\n")
 
     def get_ssh_auth_sock(self) -> Optional[str]:
         sock = self.run("echo $SSH_AUTH_SOCK", stdout=True)
@@ -185,25 +178,8 @@ class Terminal:
             if PROMPT_MAGIC in line:
                 return
 
-    def _read_fifo(self):
-        with open(self.sandbox.root / "output.fifo", "r") as f:
-            for line in f:
-                line = line.rstrip("\n")
-                self._output_lines.append(line)
-
-    def start_reader_thread(self):
-        self._reader_thread = Thread(target=self._read_fifo)
-        self._reader_thread.start()
-        self._fifo_w = open(self.sandbox.root / "output.fifo", "w")
-
-    def stop_reader_thread(self):
-        # Generate an EOF for the reader
-        self._fifo_w.close()
-        self._reader_thread.join()
-
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.child.close()
-        self.stop_reader_thread()
