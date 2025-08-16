@@ -19,11 +19,6 @@ def tsock() -> Path:
 
 
 @pytest.fixture
-def stub(tsock: Path, monkeypatch: pytest.MonkeyPatch) -> TsockStub:
-    return TsockStub(tsock, monkeypatch)
-
-
-@pytest.fixture
 def sandbox(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> Generator[Sandbox, None, None]:
@@ -35,6 +30,11 @@ def sandbox(
 def terminal(sandbox) -> Generator[Terminal, None, None]:
     with Terminal(sandbox) as t:
         yield t
+
+
+@pytest.fixture
+def stub(tsock: Path, sandbox: Sandbox) -> TsockStub:
+    return TsockStub(tsock, sandbox)
 
 
 # Wrap test case invocations to clarify subprocess errors

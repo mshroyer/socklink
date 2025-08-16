@@ -249,11 +249,11 @@ class TsockStub:
 
     path: Path
 
-    def __init__(self, path: Path, monkeypatch: pytest.MonkeyPatch):
+    def __init__(self, path: Path, sandbox: Sandbox):
         self.path = path
 
         # Enable access to test-only functions
-        monkeypatch.setenv("TSOCK_TEST", "1")
+        sandbox.monkeypatch.setenv("TSOCK_TEST", "1")
 
     def run(self, *args: str | Path, stdin: Optional[str] = None) -> str:
         """Run a tsock.sh subcommand and return its stdout
