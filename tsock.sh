@@ -270,6 +270,9 @@ elif [ "$1" = "set-server-link" ]; then
 	fi
 elif [ "$1" = "show-server-link" ]; then
 	get_server_link_path
+elif [ "$1" = "get-device-filename" ]; then
+	# For testing
+	get_device_filename "$2"
 else
 	show_usage
 	exit 1

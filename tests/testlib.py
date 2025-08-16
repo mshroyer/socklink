@@ -227,3 +227,21 @@ class TerminalCommandError(Exception):
     def __init__(self, exit_code: int, stderr: str):
         self.exit_code = exit_code
         self.stderr = stderr
+
+
+class TsockStub:
+    """An instance of the tsock script"""
+
+    path: Path
+
+    def __init__(self, path: Path):
+        self.path = path
+
+    def run(self, *args: str) -> str:
+        """Run a tsock.sh subcommand and return its stdout"""
+
+        return (
+            subprocess.check_output([self.path] + list(args))
+            .decode("utf-8")
+            .rstrip("\r\n")
+        )

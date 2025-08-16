@@ -1,15 +1,27 @@
 import os
 from pathlib import Path
+import subprocess
 
 import pytest
 
-from tests.testlib import Sandbox, SocketManager, Terminal, TerminalCommandError
+from tests.testlib import (
+    Sandbox,
+    SocketManager,
+    Terminal,
+    TerminalCommandError,
+    TsockStub,
+)
 
 
 class TestLib:
     def test_error(self, terminal: Terminal):
         with pytest.raises(TerminalCommandError):
             terminal.run("false")
+
+
+class TestFunctions:
+    def test_get_device_filename(self, stub: TsockStub):
+        assert stub.run("get-device-filename", "/dev/tty/1") == "dev+tty+1"
 
 
 class TestSshAuthSock:

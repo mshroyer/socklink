@@ -3,12 +3,17 @@ from typing import Generator
 
 import pytest
 
-from tests.testlib import Sandbox, SocketManager, Terminal, get_project_dir
+from tests.testlib import Sandbox, SocketManager, Terminal, TsockStub, get_project_dir
 
 
 @pytest.fixture
 def tsock() -> Path:
     return get_project_dir() / "tsock.sh"
+
+
+@pytest.fixture
+def stub(tsock) -> TsockStub:
+    return TsockStub(tsock)
 
 
 @pytest.fixture
