@@ -270,6 +270,15 @@ class TsockStub:
             .rstrip()
         )
 
+    def run_test(self, *args: str | Path, stdin: Optional[str] = None) -> bool:
+        """Runs a tsock.sh subcommand and interprets success as a boolean"""
+
+        try:
+            self.run(*args, stdin=stdin)
+        except subprocess.CalledProcessError:
+            return False
+        return True
+
 
 def fail_with_subprocess_error(e: subprocess.CalledProcessError):
     lines = [f"Command {e.cmd!r} exited with return code {e.returncode}"]

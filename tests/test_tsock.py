@@ -193,3 +193,42 @@ class TestInstallation:
             ### TSOCK INSTALLATION END
             The remainder of this file should be unmodified.
             """)
+
+    def test_has_manual_config_head(self, sandbox: Sandbox, stub: TsockStub):
+        rc_file = sandbox.root / "test_rc_file"
+        rc_file.write_text(
+            dedent("""\
+            tsock.sh set-tty-link
+            ### TSOCK INSTALLATION BEGIN
+            echo foo
+            ### TSOCK INSTALLATION END
+            echo bar
+            """)
+        )
+        assert stub.run_test("has-manual-config", rc_file)
+
+    def test_has_manual_config_installation(self, sandbox: Sandbox, stub: TsockStub):
+        rc_file = sandbox.root / "test_rc_file"
+        rc_file.write_text(
+            dedent("""\
+            echo foo
+            ### TSOCK INSTALLATION BEGIN
+            tsock.sh set-tty-link
+            ### TSOCK INSTALLATION END
+            echo bar
+            """)
+        )
+        assert not stub.run_test("has-manual-config", rc_file)
+
+    def test_has_manual_config_tail(self, sandbox: Sandbox, stub: TsockStub):
+        rc_file = sandbox.root / "test_rc_file"
+        rc_file.write_text(
+            dedent("""\
+            echo foo
+            ### TSOCK INSTALLATION BEGIN
+            echo bar
+            ### TSOCK INSTALLATION END
+            tsock.sh show-server-link
+            """)
+        )
+        assert stub.run_test("has-manual-config", rc_file)

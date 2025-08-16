@@ -253,6 +253,25 @@ has_tsock_section() {
 	     && grep -q "^${TSOCK_SECTION_END}\$" "$1"
 }
 
+# Checks whether the file given as an argument contains manual tsock
+# configuration--that is, outside of an explicitly marked configuration
+# section as created by this script.
+has_manual_config() {
+	rc_section=head
+	while IFS= read -r line; do
+		if [ "$line" = "$TSOCK_SECTION_BEGIN" ]; then
+			rc_section=installation
+		elif [ "$line" = "$TSOCK_SECTION_END" ]; then
+			rc_section=tail
+		elif [ $rc_section != installation ]; then
+			if echo "$line" | grep -q 'tsock\.sh[ \t]\+\(set-tty-link\|\(set\|show\)-server-link\)'; then
+				return
+			fi
+		fi
+	done < "$1"
+	false
+}
+
 # Creates or replaces the tsock installation section in the file given in $1,
 # using the text piped into this function.
 set_tsock_section() {
@@ -316,14 +335,21 @@ elif [ "$1" = "set-server-link" ]; then
 	fi
 elif [ "$1" = "show-server-link" ]; then
 	get_server_link_path
-elif [ -n "$TSOCK_TEST" ] && [ "$1" = "get-device-filename" ]; then
-	get_device_filename "$2"
-elif [ -n "$TSOCK_TEST" ] && [ "$1" = "get-filename-device" ]; then
-	get_filename_device "$2"
-elif [ -n "$TSOCK_TEST" ] && [ "$1" = "has-tsock-section" ]; then
-	has_tsock_section "$2"
-elif [ -n "$TSOCK_TEST" ] && [ "$1" = "set-tsock-section" ]; then
-	set_tsock_section "$2"
+elif [ -n "$TSOCK_TEST" ]; then
+	if [ "$1" = "get-device-filename" ]; then
+		get_device_filename "$2"
+	elif [ "$1" = "get-filename-device" ]; then
+		get_filename_device "$2"
+	elif [ "$1" = "has-tsock-section" ]; then
+		has_tsock_section "$2"
+	elif [ "$1" = "set-tsock-section" ]; then
+		set_tsock_section "$2"
+	elif [ "$1" = "has-manual-config" ]; then
+		has_manual_config "$2"
+	else
+		show_usage
+		exit 1
+	fi
 else
 	show_usage
 	exit 1
