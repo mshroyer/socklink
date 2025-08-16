@@ -1,0 +1,19 @@
+name: ci
+on:
+  workflow_call:
+  push:
+    branches:
+      - "**"
+    tags-ignore:
+      - "**"
+  pull_request:
+
+jobs:
+  lint_and_test:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+    uses: ./.github/workflows/lint-and-test.yml
+    with:
+      os: ${{ matrix.os }}

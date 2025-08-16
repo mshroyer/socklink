@@ -1,0 +1,30 @@
+name: lint_and_test
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+
+jobs:
+  lint_test:
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+
+      - uses: astral-sh/ruff-action@v3
+        with:
+          args: "check"
+
+      - uses: astral-sh/ruff-action@v3
+        with:
+          args: "format --check --diff"
+
+      - name: Run tests
+        run: uv run pytest
