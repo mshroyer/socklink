@@ -19,7 +19,7 @@ import pytest
 PROMPT_MAGIC = "ThisIsThePrompt"
 
 # Pattern for matching the prompt and the previous command's exit code.
-PROMPT_RE = re.compile(f"(\\d+) {PROMPT_MAGIC}")
+PROMPT_RE = re.compile(f".*{re.escape(PROMPT_MAGIC)} (\\d+).*")
 
 
 def get_project_dir() -> Path:
@@ -45,7 +45,7 @@ class Sandbox:
         (root / "tmp").mkdir()
 
         monkeypatch.setenv("HOME", str(root / "home"))
-        monkeypatch.setenv("TERM", "dumb")
+        monkeypatch.setenv("TERM", "xterm")
         monkeypatch.setenv("TMUX_TMPDIR", str(root / "tmp" / "tmux"))
         monkeypatch.setenv("TSOCK_TMPDIR", str(root / "tmp"))
         monkeypatch.setenv("TSOCK_LOG", str(root / "tsock.log"))
@@ -75,7 +75,7 @@ class Sandbox:
 
     def _setup_dotfiles(self):
         with open(self.root / "home" / ".bashrc", "a") as f:
-            print(f"PS1='$? {PROMPT_MAGIC}\\n'", file=f)
+            print(f"PS1='{PROMPT_MAGIC} $? \\n'", file=f)
 
         with open(self.root / "home" / ".tmux.conf", "a") as f:
             print('set -g default-command "/bin/bash"', file=f)
@@ -167,23 +167,28 @@ class Terminal:
 
         """
 
-        output_txt = self.sandbox.root / "output.txt"
+        stdout_txt = self.sandbox.root / "stdout.txt"
+        stderr_txt = self.sandbox.root / "stderr.txt"
 
+        command = "{} 2>{}".format(command, stderr_txt)
         if stdout:
             # Instead of capturing output with pexpect, pipe it into a file so
             # we don't have to deal with tmux window decorations.
-            command = "{} >{}".format(command, output_txt)
+            command = "{} >{}".format(command, stdout_txt)
 
         self.child.sendline(command)
         self.sandbox.write_debug(f"command = {command}")
         exit_code = self._wait_for_prompt()
 
+        if stdout or exit_code != 0:
+            subprocess.run(["sync"], check=True)
+
         if exit_code != 0:
-            raise TerminalCommandError(exit_code)
+            with open(stderr_txt, "r") as f:
+                raise TerminalCommandError(exit_code, f.read().rstrip("\n"))
 
         if stdout:
-            subprocess.run(["sync"], check=True)
-            with open(output_txt, "r") as f:
+            with open(stdout_txt, "r") as f:
                 return f.read().rstrip("\n")
 
     def get_ssh_auth_sock(self) -> Optional[str]:
@@ -198,8 +203,8 @@ class Terminal:
 
     def _wait_for_prompt(self) -> int:
         while True:
-            line = self.child.readline().decode("utf-8").rstrip("\n")
-            # self.sandbox.write_debug(f'\nline = "{line}"\n')
+            raw_line = self.child.readline()
+            line = raw_line.decode("utf-8").strip("\r\n")
             m = PROMPT_RE.match(line)
             if m:
                 exit_code = int(m.group(1))
@@ -217,6 +222,8 @@ class TerminalCommandError(Exception):
     """An error running a command on the terminal."""
 
     exit_code: int
+    stderr: str
 
-    def __init__(self, exit_code: int):
+    def __init__(self, exit_code: int, stderr: str):
         self.exit_code = exit_code
+        self.stderr = stderr
