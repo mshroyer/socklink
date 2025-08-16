@@ -248,11 +248,6 @@ gc_server_links() {
 TSOCK_SECTION_BEGIN='### TSOCK INSTALLATION BEGIN'
 TSOCK_SECTION_END='### TSOCK INSTALLATION END'
 
-has_tsock_section() {
-	grep -q "^${TSOCK_SECTION_BEGIN}\$" "$1" \
-	     && grep -q "^${TSOCK_SECTION_END}\$" "$1"
-}
-
 # Checks whether the file given as an argument contains manual tsock
 # configuration--that is, outside of an explicitly marked configuration
 # section as created by this script.
@@ -340,8 +335,6 @@ elif [ -n "$TSOCK_TEST" ]; then
 		get_device_filename "$2"
 	elif [ "$1" = "get-filename-device" ]; then
 		get_filename_device "$2"
-	elif [ "$1" = "has-tsock-section" ]; then
-		has_tsock_section "$2"
 	elif [ "$1" = "set-tsock-section" ]; then
 		set_tsock_section "$2"
 	elif [ "$1" = "has-manual-config" ]; then

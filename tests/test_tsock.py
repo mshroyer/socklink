@@ -55,27 +55,6 @@ class TestCommands:
 
 
 class TestInstallation:
-    def test_has_section_absent(self, sandbox: Sandbox, stub: TsockStub):
-        rc_file = sandbox.root / "test_rc_file"
-        rc_file.write_text("echo hello")
-
-        with pytest.raises(subprocess.CalledProcessError):
-            stub.run("has-tsock-section", rc_file)
-
-    def test_has_section_present(self, sandbox: Sandbox, stub: TsockStub):
-        rc_file = sandbox.root / "test_rc_file"
-        rc_file.write_text(
-            dedent("""\
-            echo hello
-
-            ### TSOCK INSTALLATION BEGIN
-            echo tsock stuff
-            ### TSOCK INSTALLATION END
-            """)
-        )
-
-        stub.run("has-tsock-section", rc_file)
-
     def test_set_section_no_file(self, sandbox: Sandbox, stub: TsockStub):
         rc_file = sandbox.root / "test_rc_file"
         stub.run(
