@@ -41,14 +41,16 @@
 set -e
 set -C  # noclobber for lock file
 
-LOGFILE=
 if [ -f "$HOME/.tsock.conf" ]; then
 	. "$HOME/.tsock.conf"
 fi
 
 # $UID is not portable
 MYUID="$(id -u)"
-TSOCKDIR="/tmp/tsock-$MYUID"
+if [ -z "$TSOCK_TMPDIR" ]; then
+	TSOCK_TMPDIR="/tmp"
+fi
+TSOCKDIR="$TSOCK_TMPDIR/tsock-$MYUID"
 SERVERSDIR="$TSOCKDIR/servers"
 TTYSDIR="$TSOCKDIR/ttys"
 LOCKFILE="$TSOCKDIR/lock"
@@ -66,8 +68,8 @@ EOF
 }
 
 log() {
-	if [ -n "$LOGFILE" ]; then
-		echo "$(date +'%Y-%m-%d %H:%M:%S') $1" >>"$LOGFILE"
+	if [ -n "$TSOCK_LOG" ]; then
+		echo "$(date +'%Y-%m-%d %H:%M:%S') $1" >>"$TSOCK_LOG"
 	fi
 	if [ -n "$2" ]; then
 		echo "$1" >&2
@@ -114,7 +116,7 @@ ensure_dir() {
 		mkdir -m700 "$1"
 	fi
 	if [ ! -O "$1" ]; then
-		echo "expected $1 to be owned by UID $MYUID" >&2
+		log "expected $1 to be owned by UID $MYUID" 1
 		exit 1
 	fi
 	if [ "$(stat_mode "$1")" != 700 ]; then
@@ -175,9 +177,15 @@ get_active_client_tty() {
 	#tmux run-shell 'echo #{client_tty}'
 }
 
+get_server_pid() {
+	echo "$TMUX" | cut -d, -f2
+}
+
 get_server_link_path() {
-	session_pid="$(tmux list-sessions -F '#{pid}' | head -n1 2>>/dev/null)" || return
-	echo "$SERVERSDIR/$session_pid"
+	pid=$(get_server_pid)
+	if [ -n "$pid" ]; then
+		echo "$SERVERSDIR/$pid"
+	fi
 }
 
 release_lock() {
