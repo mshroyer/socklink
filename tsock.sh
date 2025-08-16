@@ -116,7 +116,6 @@ get_pid_uid() {
 }
 
 ensure_dir() {
-	log "in ensure_dir"
 	if [ ! -d "$1" ]; then
 		mkdir -m700 "$1"
 	fi
@@ -170,15 +169,14 @@ set_tty_link() {
 }
 
 get_active_client_tty() {
-	tmux display-message -p '#{client_tty}'
-}
-
-get_server_pid() {
-	echo "$TMUX" | cut -d, -f2
+	if [ -n "$TMUX" ]; then
+		socket=$(echo "$TMUX" | cut -d, -f1)
+		tmux -S "$socket" display-message -p '#{client_tty}'
+	fi
 }
 
 get_server_link_path() {
-	pid=$(get_server_pid)
+	pid=$(echo "$TMUX" | cut -d, -f2)
 	if [ -n "$pid" ]; then
 		echo "$SERVERSDIR/$pid"
 	fi
