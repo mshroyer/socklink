@@ -24,9 +24,6 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v5
-
       - uses: astral-sh/ruff-action@v3
         with:
           args: "check"
@@ -38,4 +35,4 @@ jobs:
       - name: Run tests
         # Run the tests in ./pytest to avoid "File name too long" in the
         # default location on macOS
-        run: uv run pytest -v --basetemp ./pytest
+        run: scripts/test.sh

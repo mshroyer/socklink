@@ -1,4 +1,4 @@
-# tsock
+# tsock.sh
 
 A zero-dependency, cross-platform `SSH_AUTH_SOCK` wrangler for tmux.
 
@@ -6,10 +6,10 @@ A zero-dependency, cross-platform `SSH_AUTH_SOCK` wrangler for tmux.
 
 ## Tests
 
-You can run the unit tests with [uv](https://docs.astral.sh/uv/):
+You can run the unit tests with:
 
 ```
-% uv run pytest
+% scripts/test.sh
 ```
 
 The tests will use your system versions of `tmux` and any shells available for
