@@ -1,12 +1,8 @@
-name: CI
+name: Periodic
 on:
-  workflow_call:
-  push:
-    branches:
-      - "**"
-    tags-ignore:
-      - "**"
-  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "57 0 * * 3"
 
 jobs:
   lint_and_test:
@@ -14,7 +10,12 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
+          - ubuntu-24.04
+          - ubuntu-22.04
           - macos-latest
+          - macos-15
+          - macos-14
+          - macos-13
     uses: ./.github/workflows/lint-and-test.yml
     with:
       os: ${{ matrix.os }}
