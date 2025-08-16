@@ -50,10 +50,12 @@ MYUID="$(id -u)"
 if [ -z "$TSOCK_TMPDIR" ]; then
 	TSOCK_TMPDIR="/tmp"
 fi
-TSOCKDIR="$TSOCK_TMPDIR/tsock-$MYUID"
-SERVERSDIR="$TSOCKDIR/servers"
-TTYSDIR="$TSOCKDIR/ttys"
-LOCKFILE="$TSOCKDIR/lock"
+if [ -z "$TSOCK_DIR" ]; then
+	TSOCK_DIR="$TSOCK_TMPDIR/tsock-$MYUID"
+fi
+SERVERSDIR="$TSOCK_DIR/servers"
+TTYSDIR="$TSOCK_DIR/ttys"
+LOCKFILE="$TSOCK_DIR/lock"
 
 show_usage() {
 cat <<'EOF'
@@ -112,6 +114,7 @@ get_pid_uid() {
 }
 
 ensure_dir() {
+	log "in ensure_dir"
 	if [ ! -d "$1" ]; then
 		mkdir -m700 "$1"
 	fi
@@ -148,7 +151,7 @@ get_tty_link_path() {
 }
 
 set_tty_link() {
-	ensure_dir "$TSOCKDIR"
+	ensure_dir "$TSOCK_DIR"
 	ensure_dir "$TTYSDIR"
 	ensure_dir "$SERVERSDIR"
 
@@ -232,7 +235,7 @@ set_server_link() {
 
 	log "set_server_link: changing $serverlink -> $ttylink"
 
-	ensure_dir "$TSOCKDIR"
+	ensure_dir "$TSOCK_DIR"
 	ensure_dir "$SERVERSDIR"
 
 	take_lock

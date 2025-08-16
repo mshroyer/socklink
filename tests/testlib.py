@@ -47,7 +47,7 @@ class Sandbox:
         monkeypatch.setenv("HOME", str(root / "home"))
         monkeypatch.setenv("TERM", "xterm")
         monkeypatch.setenv("TMUX_TMPDIR", str(root / "tmp" / "tmux"))
-        monkeypatch.setenv("TSOCK_TMPDIR", str(root / "tmp"))
+        monkeypatch.setenv("TSOCK_DIR", str(root / "tmp" / "tsock"))
         monkeypatch.setenv("TSOCK_LOG", str(root / "tsock.log"))
 
         monkeypatch.delenv("SSH_AUTH_SOCK", raising=False)
