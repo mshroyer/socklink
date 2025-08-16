@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 from threading import Thread
@@ -15,7 +16,14 @@ import pytest
 # A sequence of magic characters to be included in the controlled shell's
 # prompt.  When we see this we know the previously issued command has
 # completed.
-PROMPT_MAGIC = "%-%-%-%"
+PROMPT_MAGIC = "ThisIsThePrompt"
+
+# Pattern for matching the prompt and the previous command's exit code.
+PROMPT_RE = re.compile(f"(\\d+) {PROMPT_MAGIC}")
+
+
+def get_project_dir() -> Path:
+    return Path(os.path.realpath(__file__)).parents[1]
 
 
 class Sandbox:
@@ -37,8 +45,10 @@ class Sandbox:
         (root / "tmp").mkdir()
 
         monkeypatch.setenv("HOME", str(root / "home"))
-        monkeypatch.setenv("TERM", "xterm")
+        monkeypatch.setenv("TERM", "dumb")
         monkeypatch.setenv("TMUX_TMPDIR", str(root / "tmp" / "tmux"))
+        monkeypatch.setenv("TSOCK_TMPDIR", str(root / "tmp"))
+        monkeypatch.setenv("TSOCK_LOG", str(root / "tsock.log"))
 
         monkeypatch.delenv("SSH_AUTH_SOCK", raising=False)
         monkeypatch.delenv("TMUX", raising=False)
@@ -65,7 +75,7 @@ class Sandbox:
 
     def _setup_dotfiles(self):
         with open(self.root / "home" / ".bashrc", "a") as f:
-            print(f'PS1="{PROMPT_MAGIC}\\n"', file=f)
+            print(f"PS1='$? {PROMPT_MAGIC}\\n'", file=f)
 
         with open(self.root / "home" / ".tmux.conf", "a") as f:
             print('set -g default-command "/bin/bash"', file=f)
@@ -89,7 +99,10 @@ class SocketManager:
 
     def _shutdown(self, socket: Path):
         if socket.exists():
-            subprocess.run(["tmux", "-S", str(socket), "kill-server"], check=True)
+            try:
+                subprocess.run(["tmux", "-S", str(socket), "kill-server"], check=True)
+            except subprocess.CalledProcessError:
+                pass
 
     def shutdown_all(self):
         for socket in self._sockets:
@@ -127,10 +140,17 @@ class Terminal:
         self.sandbox = sandbox
         self.shell = shell
 
-        self.child = pexpect.spawn(shell)
+        self.child = pexpect.spawn(shell, maxread=4096)
         self.child.setecho(False)
 
         self._output_lines = []
+
+        # Ensure we've drained the output buffer so that the next prompt we
+        # see is in response to this command finishing.
+        try:
+            self.child.read_nonblocking(size=self.child.maxread, timeout=0.1)
+        except pexpect.TIMEOUT:
+            pass
 
         self.tty = self.run("tty", stdout=True) or ""
 
@@ -155,7 +175,11 @@ class Terminal:
             command = "{} >{}".format(command, output_txt)
 
         self.child.sendline(command)
-        self._wait_for_prompt()
+        self.sandbox.write_debug(f"command = {command}")
+        exit_code = self._wait_for_prompt()
+
+        if exit_code != 0:
+            raise TerminalCommandError(exit_code)
 
         if stdout:
             subprocess.run(["sync"], check=True)
@@ -172,14 +196,27 @@ class Terminal:
         self.run(f"SSH_AUTH_SOCK={path}")
         self.run("export SSH_AUTH_SOCK")
 
-    def _wait_for_prompt(self):
+    def _wait_for_prompt(self) -> int:
         while True:
-            line = self.child.readline().decode("utf-8")
-            if PROMPT_MAGIC in line:
-                return
+            line = self.child.readline().decode("utf-8").rstrip("\n")
+            # self.sandbox.write_debug(f'\nline = "{line}"\n')
+            m = PROMPT_RE.match(line)
+            if m:
+                exit_code = int(m.group(1))
+                self.sandbox.write_debug(f"exit_code = {exit_code}")
+                return exit_code
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        self.child.close()
+        self.child.close(force=True)
+
+
+class TerminalCommandError(Exception):
+    """An error running a command on the terminal."""
+
+    exit_code: int
+
+    def __init__(self, exit_code: int):
+        self.exit_code = exit_code
