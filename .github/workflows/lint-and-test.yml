@@ -29,4 +29,6 @@ jobs:
           args: "format --check --diff"
 
       - name: Run tests
-        run: uv run pytest -v
+        # Run the tests in ./pytest to avoid "File name too long" in the
+        # default location on macOS
+        run: uv run pytest -v --basetemp ./pytest
