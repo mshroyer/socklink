@@ -134,13 +134,7 @@ class Terminal:
         self.child.setecho(False)
 
         self._output_lines = []
-
-        # Ensure we've drained the output buffer so that the next prompt we
-        # see is in response to this command finishing.
-        try:
-            self.child.read_nonblocking(size=self.child.maxread, timeout=0.1)
-        except pexpect.TIMEOUT:
-            pass
+        self._drain_read_buffer()
 
         self.tty = self.run("tty", stdout=True) or ""
 
@@ -181,6 +175,16 @@ class Terminal:
             with open(stdout_txt, "r") as f:
                 return f.read().rstrip("\n")
 
+    def _drain_read_buffer(self):
+        # Ensure we've drained the output buffer so that the next prompt we
+        # see is in response to this command finishing.
+        try:
+            while True:
+                bs = self.child.read_nonblocking(size=self.child.maxread, timeout=0.1)
+                self.sandbox.write_debug(f"drained {len(bs)} bytes from read buffer")
+        except pexpect.TIMEOUT:
+            pass
+
     def get_auth_sock(self) -> Optional[Path]:
         """Gets the current value of SSH_AUTH_SOCK in the active shell
 
@@ -216,6 +220,7 @@ class Terminal:
     def _wait_for_prompt(self) -> int:
         while True:
             raw_line = self.child.readline()
+            self.sandbox.write_debug(f"raw_line = {raw_line}")
             line = raw_line.decode("utf-8").strip("\r\n")
             m = PROMPT_RE.match(line)
             if m:
