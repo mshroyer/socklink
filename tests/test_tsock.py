@@ -23,6 +23,9 @@ class TestFunctions:
     def test_get_device_filename(self, stub: TsockStub):
         assert stub.run("get-device-filename", "/dev/tty/1") == "dev+tty+1"
 
+    def test_get_filename_device(self, stub: TsockStub):
+        assert stub.run("get-filename-device", "dev+tty+1") == "/dev/tty/1"
+
 
 class TestSshAuthSock:
     def test_unset(self, sandbox: Sandbox):

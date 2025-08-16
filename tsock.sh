@@ -273,6 +273,9 @@ elif [ "$1" = "show-server-link" ]; then
 elif [ "$1" = "get-device-filename" ]; then
 	# For testing
 	get_device_filename "$2"
+elif [ "$1" = "get-filename-device" ]; then
+	# For testing
+	get_filename_device "$2"
 else
 	show_usage
 	exit 1
