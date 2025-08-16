@@ -117,7 +117,7 @@ class Terminal:
     sandbox: Sandbox
     child: pexpect.spawn
     tty: str
-    ssh_auth_sock: Optional[Path]
+    login_auth_sock: Optional[Path]
     _reader_thread: Thread
     _fifo_w: TextIO
 
@@ -145,7 +145,7 @@ class Terminal:
         self.tty = self.run("tty", stdout=True) or ""
 
         if login_sock:
-            self._setup_login_ssh_auth_sock()
+            self._setup_login_auth_sock()
 
         self.sandbox.write_debug("Finished init")
 
@@ -181,14 +181,36 @@ class Terminal:
             with open(stdout_txt, "r") as f:
                 return f.read().rstrip("\n")
 
-    def get_ssh_auth_sock(self) -> Optional[str]:
-        sock = self.run("echo $SSH_AUTH_SOCK", stdout=True)
-        if sock != "":
-            return sock
+    def get_auth_sock(self) -> Optional[Path]:
+        """Gets the current value of SSH_AUTH_SOCK in the active shell
 
-    def _setup_login_ssh_auth_sock(self):
-        path = self.sandbox.make_unique_file("auth_sock-", subdir="home")
-        self.run(f"SSH_AUTH_SOCK={path}")
+        Note that this issues a command on the shell, so it may change state
+        if you have tsock.sh attached to shell hooks.
+
+        """
+
+        sock = self.run("echo $SSH_AUTH_SOCK", stdout=True)
+        if sock is not None and sock != "":
+            return Path(sock)
+
+    def is_login_auth_sock(self, symlink: Path | str) -> bool:
+        """Checks whether this is our login SSH_AUTH_SOCK
+
+        Determines whether the SSH_AUTH_SOCK symlink resolves to this
+        terminal's login SSH_AUTH_SOCK, if any.
+
+        """
+
+        symlink = Path(os.fspath(symlink))
+        return (
+            symlink.exists() and Path(os.path.realpath(symlink)) == self.login_auth_sock
+        )
+
+    def _setup_login_auth_sock(self):
+        self.login_auth_sock = self.sandbox.make_unique_file(
+            "auth_sock-", subdir="home"
+        )
+        self.run(f"SSH_AUTH_SOCK={self.login_auth_sock}")
         self.run("export SSH_AUTH_SOCK")
 
     def _wait_for_prompt(self) -> int:
@@ -220,7 +242,7 @@ class TerminalCommandError(Exception):
 
 
 class TsockStub:
-    """An instance of the tsock script"""
+    """An instance of the tsock script that can be invoked directly"""
 
     path: Path
 

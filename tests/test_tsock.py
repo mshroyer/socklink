@@ -28,15 +28,15 @@ class TestFunctions:
 class TestSshAuthSock:
     def test_unset(self, sandbox: Sandbox):
         terminal = Terminal(sandbox, login_sock=False)
-        assert terminal.get_ssh_auth_sock() is None
+        assert terminal.get_auth_sock() is None
 
     def test_set(self, terminal: Terminal):
-        assert terminal.get_ssh_auth_sock() is not None
+        assert terminal.get_auth_sock() is not None
 
     def test_tmux_session(self, sandbox: Sandbox, terminal: Terminal):
         socket = sandbox.reserve_tmux_socket()
         terminal.run(f"tmux -S {socket}")
-        assert terminal.get_ssh_auth_sock() is not None
+        assert terminal.get_auth_sock() is not None
 
 
 class TestCommands:
@@ -46,4 +46,7 @@ class TestCommands:
 
     def test_set_tty_link(self, sandbox: Sandbox, terminal: Terminal, tsock: Path):
         terminal.run(f"{tsock} set-tty-link")
-        assert len(os.listdir(sandbox.root / "tmp" / "tsock" / "ttys")) != 0
+        ttys_dir = sandbox.root / "tmp" / "tsock" / "ttys"
+        tty_socks = os.listdir(ttys_dir)
+        assert len(tty_socks) == 1
+        assert terminal.is_login_auth_sock(ttys_dir / tty_socks[0])
