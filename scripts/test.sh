@@ -28,6 +28,7 @@ setup_venv() {
 		"$py" -m venv "${PROJECT}/.venv"
 	fi
 	. "${PROJECT}/.venv/bin/activate"
+	pip install pip-tools
 }
 
 setup_venv
