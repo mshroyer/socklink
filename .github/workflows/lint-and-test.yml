@@ -10,6 +10,8 @@ jobs:
   lint_test:
     runs-on: ${{ inputs.os }}
     steps:
+      - uses: actions/checkout@v4
+
       - name: Setup python
         uses: actions/setup-python@v5
         with:
