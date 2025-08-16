@@ -30,8 +30,6 @@ pyproject-hooks==1.2.0
     #   pip-tools
 pytest==8.4.1
     # via tsock-tests (pyproject.toml)
-ruff==0.12.9
-    # via tsock-tests (pyproject.toml)
 wheel==0.45.1
     # via pip-tools
 
