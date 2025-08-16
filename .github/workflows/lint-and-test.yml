@@ -35,4 +35,4 @@ jobs:
       - name: Run tests
         # Run the tests in ./pytest to avoid "File name too long" in the
         # default location on macOS
-        run: scripts/test.sh
+        run: scripts/test.sh --basetemp ./pytest
