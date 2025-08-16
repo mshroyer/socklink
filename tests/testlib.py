@@ -97,7 +97,7 @@ class Sandbox:
             print(f"PS1='{PROMPT_MAGIC} $? \\n'", file=f)
 
         with open(self.root / "home" / ".tmux.conf", "a") as f:
-            print('set -g default-command "/bin/bash"', file=f)
+            print('set -g default-command "bash"', file=f)
 
     def __enter__(self):
         return self
@@ -124,7 +124,7 @@ class Terminal:
     def __init__(
         self,
         sandbox: Sandbox,
-        shell: str = "/bin/bash",
+        shell: str = "bash",
         login_sock: bool = True,
     ):
         self.sandbox = sandbox
