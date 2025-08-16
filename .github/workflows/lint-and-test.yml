@@ -12,6 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: Homebrew/actions/setup-homebrew@main
+        if: ${{ contains(inputs.os, 'macos-') }}
+
+      - name: Install tmux
+        run: brew install tmux
+        if: ${{ contains(inputs.os, 'macos-') }}
+
       - name: Setup python
         uses: actions/setup-python@v5
         with:
