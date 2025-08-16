@@ -78,6 +78,8 @@ log() {
 	fi
 }
 
+### Auth socket management ###################################################
+
 # Converts absolute path to a device node into a string that can be used as a
 # filename: /dev/pts/98 -> dev+pts+98
 get_device_filename() {
@@ -252,6 +254,15 @@ gc_server_links() {
 	done
 }
 
+#### Installation ############################################################
+
+has_tsock_installation_section() {
+	grep -q '^### TSOCK INSTALLATION BEGIN$' "$1" \
+	     && grep -q '^### TSOCK INSTALLATION END$' "$1"
+}
+
+#### Main ####################################################################
+
 if [ "$1" = "-h" ] || [ "$1" = "help" ]; then
 	show_usage
 elif [ "$1" = "set-tty-link" ]; then
@@ -270,12 +281,12 @@ elif [ "$1" = "set-server-link" ]; then
 	fi
 elif [ "$1" = "show-server-link" ]; then
 	get_server_link_path
-elif [ "$1" = "get-device-filename" ]; then
-	# For testing
+elif [ -n "$TSOCK_TEST" ] && [ "$1" = "get-device-filename" ]; then
 	get_device_filename "$2"
-elif [ "$1" = "get-filename-device" ]; then
-	# For testing
+elif [ -n "$TSOCK_TEST" ] && [ "$1" = "get-filename-device" ]; then
 	get_filename_device "$2"
+elif [ -n "$TSOCK_TEST" ] && [ "$1" = "has-tsock-installation-section" ]; then
+	has_tsock_installation_section "$2"
 else
 	show_usage
 	exit 1

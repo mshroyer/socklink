@@ -251,10 +251,13 @@ class TsockStub:
 
     path: Path
 
-    def __init__(self, path: Path):
+    def __init__(self, path: Path, monkeypatch: pytest.MonkeyPatch):
         self.path = path
 
-    def run(self, *args: str) -> str:
+        # Enable access to test-only functions
+        monkeypatch.setenv("TSOCK_TEST", "1")
+
+    def run(self, *args: str | Path) -> str:
         """Run a tsock.sh subcommand and return its stdout
 
         Runs the subcommand directly, without constructing a sandboxed
@@ -263,7 +266,7 @@ class TsockStub:
         """
 
         return (
-            subprocess.check_output([self.path] + list(args))
+            subprocess.check_output([self.path] + list(map(str, args)))
             .decode("utf-8")
             .rstrip("\r\n")
         )

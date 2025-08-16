@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import subprocess
 
 import pytest
 
@@ -50,3 +51,36 @@ class TestCommands:
         tty_socks = os.listdir(ttys_dir)
         assert len(tty_socks) == 1
         assert terminal.is_login_auth_sock(ttys_dir / tty_socks[0])
+
+
+class TestInstallation:
+    def test_has_tsock_installation_section_absent(
+        self, sandbox: Sandbox, stub: TsockStub
+    ):
+        rc_file = sandbox.root / "test_rc_file"
+        with open(rc_file, "w") as f:
+            print(r"echo hello", file=f)
+
+        with pytest.raises(subprocess.CalledProcessError):
+            stub.run("has-tsock-installation-section", rc_file)
+
+    def test_has_tsock_installation_section_present(
+        self, sandbox: Sandbox, stub: TsockStub
+    ):
+        rc_file = sandbox.root / "test_rc_file"
+        with open(rc_file, "w") as f:
+            print(
+                "\n".join(
+                    [
+                        r"echo hello",
+                        r"",
+                        r"### TSOCK INSTALLATION BEGIN",
+                        r"echo tsock",
+                        r"### TSOCK INSTALLATION END",
+                        r"",
+                    ]
+                ),
+                file=f,
+            )
+
+        stub.run("has-tsock-installation-section", rc_file)

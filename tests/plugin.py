@@ -11,9 +11,9 @@ def tsock() -> Path:
     return get_project_dir() / "tsock.sh"
 
 
-@pytest.fixture(scope="session")
-def stub(tsock) -> TsockStub:
-    return TsockStub(tsock)
+@pytest.fixture
+def stub(tsock: Path, monkeypatch: pytest.MonkeyPatch) -> TsockStub:
+    return TsockStub(tsock, monkeypatch)
 
 
 @pytest.fixture
