@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import subprocess
+from textwrap import dedent
 
 import pytest
 
@@ -54,33 +55,141 @@ class TestCommands:
 
 
 class TestInstallation:
-    def test_has_tsock_installation_section_absent(
-        self, sandbox: Sandbox, stub: TsockStub
-    ):
+    def test_has_section_absent(self, sandbox: Sandbox, stub: TsockStub):
         rc_file = sandbox.root / "test_rc_file"
-        with open(rc_file, "w") as f:
-            print(r"echo hello", file=f)
+        rc_file.write_text("echo hello")
 
         with pytest.raises(subprocess.CalledProcessError):
-            stub.run("has-tsock-installation-section", rc_file)
+            stub.run("has-tsock-section", rc_file)
 
-    def test_has_tsock_installation_section_present(
-        self, sandbox: Sandbox, stub: TsockStub
-    ):
+    def test_has_section_present(self, sandbox: Sandbox, stub: TsockStub):
         rc_file = sandbox.root / "test_rc_file"
-        with open(rc_file, "w") as f:
-            print(
-                "\n".join(
-                    [
-                        r"echo hello",
-                        r"",
-                        r"### TSOCK INSTALLATION BEGIN",
-                        r"echo tsock",
-                        r"### TSOCK INSTALLATION END",
-                        r"",
-                    ]
-                ),
-                file=f,
-            )
+        rc_file.write_text(
+            dedent("""\
+            echo hello
 
-        stub.run("has-tsock-installation-section", rc_file)
+            ### TSOCK INSTALLATION BEGIN
+            echo tsock stuff
+            ### TSOCK INSTALLATION END
+            """)
+        )
+
+        stub.run("has-tsock-section", rc_file)
+
+    def test_set_section_no_file(self, sandbox: Sandbox, stub: TsockStub):
+        rc_file = sandbox.root / "test_rc_file"
+        stub.run(
+            "set-tsock-section",
+            rc_file,
+            stdin=dedent("""\
+        foo
+        bar
+        """),
+        )
+
+        assert rc_file.read_text() == dedent("""\
+        ### TSOCK INSTALLATION BEGIN
+        foo
+        bar
+        ### TSOCK INSTALLATION END
+        """)
+
+    def test_set_section_empty_file(self, sandbox: Sandbox, stub: TsockStub):
+        rc_file = sandbox.root / "test_rc_file"
+        rc_file.touch()
+        stub.run(
+            "set-tsock-section",
+            rc_file,
+            stdin=dedent("""\
+        foo
+        bar
+        """),
+        )
+
+        assert rc_file.read_text() == dedent("""\
+        ### TSOCK INSTALLATION BEGIN
+        foo
+        bar
+        ### TSOCK INSTALLATION END
+        """)
+
+    def test_set_section_empty_section(self, sandbox: Sandbox, stub: TsockStub):
+        rc_file = sandbox.root / "test_rc_file"
+        rc_file.write_text(
+            dedent("""\
+        ### TSOCK INSTALLATION BEGIN
+        ### TSOCK INSTALLATION END
+        """)
+        )
+        stub.run(
+            "set-tsock-section",
+            rc_file,
+            stdin=dedent("""\
+        foo
+        bar
+        """),
+        )
+
+        assert rc_file.read_text() == dedent("""\
+        ### TSOCK INSTALLATION BEGIN
+        foo
+        bar
+        ### TSOCK INSTALLATION END
+        """)
+
+    def test_set_section_not_preeixsting(self, sandbox: Sandbox, stub: TsockStub):
+        rc_file = sandbox.root / "test_rc_file"
+        rc_file.write_text(
+            dedent("""\
+            This is a test
+            The remainder of this file should be unmodified.
+            """)
+        )
+        stub.run(
+            "set-tsock-section",
+            rc_file,
+            stdin=dedent("""\
+            foo
+            bar
+            """),
+        )
+
+        assert rc_file.read_text() == dedent("""\
+            This is a test
+            The remainder of this file should be unmodified.
+
+            ### TSOCK INSTALLATION BEGIN
+            foo
+            bar
+            ### TSOCK INSTALLATION END
+            """)
+
+    def test_set_section_preserves_rest(self, sandbox: Sandbox, stub: TsockStub):
+        rc_file = sandbox.root / "test_rc_file"
+        rc_file.write_text(
+            dedent("""\
+            This is a test
+
+            ### TSOCK INSTALLATION BEGIN
+            ### TSOCK INSTALLATION END
+            The remainder of this file should be unmodified.
+            """)
+        )
+        stub.run(
+            "set-tsock-section",
+            rc_file,
+            stdin=dedent("""\
+            foo
+            bar
+            """),
+        )
+
+        assert rc_file.read_text() == dedent("""\
+            This is a test
+
+            ### TSOCK INSTALLATION BEGIN
+            foo
+            bar
+            ### TSOCK INSTALLATION END
+            The remainder of this file should be unmodified.
+            """)

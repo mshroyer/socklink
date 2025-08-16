@@ -168,12 +168,10 @@ class Terminal:
             subprocess.run(["sync"], check=True)
 
         if exit_code != 0:
-            with open(stderr_txt, "r") as f:
-                raise TerminalCommandError(exit_code, f.read().rstrip("\n"))
+            raise TerminalCommandError(exit_code, stderr_txt.read_text().rstrip("\n"))
 
         if stdout:
-            with open(stdout_txt, "r") as f:
-                return f.read().rstrip("\n")
+            return stdout_txt.read_text().rstrip("\n")
 
     def _drain_read_buffer(self):
         # Ensure we've drained the output buffer so that the next prompt we
@@ -257,7 +255,7 @@ class TsockStub:
         # Enable access to test-only functions
         monkeypatch.setenv("TSOCK_TEST", "1")
 
-    def run(self, *args: str | Path) -> str:
+    def run(self, *args: str | Path, stdin: Optional[str] = None) -> str:
         """Run a tsock.sh subcommand and return its stdout
 
         Runs the subcommand directly, without constructing a sandboxed
@@ -265,8 +263,34 @@ class TsockStub:
 
         """
 
+        in_bytes = stdin.encode("utf-8") if stdin is not None else None
         return (
-            subprocess.check_output([self.path] + list(map(str, args)))
+            subprocess.check_output([self.path] + list(map(str, args)), input=in_bytes)
             .decode("utf-8")
-            .rstrip("\r\n")
+            .rstrip()
         )
+
+
+def fail_with_subprocess_error(e: subprocess.CalledProcessError):
+    lines = [f"Command {e.cmd!r} exited with return code {e.returncode}"]
+
+    if getattr(e, "stdout", None):
+        out = (
+            e.stdout if isinstance(e.stdout, str) else e.stdout.decode(errors="ignore")
+        )
+        if out:
+            lines.append("=== STDOUT ===")
+            lines.append(out.rstrip())
+
+    if getattr(e, "stderr", None):
+        err = (
+            e.stderr if isinstance(e.stderr, str) else e.stderr.decode(errors="ignore")
+        )
+        if err:
+            lines.append("=== STDERR ===")
+            lines.append(err.rstrip())
+
+    msg = "\n".join(lines)
+
+    # Suppress the default Python stack trace output
+    pytest.fail(msg, pytrace=False)

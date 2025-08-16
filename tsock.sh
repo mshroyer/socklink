@@ -256,9 +256,55 @@ gc_server_links() {
 
 #### Installation ############################################################
 
-has_tsock_installation_section() {
-	grep -q '^### TSOCK INSTALLATION BEGIN$' "$1" \
-	     && grep -q '^### TSOCK INSTALLATION END$' "$1"
+TSOCK_SECTION_BEGIN='### TSOCK INSTALLATION BEGIN'
+TSOCK_SECTION_END='### TSOCK INSTALLATION END'
+
+has_tsock_section() {
+	grep -q "^${TSOCK_SECTION_BEGIN}\$" "$1" \
+	     && grep -q "^${TSOCK_SECTION_END}\$" "$1"
+}
+
+# Creates or replaces the tsock installation section in the file given in $1,
+# using the text piped into this function.
+set_tsock_section() {
+	rc_tempdir=$(mktemp -d "$TSOCK_TMPDIR/tsock-rc-XXXXXXXX")
+	rc_section=head
+	rc_existing_content=
+
+	if [ ! -e "$1" ]; then
+		touch "$1"
+	elif [ ! -f "$1" ]; then
+		log "Expected $1 to be a file" t
+		exit 1
+	fi
+	while IFS= read -r line; do
+		if [ "$line" = "$TSOCK_SECTION_BEGIN" ]; then
+			rc_section=installation
+		elif [ "$line" = "$TSOCK_SECTION_END" ]; then
+			rc_section=tail
+		elif [ $rc_section != installation ]; then
+			rc_existing_content=1
+			echo "$line" >>"$rc_tempdir/$rc_section"
+		fi
+	done < "$1"
+
+	touch "$rc_tempdir/installation"
+	if [ $rc_section = head ] && [ -n "$rc_existing_content" ]; then
+		printf '\n' >>"$rc_tempdir/installation"
+	fi
+	echo "$TSOCK_SECTION_BEGIN" >>"$rc_tempdir/installation"
+	while IFS= read line; do
+		echo "$line" >>"$rc_tempdir/installation"
+	done
+	echo "$TSOCK_SECTION_END" >>"$rc_tempdir/installation"
+
+	touch "$rc_tempdir/head"
+	touch "$rc_tempdir/tail"
+	cat "$rc_tempdir/head" >|"$1"
+	cat "$rc_tempdir/installation" >>"$1"
+	cat "$rc_tempdir/tail" >>"$1"
+
+	rm -rf "$rc_tempdir"
 }
 
 #### Main ####################################################################
@@ -285,8 +331,10 @@ elif [ -n "$TSOCK_TEST" ] && [ "$1" = "get-device-filename" ]; then
 	get_device_filename "$2"
 elif [ -n "$TSOCK_TEST" ] && [ "$1" = "get-filename-device" ]; then
 	get_filename_device "$2"
-elif [ -n "$TSOCK_TEST" ] && [ "$1" = "has-tsock-installation-section" ]; then
-	has_tsock_installation_section "$2"
+elif [ -n "$TSOCK_TEST" ] && [ "$1" = "has-tsock-section" ]; then
+	has_tsock_section "$2"
+elif [ -n "$TSOCK_TEST" ] && [ "$1" = "set-tsock-section" ]; then
+	set_tsock_section "$2"
 else
 	show_usage
 	exit 1
