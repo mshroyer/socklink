@@ -6,8 +6,7 @@ import re
 import subprocess
 import tempfile
 from threading import Thread
-from time import sleep
-from typing import BinaryIO, List, Optional, TextIO, Tuple
+from typing import List, Optional, TextIO
 
 import pexpect
 import pytest
@@ -36,10 +35,12 @@ class Sandbox:
 
     monkeypatch: pytest.MonkeyPatch
     root: Path
+    _tmux_sockets: List[Path]
 
     def __init__(self, root: Path, monkeypatch: pytest.MonkeyPatch):
         self.monkeypatch = monkeypatch
         self.root = root
+        self._tmux_sockets = []
 
         (root / "home").mkdir()
         (root / "tmp").mkdir()
@@ -68,6 +69,24 @@ class Sandbox:
         os.close(fd)
         return Path(filename)
 
+    def reserve_tmux_socket(self) -> Path:
+        path = self.make_unique_file("tmux-server-")
+        path.unlink()
+        self._tmux_sockets.append(path)
+        return path
+
+    def _shutdown_tmux_socket(self, socket: Path):
+        if socket.exists():
+            try:
+                subprocess.run(["tmux", "-S", str(socket), "kill-server"], check=True)
+            except subprocess.CalledProcessError:
+                pass
+
+    def shutdown_all_tmux_sockets(self):
+        for socket in self._tmux_sockets:
+            self._shutdown_tmux_socket(socket)
+        self._tmux_sockets = []
+
     def write_debug(self, msg):
         with open(self.root / "debug.txt", "a") as f:
             print(msg, file=f)
@@ -80,40 +99,11 @@ class Sandbox:
         with open(self.root / "home" / ".tmux.conf", "a") as f:
             print('set -g default-command "/bin/bash"', file=f)
 
-
-class SocketManager:
-    """A container for tmux sockets"""
-
-    sandbox: Sandbox
-    _sockets: List[Path]
-
-    def __init__(self, sandbox):
-        self.sandbox = sandbox
-        self._sockets = []
-
-    def reserve_unique(self) -> Path:
-        path = self.sandbox.make_unique_file("tmux-server-")
-        path.unlink()
-        self._sockets.append(path)
-        return path
-
-    def _shutdown(self, socket: Path):
-        if socket.exists():
-            try:
-                subprocess.run(["tmux", "-S", str(socket), "kill-server"], check=True)
-            except subprocess.CalledProcessError:
-                pass
-
-    def shutdown_all(self):
-        for socket in self._sockets:
-            self._shutdown(socket)
-        self._sockets = []
-
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        self.shutdown_all()
+        self.shutdown_all_tmux_sockets()
 
 
 class Terminal:
@@ -238,7 +228,12 @@ class TsockStub:
         self.path = path
 
     def run(self, *args: str) -> str:
-        """Run a tsock.sh subcommand and return its stdout"""
+        """Run a tsock.sh subcommand and return its stdout
+
+        Runs the subcommand directly, without constructing a sandboxed
+        environment.
+
+        """
 
         return (
             subprocess.check_output([self.path] + list(args))

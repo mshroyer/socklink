@@ -3,7 +3,7 @@ from typing import Generator
 
 import pytest
 
-from tests.testlib import Sandbox, SocketManager, Terminal, TsockStub, get_project_dir
+from tests.testlib import Sandbox, Terminal, TsockStub, get_project_dir
 
 
 @pytest.fixture(scope="session")
@@ -17,14 +17,11 @@ def stub(tsock) -> TsockStub:
 
 
 @pytest.fixture
-def sandbox(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Sandbox:
-    return Sandbox(tmp_path, monkeypatch)
-
-
-@pytest.fixture
-def socket_manager(sandbox) -> Generator[SocketManager, None, None]:
-    with SocketManager(sandbox) as m:
-        yield m
+def sandbox(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> Generator[Sandbox, None, None]:
+    with Sandbox(tmp_path, monkeypatch) as s:
+        yield s
 
 
 @pytest.fixture

@@ -1,12 +1,10 @@
 import os
 from pathlib import Path
-import subprocess
 
 import pytest
 
 from tests.testlib import (
     Sandbox,
-    SocketManager,
     Terminal,
     TerminalCommandError,
     TsockStub,
@@ -21,10 +19,10 @@ class TestLib:
 
 class TestFunctions:
     def test_get_device_filename(self, stub: TsockStub):
-        assert stub.run("get-device-filename", "/dev/tty/1") == "dev+tty+1"
+        assert stub.run("get-device-filename", "/dev/pts/12") == "dev+pts+12"
 
     def test_get_filename_device(self, stub: TsockStub):
-        assert stub.run("get-filename-device", "dev+tty+1") == "/dev/tty/1"
+        assert stub.run("get-filename-device", "dev+pts+12") == "/dev/pts/12"
 
 
 class TestSshAuthSock:
@@ -35,10 +33,8 @@ class TestSshAuthSock:
     def test_set(self, terminal: Terminal):
         assert terminal.get_ssh_auth_sock() is not None
 
-    def test_tmux_session(
-        self, terminal: Terminal, socket_manager: SocketManager, sandbox: Sandbox
-    ):
-        socket = socket_manager.reserve_unique()
+    def test_tmux_session(self, sandbox: Sandbox, terminal: Terminal):
+        socket = sandbox.reserve_tmux_socket()
         terminal.run(f"tmux -S {socket}")
         assert terminal.get_ssh_auth_sock() is not None
 
