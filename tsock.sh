@@ -170,16 +170,7 @@ set_tty_link() {
 }
 
 get_active_client_tty() {
-	tmux list-clients -F '#{client_activity} #{client_tty}' 2>>/dev/null \
-		| sort -r \
-		| awk 'NR==1 { print $2; }' \
-		|| return
-
-	# In theory `tmux run-shell` should tell us what we need, but on
-	# Raspbian it takes over the entire tmux session in view mode and I
-	# don't know why:
-
-	#tmux run-shell 'echo #{client_tty}'
+	tmux display-message -p '#{client_tty}'
 }
 
 get_server_pid() {
