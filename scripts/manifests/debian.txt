@@ -1,0 +1,11 @@
+image: debian/testing
+packages:
+  - python3
+  - python3-venv
+  - tmux
+sources:
+  - https://github.com/mshroyer/tsock
+tasks:
+  - test: |
+      cd tsock
+      ./scripts/test.sh

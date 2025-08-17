@@ -1,0 +1,9 @@
+image: openbsd/latest
+packages:
+  - python
+sources:
+  - https://github.com/mshroyer/tsock
+tasks:
+  - test: |
+      cd tsock
+      ./scripts/test.sh

@@ -1,0 +1,10 @@
+image: alpine/edge
+packages:
+  - python3
+  - tmux
+sources:
+  - https://github.com/mshroyer/tsock
+tasks:
+  - test: |
+      cd tsock
+      ./scripts/test.sh

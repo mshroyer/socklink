@@ -1,0 +1,10 @@
+image: netbsd/latest
+packages:
+  - python312
+  - tmux
+sources:
+  - https://github.com/mshroyer/tsock
+tasks:
+  - test: |
+      cd tsock
+      ./scripts/test.sh
