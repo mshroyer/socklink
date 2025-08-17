@@ -330,7 +330,7 @@ elif [ "$1" = "set-server-link" ]; then
 	fi
 elif [ "$1" = "show-server-link" ]; then
 	get_server_link_path
-elif [ -n "$TSOCK_TEST" ]; then
+elif [ -n "$TSOCK_TESTONLY_COMMANDS" ]; then
 	if [ "$1" = "get-device-filename" ]; then
 		get_device_filename "$2"
 	elif [ "$1" = "get-filename-device" ]; then

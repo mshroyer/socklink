@@ -253,7 +253,7 @@ class TsockStub:
         self.path = path
 
         # Enable access to test-only functions
-        sandbox.monkeypatch.setenv("TSOCK_TEST", "1")
+        sandbox.monkeypatch.setenv("TSOCK_TESTONLY_COMMANDS", "1")
 
     def run(self, *args: str | Path, stdin: Optional[str] = None) -> str:
         """Run a tsock.sh subcommand and return its stdout
@@ -275,9 +275,9 @@ class TsockStub:
 
         try:
             self.run(*args, stdin=stdin)
+            return True
         except subprocess.CalledProcessError:
             return False
-        return True
 
 
 def fail_with_subprocess_error(e: subprocess.CalledProcessError):
