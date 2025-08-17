@@ -91,6 +91,50 @@ class TestInstallation:
         ### TSOCK INSTALLATION END
         """)
 
+    def test_set_section_single_char_file(self, sandbox: Sandbox, stub: TsockStub):
+        rc_file = sandbox.root / "test_rc_file"
+        rc_file.write_text("a")
+        stub.run(
+            "set-tsock-section",
+            rc_file,
+            stdin=dedent("""\
+        foo
+        bar
+        """),
+        )
+
+        assert rc_file.read_text() == dedent("""\
+        a
+
+        ### TSOCK INSTALLATION BEGIN
+        foo
+        bar
+        ### TSOCK INSTALLATION END
+        """)
+
+    def test_set_section_single_char_file_with_lf(
+        self, sandbox: Sandbox, stub: TsockStub
+    ):
+        rc_file = sandbox.root / "test_rc_file"
+        rc_file.write_text("a\n")
+        stub.run(
+            "set-tsock-section",
+            rc_file,
+            stdin=dedent("""\
+        foo
+        bar
+        """),
+        )
+
+        assert rc_file.read_text() == dedent("""\
+        a
+
+        ### TSOCK INSTALLATION BEGIN
+        foo
+        bar
+        ### TSOCK INSTALLATION END
+        """)
+
     def test_set_section_empty_section(self, sandbox: Sandbox, stub: TsockStub):
         rc_file = sandbox.root / "test_rc_file"
         rc_file.write_text(
@@ -122,6 +166,32 @@ class TestInstallation:
             This is a test
             The remainder of this file should be unmodified.
             """)
+        )
+        stub.run(
+            "set-tsock-section",
+            rc_file,
+            stdin=dedent("""\
+            foo
+            bar
+            """),
+        )
+
+        assert rc_file.read_text() == dedent("""\
+            This is a test
+            The remainder of this file should be unmodified.
+
+            ### TSOCK INSTALLATION BEGIN
+            foo
+            bar
+            ### TSOCK INSTALLATION END
+            """)
+
+    def test_set_section_not_preeixsting_no_lf(self, sandbox: Sandbox, stub: TsockStub):
+        rc_file = sandbox.root / "test_rc_file"
+        rc_file.write_text(
+            dedent("""\
+            This is a test
+            The remainder of this file should be unmodified.""")
         )
         stub.run(
             "set-tsock-section",

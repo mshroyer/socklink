@@ -248,6 +248,19 @@ gc_server_links() {
 TSOCK_SECTION_BEGIN='### TSOCK INSTALLATION BEGIN'
 TSOCK_SECTION_END='### TSOCK INSTALLATION END'
 
+# Ensures non-empty files have a trailing newline, otherwise read -r will fail
+# to return the last line.
+ensure_trailing_newline() {
+	if [ ! -s "$1" ]; then
+		return
+	fi
+	code=$(tail -c 1 "$1" | od -An -t u1)
+	case "$code" in
+		*10*) : ;;
+		*) printf '\n' >> "$1" ;;
+	esac
+}
+
 # Checks whether the file given as an argument contains manual tsock
 # configuration--that is, outside of an explicitly marked configuration
 # section as created by this script.
@@ -279,7 +292,10 @@ set_tsock_section() {
 	elif [ ! -f "$1" ]; then
 		log "Expected $1 to be a file" t
 		exit 1
+	else
+		ensure_trailing_newline "$1"
 	fi
+
 	while IFS= read -r line; do
 		if [ "$line" = "$TSOCK_SECTION_BEGIN" ]; then
 			rc_section=installation
