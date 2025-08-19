@@ -12,6 +12,5 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "gql[aiohttp]>=4.0.0",
-    "requests>=2.32",
     "ruff>=0.12.9",
 ]
