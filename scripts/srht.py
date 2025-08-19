@@ -422,6 +422,9 @@ async def main():
     parser.add_argument(
         "--trigger", type=str, help="Optional trigger info for job note", default=None
     )
+    parser.add_argument(
+        "--max-concurrency", type=int, help="Max concurrency for API calls", default=1
+    )
     args = parser.parse_args()
 
     token = os.getenv("SOURCEHUT_ACCESS_TOKEN")
@@ -433,7 +436,9 @@ async def main():
     _check_commit_accessibility(repo, commit)
 
     client = SourceHutClient(repo, commit, token)
-    manager = JobManager(client, max_concurrency=1, trigger=args.trigger)
+    manager = JobManager(
+        client, max_concurrency=args.max_concurrency, trigger=args.trigger
+    )
 
     await manager.start_group_from_manifest_dir(args.manifest_dir)
 
