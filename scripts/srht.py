@@ -16,6 +16,8 @@ from enum import Enum
 from pathlib import Path
 from typing import List, TypeVar
 import os
+import sys
+import time
 
 from gql import Client, gql
 from gql.transport.aiohttp import AIOHTTPTransport
@@ -23,7 +25,7 @@ from gql.transport.aiohttp import AIOHTTPTransport
 
 ENDPOINT = "https://builds.sr.ht/query"
 
-POLL_INTERVAL = timedelta(seconds=30)
+POLL_INTERVAL = timedelta(seconds=10)
 
 
 class JobStatus(Enum):
@@ -70,12 +72,13 @@ class Job:
     """A build job"""
 
     job_id: int
+    nickname: str
     canonical_name: str
     status: JobStatus
 
     def url(self) -> str:
         """Returns the URL of the build's status page"""
-        return f"https://builds.sr.ht/{self.canonical_name}/jobs/{self.job_id}"
+        return f"https://builds.sr.ht/{self.canonical_name}/job/{self.job_id}"
 
 
 @dataclass
@@ -108,7 +111,7 @@ class SourceHutClient:
 
     async def submit_job(
         self,
-        manifest: str,
+        manifest_file: Path,
         note: str = "",
         tags: List[str] = list(),
         visibility: Visibility = Visibility.UNLISTED,
@@ -134,7 +137,7 @@ class SourceHutClient:
         """)
 
         query.variable_values = {
-            "manifest": manifest,
+            "manifest": manifest_file.read_text(),
             "note": note,
             "secrets": True,
             "tags": tags,
@@ -147,6 +150,7 @@ class SourceHutClient:
 
         return Job(
             job_id=result["submit"]["id"],
+            nickname=manifest_file.with_suffix("").name,
             canonical_name=result["submit"]["owner"]["canonicalName"],
             status=JobStatus.UNKNOWN,
         )
@@ -204,12 +208,14 @@ class SourceHutClient:
 class JobManager:
     _client: SourceHutClient
     _max_concurrency: int
+    _jobs: List[Job]
+    _start_time: float
 
     def __init__(self, client: SourceHutClient, max_concurrency: int = 3):
         self._client = client
         self._max_concurrency = max_concurrency
 
-    async def start_group_from_manifest_dir(self, manifest_dir: Path | str) -> JobGroup:
+    async def start_group_from_manifest_dir(self, manifest_dir: Path | str):
         """Starts a job group from YAML manifest files in a directory
 
         Returns the ID of the running group.
@@ -219,31 +225,73 @@ class JobManager:
         manifest_dir = Path(os.fspath(manifest_dir))
         manifests = list(manifest_dir.glob("*.yml"))
 
-        jobs = await _run_with_bounded_concurrency(
+        self._jobs = await _run_with_bounded_concurrency(
             self._max_concurrency,
             self._start_manifest,
             manifests,
         )
-        return await self._client.create_group(jobs, note="")
+        await self._client.create_group(self._jobs, note="")
+        self._start_time = time.time()
+
+    def print_job_links(self, include_statuses: bool):
+        def get_status(job: Job):
+            if include_statuses:
+                return f"{str(job.status)}  "
+            else:
+                return ""
+
+        for job in self._jobs:
+            print(f"{job.nickname:<12} {get_status(job)}{job.url()}")
+
+    def print_status_header(self):
+        self._print_status_line_fn(lambda j: j.nickname)(self._jobs)
+        self._print_status_line_fn(lambda j: "-" * (self._job_column_width(j)))(
+            self._jobs
+        )
+
+    def print_status_line(self):
+        self._print_status_line_fn(lambda j: str(j.status))(self._jobs)
+
+    def _print_status_line_fn(
+        self, fn: Callable[[Job], str]
+    ) -> Callable[[List[Job]], None]:
+        def result(jobs: List[Job]):
+            print(f"| {int(time.time() - self._start_time):>3}s | ", end="")
+            for job in jobs:
+                print(f"{fn(job):<{self._job_column_width(job)}}", end="")
+                print(" |", end="")
+            print("")
+
+        return result
+
+    @staticmethod
+    def _job_column_width(job: Job) -> int:
+        return max(len(job.nickname), 9)
+
+    def are_jobs_terminated(self) -> bool:
+        return all(map(lambda j: j.status.is_terminal(), self._jobs))
+
+    def are_jobs_successful(self) -> bool:
+        return all(map(lambda j: j.status == JobStatus.SUCCESS, self._jobs))
 
     async def _start_manifest(self, manifest_file: Path) -> Job:
         name = manifest_file.with_suffix("").name
         return await self._client.submit_job(
-            manifest_file.read_text(),
+            manifest_file,
             note=f"tsock.sh tests for {name}",
             tags=["tsock", name],
             execute=False,
         )
 
-    async def update_job_statuses(self, jobs: List[Job]) -> List[Job]:
+    async def refresh_job_statuses(self):
         """Get a list of jobs with updated statuses
 
         Returns a new list of Jobs with updated status fields.
 
         """
 
-        return await _run_with_bounded_concurrency(
-            self._max_concurrency, self._get_updated_job, jobs
+        self._jobs = await _run_with_bounded_concurrency(
+            self._max_concurrency, self._get_updated_job, self._jobs
         )
 
     async def _get_updated_job(self, job: Job) -> Job:
@@ -251,7 +299,7 @@ class JobManager:
             return job
 
         new_status = await self._client.get_job_status(job.job_id)
-        return Job(job.job_id, job.canonical_name, new_status)
+        return Job(job.job_id, job.nickname, job.canonical_name, new_status)
 
 
 T = TypeVar("T")
@@ -286,40 +334,27 @@ async def main():
     client = SourceHutClient("https://github.com/mshroyer/tsock", token)
     manager = JobManager(client)
 
-    # build_id = await client.submit_build(
-    #     dedent("""\
-    #     image: archlinux
-    #     packages:
-    #       - python
-    #       - tmux
-    #     sources:
-    #       - https://github.com/mshroyer/tsock
-    #     tasks:
-    #       - test: |
-    #           cd tsock
-    #           ./scripts/test.sh
-    #     """)
-    # )
-    # print(f"build_id = {build_id}")
-
-    # status = await client.get_job_status(1552562)
-    # print(f"status = {status}")
-
-    group = await manager.start_group_from_manifest_dir(
+    await manager.start_group_from_manifest_dir(
         "/home/mshroyer/code/tsock/scripts/srht_manifests"
     )
-    jobs = group.jobs
-    print(f"group: {group}")
-    while True:
-        print("")
-        for job in jobs:
-            print(f"job: {job}")
 
-        if all(map(lambda j: j.status.is_terminal(), jobs)):
+    print("Started jobs:\n")
+    manager.print_job_links(False)
+    print("\nCurrent statuses:\n")
+    manager.print_status_header()
+    while True:
+        manager.print_status_line()
+        if manager.are_jobs_terminated():
             break
 
         await asyncio.sleep(POLL_INTERVAL.seconds)
-        jobs = await manager.update_job_statuses(jobs)
+        await manager.refresh_job_statuses()
+
+    print("")
+    manager.print_job_links(True)
+
+    if not manager.are_jobs_successful():
+        sys.exit(1)
 
 
 if __name__ == "__main__":
