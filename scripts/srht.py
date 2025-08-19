@@ -20,6 +20,7 @@ from typing import List, TypeVar
 import os
 import subprocess
 import sys
+import tempfile
 import time
 
 from gql import Client, gql
@@ -362,6 +363,42 @@ def _get_default_commit() -> str:
     return commit
 
 
+def _check_commit_accessibility(repo: str, commit: str):
+    """Checks the remote accessibility of the commit at the repo
+
+    Raises a RuntimeError if the commit isn't present at the remote repo.
+    This way we can avoid starting a bunch of SourceHut builds that can't
+    actually accesss the commit that we want to test, for example if we run
+    this script manually before remembering to push to main.
+
+    """
+
+    with tempfile.TemporaryDirectory() as temp:
+        subprocess.check_output(["git", "-C", str(temp), "init", "--bare", "-q"])
+
+        # Do a minimal, filtered checkout of the commit to verify it exists on
+        # the remote
+        try:
+            subprocess.check_output(
+                [
+                    "git",
+                    "-C",
+                    str(temp),
+                    "-c",
+                    "protocol.version=2",
+                    "fetch",
+                    "-q",
+                    "--no-tags",
+                    "--depth=1",
+                    "--filter=blob:none",
+                    repo,
+                    commit,
+                ]
+            )
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"Could not retrieve commit {commit} from {repo}") from e
+
+
 async def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -379,9 +416,11 @@ async def main():
     if token is None:
         raise ValueError("SOURCEHUT_ACCESS_TOKEN not set")
 
-    client = SourceHutClient(
-        args.repo or _get_default_repo(), args.commit or _get_default_commit(), token
-    )
+    repo = args.repo or _get_default_repo()
+    commit = args.commit or _get_default_commit()
+    _check_commit_accessibility(repo, commit)
+
+    client = SourceHutClient(repo, commit, token)
     manager = JobManager(client, max_concurrency=1)
 
     await manager.start_group_from_manifest_dir(args.manifest_dir)
