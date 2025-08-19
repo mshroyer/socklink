@@ -13,9 +13,8 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
-import pdb
 from pathlib import Path
-from typing import Any, Dict, List, Optional, TypeVar
+from typing import List, TypeVar
 import os
 
 from gql import Client, gql
@@ -218,16 +217,23 @@ class JobManager:
         """
 
         manifest_dir = Path(os.fspath(manifest_dir))
-        manifests = []
-        for manifest_file in manifest_dir.glob("*.yml"):
-            manifests.append(manifest_file.read_text())
+        manifests = list(manifest_dir.glob("*.yml"))
 
         jobs = await _run_with_bounded_concurrency(
             self._max_concurrency,
-            lambda m: self._client.submit_job(m, execute=False),
+            self._start_manifest,
             manifests,
         )
         return await self._client.create_group(jobs, note="")
+
+    async def _start_manifest(self, manifest_file: Path) -> Job:
+        name = manifest_file.with_suffix("").name
+        return await self._client.submit_job(
+            manifest_file.read_text(),
+            note=f"tsock.sh tests for {name}",
+            tags=["tsock", name],
+            execute=False,
+        )
 
     async def update_job_statuses(self, jobs: List[Job]) -> List[Job]:
         """Get a list of jobs with updated statuses
