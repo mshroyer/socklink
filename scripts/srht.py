@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
 from pathlib import Path
-from typing import List, TypeVar
+from typing import List, Optional, TypeVar
 import os
 import subprocess
 import sys
@@ -221,12 +221,19 @@ class SourceHutClient:
 class JobManager:
     _client: SourceHutClient
     _max_concurrency: int
+    _trigger: str
     _jobs: List[Job]
     _start_time: float
 
-    def __init__(self, client: SourceHutClient, max_concurrency: int = 3):
+    def __init__(
+        self,
+        client: SourceHutClient,
+        max_concurrency: int = 3,
+        trigger: Optional[str] = None,
+    ):
         self._client = client
         self._max_concurrency = max_concurrency
+        self._trigger = "" if trigger is None else f" - {trigger}"
 
     async def start_group_from_manifest_dir(self, manifest_dir: Path | str):
         """Starts a job group from YAML manifest files in a directory
@@ -243,6 +250,8 @@ class JobManager:
             self._start_manifest,
             manifests,
         )
+        self._jobs.sort(key=lambda j: j.nickname)
+
         await self._client.create_group(self._jobs, note="")
         self._start_time = time.time()
 
@@ -293,7 +302,7 @@ class JobManager:
         name = manifest_file.with_suffix("").name
         return await self._client.submit_job(
             manifest_file,
-            note=f"tsock.sh tests for {name}",
+            note=f"tsock.sh tests for {name}{self._trigger}",
             tags=["tsock", name],
             execute=False,
         )
@@ -410,6 +419,9 @@ async def main():
         "--repo", type=str, help="URL of git repo containing the commit to test"
     )
     parser.add_argument("--commit", type=str, help="Commit ID to test")
+    parser.add_argument(
+        "--trigger", type=str, help="Optional trigger info for job note", default=None
+    )
     args = parser.parse_args()
 
     token = os.getenv("SOURCEHUT_ACCESS_TOKEN")
@@ -421,7 +433,7 @@ async def main():
     _check_commit_accessibility(repo, commit)
 
     client = SourceHutClient(repo, commit, token)
-    manager = JobManager(client, max_concurrency=1)
+    manager = JobManager(client, max_concurrency=1, trigger=args.trigger)
 
     await manager.start_group_from_manifest_dir(args.manifest_dir)
 
