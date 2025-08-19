@@ -244,24 +244,27 @@ class JobManager:
             print(f"{job.nickname:<12} {get_status(job)}{job.url()}")
 
     def print_status_header(self):
-        self._print_status_line_fn(lambda j: j.nickname)(self._jobs)
-        self._print_status_line_fn(lambda j: "-" * (self._job_column_width(j)))(
+        self._print_status_line_fn("time", lambda j: j.nickname)(self._jobs)
+        self._print_status_line_fn("----", lambda j: "-" * (self._job_column_width(j)))(
             self._jobs
         )
 
     def print_status_line(self):
-        self._print_status_line_fn(lambda j: str(j.status))(self._jobs)
+        self._print_status_line_fn(
+            f"{int(time.time() - self._start_time):>3}", lambda j: str(j.status)
+        )(self._jobs)
 
+    @classmethod
     def _print_status_line_fn(
-        self, fn: Callable[[Job], str]
+        cls, timestamp: str, fn: Callable[[Job], str]
     ) -> Callable[[List[Job]], None]:
         def result(jobs: List[Job]):
-            print(f"| {int(time.time() - self._start_time):>3}s |", end="")
+            print(f"| {timestamp} |", end="")
             for i, job in enumerate(jobs):
                 if i == 0:
                     print(" ", end="")
 
-                print(f"{fn(job):<{self._job_column_width(job)}}", end="")
+                print(f"{fn(job):<{cls._job_column_width(job)}}", end="")
                 print(" |", end="")
             print("")
 
