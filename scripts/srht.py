@@ -236,7 +236,7 @@ class JobManager:
     def print_job_links(self, include_statuses: bool):
         def get_status(job: Job):
             if include_statuses:
-                return f"{str(job.status)}  "
+                return f"{str(job.status):<11}"
             else:
                 return ""
 
@@ -256,8 +256,11 @@ class JobManager:
         self, fn: Callable[[Job], str]
     ) -> Callable[[List[Job]], None]:
         def result(jobs: List[Job]):
-            print(f"| {int(time.time() - self._start_time):>3}s | ", end="")
-            for job in jobs:
+            print(f"| {int(time.time() - self._start_time):>3}s |", end="")
+            for i, job in enumerate(jobs):
+                if i == 0:
+                    print(" ", end="")
+
                 print(f"{fn(job):<{self._job_column_width(job)}}", end="")
                 print(" |", end="")
             print("")
@@ -332,7 +335,7 @@ async def main():
         raise ValueError("SOURCEHUT_ACCESS_TOKEN not set")
 
     client = SourceHutClient("https://github.com/mshroyer/tsock", token)
-    manager = JobManager(client)
+    manager = JobManager(client, max_concurrency=1)
 
     await manager.start_group_from_manifest_dir(
         "/home/mshroyer/code/tsock/scripts/srht_manifests"
