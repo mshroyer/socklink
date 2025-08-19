@@ -3,7 +3,7 @@ packages:
   - python
   - tmux
 sources:
-  - https://github.com/mshroyer/tsock
+  - {{ repo }}#{{ commit }}
 tasks:
   - test: |
       cd tsock

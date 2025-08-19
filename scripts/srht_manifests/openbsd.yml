@@ -2,7 +2,7 @@ image: openbsd/latest
 packages:
   - python
 sources:
-  - https://github.com/mshroyer/tsock
+  - {{ repo }}#{{ commit }}
 tasks:
   - test: |
       cd tsock

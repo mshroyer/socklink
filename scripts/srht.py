@@ -2,12 +2,14 @@
 
 """Runs the SourceHut builds
 
-Submits the builds under the manifests/ directory to SourceHut, then waits for
-them to all complete.  If any builds fail, cancels any still running and then
-exits with a nonzero status.
+Submits the builds under the manifests/ directory to SourceHut, then prints
+periodic updates while waiting for them all to complete.
+
+Returns a nonzero exit code if any jobs fail.
 
 """
 
+import argparse
 import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -16,15 +18,19 @@ from enum import Enum
 from pathlib import Path
 from typing import List, TypeVar
 import os
+import subprocess
 import sys
 import time
 
 from gql import Client, gql
 from gql.transport.aiohttp import AIOHTTPTransport
+import jinja2
 
 
+# GraphQL endpoint.
 ENDPOINT = "https://builds.sr.ht/query"
 
+# Interval for polling for job status updates.
 POLL_INTERVAL = timedelta(seconds=10)
 
 
@@ -91,12 +97,14 @@ class JobGroup:
 class SourceHutClient:
     """An authenticated SourceHut client"""
 
-    repo_url: str
+    repo: str
+    commit: str
     _token: str
     _client: Client
 
-    def __init__(self, repo_url: str, token: str):
-        self.repo_url = repo_url
+    def __init__(self, repo: str, commit: str, token: str):
+        self.repo = repo
+        self.commit = commit
         self._token = token
         self._client = self._make_client()
 
@@ -136,8 +144,12 @@ class SourceHutClient:
           }
         """)
 
+        environment = jinja2.Environment()
+        template = environment.from_string(manifest_file.read_text())
+        manifest = template.render(repo=self.repo, commit=self.commit)
+
         query.variable_values = {
-            "manifest": manifest_file.read_text(),
+            "manifest": manifest,
             "note": note,
             "secrets": True,
             "tags": tags,
@@ -328,17 +340,51 @@ async def _run_with_bounded_concurrency(
     return await asyncio.gather(*(runner(arg) for arg in args))
 
 
+def _get_default_repo() -> str:
+    repo_dir = Path(__file__).parent
+    repo = (
+        subprocess.check_output(
+            ["git", "-C", str(repo_dir), "remote", "get-url", "origin"]
+        )
+        .decode("utf-8")
+        .rstrip()
+    )
+    return repo
+
+
+def _get_default_commit() -> str:
+    repo_dir = Path(__file__).parent
+    commit = (
+        subprocess.check_output(["git", "-C", str(repo_dir), "rev-parse", "HEAD"])
+        .decode("utf-8")
+        .rstrip()
+    )
+    return commit
+
+
 async def main():
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "manifest_dir", type=Path, help="A directory containing job manifest templates"
+    )
+    parser.add_argument(
+        "--repo", type=str, help="URL of git repo containing the commit to test"
+    )
+    parser.add_argument("--commit", type=str, help="Commit ID to test")
+    args = parser.parse_args()
+
     token = os.getenv("SOURCEHUT_ACCESS_TOKEN")
     if token is None:
         raise ValueError("SOURCEHUT_ACCESS_TOKEN not set")
 
-    client = SourceHutClient("https://github.com/mshroyer/tsock", token)
+    client = SourceHutClient(
+        args.repo or _get_default_repo(), args.commit or _get_default_commit(), token
+    )
     manager = JobManager(client, max_concurrency=1)
 
-    await manager.start_group_from_manifest_dir(
-        "/home/mshroyer/code/tsock/scripts/srht_manifests"
-    )
+    await manager.start_group_from_manifest_dir(args.manifest_dir)
 
     print("### Started jobs ###\n")
     manager.print_job_links(False)
