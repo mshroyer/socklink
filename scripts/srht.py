@@ -251,7 +251,7 @@ class JobManager:
 
     def print_status_line(self):
         self._print_status_line_fn(
-            f"{int(time.time() - self._start_time):>3}", lambda j: str(j.status)
+            f"{int(time.time() - self._start_time):>3}s", lambda j: str(j.status)
         )(self._jobs)
 
     @classmethod
@@ -260,12 +260,8 @@ class JobManager:
     ) -> Callable[[List[Job]], None]:
         def result(jobs: List[Job]):
             print(f"| {timestamp} |", end="")
-            for i, job in enumerate(jobs):
-                if i == 0:
-                    print(" ", end="")
-
-                print(f"{fn(job):<{cls._job_column_width(job)}}", end="")
-                print(" |", end="")
+            for job in jobs:
+                print(f" {fn(job):<{cls._job_column_width(job)}} |", end="")
             print("")
 
         return result
@@ -344,9 +340,9 @@ async def main():
         "/home/mshroyer/code/tsock/scripts/srht_manifests"
     )
 
-    print("Started jobs:\n")
+    print("### Started jobs ###\n")
     manager.print_job_links(False)
-    print("\nCurrent statuses:\n")
+    print("\n### Current job statuses ###\n")
     manager.print_status_header()
     while True:
         manager.print_status_line()
@@ -356,7 +352,7 @@ async def main():
         await asyncio.sleep(POLL_INTERVAL.seconds)
         await manager.refresh_job_statuses()
 
-    print("")
+    print("\n### Final job statuses ###\n")
     manager.print_job_links(True)
 
     if not manager.are_jobs_successful():
