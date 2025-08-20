@@ -1,0 +1,24 @@
+name: SourceHut
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  sourcehut:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Run tests on SourceHut Builds
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install -r dev-requirements.txt
+          python scripts/srht.py scripts/srht_manifests \
+              --repo https://github.com/${{ github.repository }} --commit ${{ github.sha }}
+        shell: bash
