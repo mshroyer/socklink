@@ -288,6 +288,7 @@ class JobManager:
             for job in jobs:
                 print(f" {fn(job):<{cls._job_column_width(job)}} |", end="")
             print("")
+            sys.stdout.flush()
 
         return result
 
