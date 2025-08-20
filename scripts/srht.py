@@ -24,6 +24,7 @@ import tempfile
 import time
 
 from gql import Client, gql
+from gql.client import AsyncClientSession
 from gql.transport.aiohttp import AIOHTTPTransport
 import jinja2
 
@@ -102,6 +103,7 @@ class SourceHutClient:
     commit: str
     _token: str
     _client: Client
+    _session: AsyncClientSession
 
     def __init__(self, repo: str, commit: str, token: str):
         self.repo = repo
@@ -158,9 +160,7 @@ class SourceHutClient:
             "visibility": str(visibility),
         }
 
-        async with self._client as session:
-            result = await session.execute(query)
-
+        result = await self._session.execute(query)
         return Job(
             job_id=result["submit"]["id"],
             nickname=manifest_file.with_suffix("").name,
@@ -186,9 +186,7 @@ class SourceHutClient:
             "execute": execute,
         }
 
-        async with self._client as session:
-            result = await session.execute(query)
-
+        result = await self._session.execute(query)
         return JobGroup(
             group_id=result["createGroup"]["id"],
             jobs=jobs,
@@ -212,10 +210,15 @@ class SourceHutClient:
             "id": job_id,
         }
 
-        async with self._client as session:
-            result = await session.execute(query)
-
+        result = await self._session.execute(query)
         return JobStatus.from_str(result["job"]["status"])
+
+    async def __aenter__(self):
+        self._session = await self._client.connect_async()
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        await self._client.close_async()
 
 
 class JobManager:
@@ -423,7 +426,7 @@ async def main():
         "--trigger", type=str, help="Optional trigger info for job note", default=None
     )
     parser.add_argument(
-        "--max-concurrency", type=int, help="Max concurrency for API calls", default=1
+        "--max-concurrency", type=int, help="Max concurrency for API calls", default=4
     )
     args = parser.parse_args()
 
@@ -435,30 +438,30 @@ async def main():
     commit = args.commit or _get_default_commit()
     _check_commit_accessibility(repo, commit)
 
-    client = SourceHutClient(repo, commit, token)
-    manager = JobManager(
-        client, max_concurrency=args.max_concurrency, trigger=args.trigger
-    )
+    async with SourceHutClient(repo, commit, token) as client:
+        manager = JobManager(
+            client, max_concurrency=args.max_concurrency, trigger=args.trigger
+        )
 
-    await manager.start_group_from_manifest_dir(args.manifest_dir)
+        await manager.start_group_from_manifest_dir(args.manifest_dir)
 
-    print("### Started jobs ###\n")
-    manager.print_job_links(False)
-    print("\n### Current job statuses ###\n")
-    manager.print_status_header()
-    while True:
-        manager.print_status_line()
-        if manager.are_jobs_terminated():
-            break
+        print("### Started jobs ###\n")
+        manager.print_job_links(False)
+        print("\n### Current job statuses ###\n")
+        manager.print_status_header()
+        while True:
+            manager.print_status_line()
+            if manager.are_jobs_terminated():
+                break
 
-        await asyncio.sleep(POLL_INTERVAL.seconds)
-        await manager.refresh_job_statuses()
+            await asyncio.sleep(POLL_INTERVAL.seconds)
+            await manager.refresh_job_statuses()
 
-    print("\n### Final job statuses ###\n")
-    manager.print_job_links(True)
+        print("\n### Final job statuses ###\n")
+        manager.print_job_links(True)
 
-    if not manager.are_jobs_successful():
-        sys.exit(1)
+        if not manager.are_jobs_successful():
+            sys.exit(1)
 
 
 if __name__ == "__main__":
