@@ -2,10 +2,13 @@
 
 # Run tsock.sh's Python-based test suite
 #
-# Finds an appropriate version of Python, sets up a virtualenv in .venv,
-# installs dependencies, and runs the tests.
+# Finds an appropriate version of Python, sets up a virtual environment in
+# .venv, installs test dependencies, and runs the tests.
 
 set -e
+
+PYTHON_MIN=3.11
+PYTHON_BINS="python3.13 python3.12 python3.11 python3 python"
 
 PROJECT=$(cd "$(dirname "$0")/.." && pwd)
 
@@ -19,11 +22,9 @@ python_version_at_least() {
 # Searches Python binary candidate names for the first one matching our
 # minimum version requirement.
 get_python_bin() {
-	python_min=3.11
-	python_bins="python3.13 python3.12 python3.11 python3 python"
-	for bin in $python_bins; do
+	for bin in $PYTHON_BINS; do
 		if which $bin >/dev/null 2>&1 \
-				&& python_version_at_least $bin $python_min; then
+				&& python_version_at_least $bin $PYTHON_MIN; then
 			echo $bin
 			return
 		fi
@@ -39,8 +40,8 @@ setup_venv() {
 		"$py" -m venv "${PROJECT}/.venv"
 	fi
 	. "${PROJECT}/.venv/bin/activate"
+	pip install -r requirements.txt
 }
 
 setup_venv
-pip install -r requirements.txt
 pytest -v $@
