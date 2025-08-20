@@ -154,7 +154,7 @@ class SourceHutClient:
         query.variable_values = {
             "manifest": manifest,
             "note": note,
-            "secrets": True,
+            "secrets": False,
             "tags": tags,
             "execute": execute,
             "visibility": str(visibility),
