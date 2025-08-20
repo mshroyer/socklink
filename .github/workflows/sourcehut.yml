@@ -14,13 +14,19 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Run tests on SourceHut Builds
-        env:
-          SOURCEHUT_ACCESS_TOKEN: ${{ secrets.SOURCEHUT_ACCESS_TOKEN }}
+      - name: Setup venv
         run: |
           python -m venv .venv
           . .venv/bin/activate
           pip install -r dev-requirements.txt
+
+      - name: Run tests on SourceHut Builds
+        env:
+          SOURCEHUT_ACCESS_TOKEN: ${{ secrets.SOURCEHUT_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run_url=$(gh run --repo ${{ github.repository }} view ${{ github.run_id }} --json jobs --jq '.jobs[] | select(.name == "${{ github.job }}") | .url')
+          . .venv/bin/activate
           python scripts/srht.py scripts/srht_manifests \
-              --repo https://github.com/${{ github.repository }} --commit ${{ github.sha }}
-        shell: bash
+              --repo https://github.com/${{ github.repository }} --commit ${{ github.sha }} \
+              --trigger "$run_url"
