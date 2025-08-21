@@ -1,4 +1,4 @@
-name: Test Ubuntu
+name: Test macOS
 on:
   workflow_call:
   push:
@@ -12,4 +12,4 @@ jobs:
   test:
     uses: ./.github/workflows/test.yml
     with:
-      os: ubuntu-latest
+      os: macos-latest
