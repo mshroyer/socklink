@@ -7,7 +7,7 @@ on:
         type: string
 
 jobs:
-  lint_test:
+  test:
     runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v4
