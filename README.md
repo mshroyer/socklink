@@ -1,13 +1,13 @@
 # tsock.sh
 
-A zero-dependency, cross-platform `SSH_AUTH_SOCK` wrangler for tmux.
+A zero-dependency, cross-platform `SSH_AUTH_SOCK` manager for tmux.
 
-(It's just a shell script, the Python is all tests.)
+It's just a shell script!  The Python is all test automation.
 
 ## Tests
 
 | OS                                                                                | Status                                                                                                                                                                 | Runs on        |
-|-----------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------:|----------------|
+|-----------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------:|
 | [Alpine Linux Edge](https://man.sr.ht/builds.sr.ht/compatibility.md#alpine-linux) | [![Alpine Linux status](https://builds.sr.ht/~mshroyer/tsock/alpine.svg)](https://builds.sr.ht/~mshroyer/tsock/alpine)                                                 | schedule       |
 | [Arch Linux](https://man.sr.ht/builds.sr.ht/compatibility.md#arch-linux)          | [![Arch Linux status](https://builds.sr.ht/~mshroyer/tsock/archlinux.svg)](https://builds.sr.ht/~mshroyer/tsock/archlinux)                                             | schedule       |
 | [Debian Testing](https://man.sr.ht/builds.sr.ht/compatibility.md#debian)          | [![Debian status](https://builds.sr.ht/~mshroyer/tsock/debian.svg)](https://builds.sr.ht/~mshroyer/tsock/debian)                                                       | schedule       |
