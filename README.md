@@ -6,6 +6,11 @@ It's just a shell script!  The Python is all test automation.
 
 ## Tests
 
+Different Linux and BSD distributions can use different versions of `/bin/sh`
+and associated POSIX commands--Alpine Linux's `sh` is `ash`, Debian's is
+`dash`, Fedora's is `bash`, and so on.  Automating cross-platform testing has
+caught bugs that would have otherwise shipped with this script.
+
 | OS                                                                                | Status                                                                                                                                                                 | Runs on        |
 |-----------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------:|
 | [Alpine Linux Edge](https://man.sr.ht/builds.sr.ht/compatibility.md#alpine-linux) | [![Alpine Linux status](https://builds.sr.ht/~mshroyer/tsock/alpine.svg)](https://builds.sr.ht/~mshroyer/tsock/alpine)                                                 | schedule       |
