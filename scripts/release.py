@@ -194,14 +194,10 @@ def wait_ci(args: argparse.Namespace):
             sys.exit(1)
 
         if max_repeat == 0:
-            print(
-                f"Timed out waiting for CI run https://github.com/mshroyer/coursepointer/actions/runs/{pending_id} for commit {args.hash}"
-            )
+            print(f"Timed out waiting for CI runs for commit {args.hash}")
             sys.exit(1)
 
-        print(
-            f"Waiting on CI run https://github.com/mshroyer/coursepointer/actions/runs/{pending_id} for commit {args.hash}"
-        )
+        print(f"Waiting on CI runs for commit {args.hash}")
         max_repeat -= 1
 
 
