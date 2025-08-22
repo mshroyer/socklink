@@ -1,0 +1,71 @@
+name: Release
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*.*.*"
+    branches-ignore:
+      - "**"
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  lint_release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Lint release
+        run: python3 scripts/release.py lint
+
+  await_ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Wait for successful CI run
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/release.py wait-ci ${{ github.sha }}
+
+  sourcehut:
+    needs:
+      - lint_release
+      - await_ci
+    uses: ./.github/workflows/sourcehut.yml
+
+  create_release:
+    needs: sourcehut
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Create draft release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/release.py create
+
+  upload_script:
+    runs-on: ubuntu-latest
+    needs: create_release
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Upload artifacts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/release.py upload tsock.sh

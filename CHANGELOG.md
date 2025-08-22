@@ -1,6 +1,6 @@
 # tsock.sh Changelog
 
-## v0.1.0-dev
+## v0.1.0
 
 - Some improvements over the original version from my "config" repo to
   simplify querying the active client TTY and ensure non-default socket paths
