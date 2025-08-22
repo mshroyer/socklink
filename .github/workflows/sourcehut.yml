@@ -7,7 +7,6 @@ on:
 
 jobs:
   sourcehut:
-    if: secrets.SOURCEHUT_ACCESS_TOKEN != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,6 +26,7 @@ jobs:
         env:
           SOURCEHUT_ACCESS_TOKEN: ${{ secrets.SOURCEHUT_ACCESS_TOKEN }}
           GH_TOKEN: ${{ github.token }}
+        if: ${{ env.SOURCEHUT_ACCESS_TOKEN != '' }}
         run: |
           run_url=$(gh run --repo ${{ github.repository }} view ${{ github.run_id }} --json jobs --jq '.jobs[] | select(.name == "${{ github.job }}") | .url')
           . .venv/bin/activate
