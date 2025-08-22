@@ -25,7 +25,7 @@ CI_WORKFLOWS = ["lint", "test-macos", "test-ubuntu"]
 
 
 def last_changelog_version() -> Optional[str]:
-    pattern = re.compile(r"^## v(\d+\.\d+\.\d+)")
+    pattern = re.compile(r"^## v(\d+\.\d+\.\d+)$")
     with open("CHANGELOG.md") as f:
         for line in f:
             m = pattern.match(line)
@@ -175,11 +175,11 @@ def lint(args: argparse.Namespace):
 
 
 def wait_ci(args: argparse.Namespace):
-    max_repeat = 90
+    max_repeat = 180
     while True:
         # Sleep first to try to prevent racing against the CI workflow being
         # queued.
-        time.sleep(10)
+        time.sleep(5)
 
         status = get_combined_ci_status(args.hash)
         if status == CiStatus.SUCCESS:

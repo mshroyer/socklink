@@ -38,6 +38,8 @@
 # https://github.com/mshroyer/config/blob/master/cfg.bin/tsock.sh
 # or ~mshroyer/cfg.bin/tsock.sh on the sdf.org cluster or MetaArray
 
+VERSION=0.1.0
+
 set -e
 set -C  # noclobber for lock file
 
@@ -65,6 +67,7 @@ Usage:
     tsock.sh set-tty-link
     tsock.sh set-server-link [client_tty]
     tsock.sh show-server-link
+    tsock.sh version
     tsock.sh help
 EOF
 }
@@ -330,6 +333,8 @@ set_tsock_section() {
 
 if [ "$1" = "-h" ] || [ "$1" = "help" ]; then
 	show_usage
+elif [ "$1" = "version" ]; then
+	echo "$VERSION"
 elif [ "$1" = "set-tty-link" ]; then
 	log "$1 $2"
 	set_tty_link
