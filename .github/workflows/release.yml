@@ -41,6 +41,7 @@ jobs:
       - lint_release
       - await_ci
     uses: ./.github/workflows/sourcehut.yml
+    secrets: inherit
 
   create_release:
     needs: sourcehut
