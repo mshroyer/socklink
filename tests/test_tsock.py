@@ -26,6 +26,22 @@ class TestFunctions:
         assert stub.run("get-filename-device", "dev+pts+12") == "/dev/pts/12"
 
 
+class TestFeatureChecks:
+    def test_client_active_hook(self, stub: TsockStub):
+        assert not stub.run_test("has-client-active-hook", "tmux 3.2")
+        assert stub.run_test("has-client-active-hook", "tmux 3.3")
+
+        # Debian 12
+        assert stub.run_test("has-client-active-hook", "tmux 3.3a")
+
+        # AlmaLinux 10
+        assert stub.run_test("has-client-active-hook", "tmux next-3.4")
+
+        # OpenBSD
+        assert not stub.run_test("has-client-active-hook", "tmux openbsd-7.0")
+        assert stub.run_test("has-client-active-hook", "tmux openbsd-7.7")
+
+
 class TestSshAuthSock:
     def test_unset(self, sandbox: Sandbox):
         terminal = Terminal(sandbox, login_sock=False)

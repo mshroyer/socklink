@@ -331,6 +331,29 @@ set_tsock_section() {
 	rm -rf "$rc_tempdir"
 }
 
+#### Feature checks ##########################################################
+
+check_number_at_least() {
+	if [ "$(echo "$2 >= $1" | bc)" != "1" ]; then
+		false
+	fi
+}
+
+has_client_active_hook() {
+	verstr="$1"
+	if [ -z "$verstr" ]; then
+		verstr="$(tmux -V)"
+	fi
+	prefix="$(echo "$verstr" | sed -E 's/^tmux ((.*)-)?([0-9]+\.[0-9]+)(.*)/\2/')"
+	number="$(echo "$verstr" | sed -E 's/^tmux ((.*)-)?([0-9]+\.[0-9]+)(.*)/\3/')"
+
+	if [ "$prefix" = "openbsd" ]; then
+		check_number_at_least 7.1 $number
+	else
+		check_number_at_least 3.3 $number
+	fi
+}
+
 #### Main ####################################################################
 
 if [ "$1" = "-h" ] || [ "$1" = "help" ]; then
@@ -353,6 +376,8 @@ elif [ "$1" = "set-server-link" ]; then
 	fi
 elif [ "$1" = "show-server-link" ]; then
 	get_server_link_path
+elif [ "$1" = "has-client-active-hook" ]; then
+	has_client_active_hook "$2"
 elif [ -n "$TSOCK_TESTONLY_COMMANDS" ]; then
 	if [ "$1" = "get-device-filename" ]; then
 		get_device_filename "$2"
