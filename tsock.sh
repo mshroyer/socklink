@@ -174,9 +174,9 @@ set_tty_link() {
 get_active_client_tty() {
 	if [ -n "$TMUX" ]; then
 		socket=$(echo "$TMUX" | cut -d, -f1)
-		tty=$("tmux -S "$socket" display-message -p '#{client_tty}'")
-		log "Got active client TTY from $socket: $tty"
-		echo tty
+		tty=$(tmux -S "$socket" display-message -p '#{client_tty}')
+		log "get_active_client_tty $socket: $tty"
+		echo $tty
 	fi
 }
 
