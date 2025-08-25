@@ -130,6 +130,9 @@ class Terminal:
         self.sandbox = sandbox
         self.shell = shell
 
+        if login_sock:
+            self._setup_login_auth_sock()
+
         self.child = pexpect.spawn(shell, maxread=4096)
         self.child.setecho(False)
 
@@ -137,9 +140,6 @@ class Terminal:
         self._drain_read_buffer()
 
         self.tty = self.run("tty", stdout=True) or ""
-
-        if login_sock:
-            self._setup_login_auth_sock()
 
         self.sandbox.write_debug("Finished init")
 
@@ -195,7 +195,7 @@ class Terminal:
         if sock is not None and sock != "":
             return Path(sock)
 
-    def is_login_auth_sock(self, symlink: Path | str) -> bool:
+    def points_to_login_auth_sock(self, symlink: Path | str) -> bool:
         """Checks whether this is our login SSH_AUTH_SOCK
 
         Determines whether the SSH_AUTH_SOCK symlink resolves to this
@@ -212,8 +212,7 @@ class Terminal:
         self.login_auth_sock = self.sandbox.make_unique_file(
             "auth_sock-", subdir="home"
         )
-        self.run(f"SSH_AUTH_SOCK={self.login_auth_sock}")
-        self.run("export SSH_AUTH_SOCK")
+        self.sandbox.monkeypatch.setenv("SSH_AUTH_SOCK", str(self.login_auth_sock))
 
     def _wait_for_prompt(self) -> int:
         while True:

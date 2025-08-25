@@ -55,6 +55,17 @@ class TestSshAuthSock:
         terminal.run(f"tmux -S {socket}")
         assert terminal.get_auth_sock() is not None
 
+    def test_default_setup(self, sandbox: Sandbox, stub: TsockStub):
+        stub.run("setup")
+
+        socket = sandbox.reserve_tmux_socket()
+        terminal = Terminal(sandbox, login_sock=True)
+        terminal.run(f"tmux -S {socket}")
+
+        auth_sock = terminal.get_auth_sock()
+        assert auth_sock is not None
+        assert terminal.points_to_login_auth_sock(auth_sock)
+
 
 class TestCommands:
     def test_show_server_link_unset(self, terminal: Terminal, tsock: Path):
@@ -66,7 +77,7 @@ class TestCommands:
         ttys_dir = sandbox.root / "tmp" / "tsock" / "ttys"
         tty_socks = os.listdir(ttys_dir)
         assert len(tty_socks) == 1
-        assert terminal.is_login_auth_sock(ttys_dir / tty_socks[0])
+        assert terminal.points_to_login_auth_sock(ttys_dir / tty_socks[0])
 
 
 class TestInstallation:

@@ -66,6 +66,7 @@ tsock.sh - Wrangle SSH agent sockets for tmux sessions
 Usage:
     tsock.sh set-tty-link
     tsock.sh set-server-link [client_tty]
+    tsock.sh set-server-link-by-name client_name
     tsock.sh show-server-link
     tsock.sh version
     tsock.sh help
@@ -238,6 +239,21 @@ set_server_link() {
 	set_symlink "$ttylink" "$serverlink"
 }
 
+# Allow for setting the server link with a client identified by name instead
+# of by tty.  This is useful because tmux currently has a #{hook_client}
+# format variable that resolves to the triggering client name, but no
+# #{hook_client_tty}.
+get_named_client_tty() {
+	for client in $(tmux list-clients -F '#{client_name}:#{client_tty}'); do
+		cname=$(echo $client | cut -d: -f1)
+		ctty=$(echo $client | cut -d: -f2)
+		if [ "$cname" = "$1" ]; then
+			echo $ctty
+			return
+		fi
+	done
+}
+
 gc_server_links() {
 	for link in $(ls "$SERVERSDIR"); do
 		pid_uid="$(get_pid_uid "$link")"
@@ -331,6 +347,38 @@ set_tsock_section() {
 	rm -rf "$rc_tempdir"
 }
 
+get_script() {
+	script="$(realpath "$0")"
+	if echo "$script" | grep -q "^$HOME/"; then
+		script="\$HOME${script#"$HOME"}"
+	fi
+	echo "$script"
+}
+
+setup_tmux_conf() {
+	script="$(get_script)"
+
+	set_tsock_section "$HOME/.tmux.conf" <<EOF
+if-shell -b '$script has-client-active-hook' {
+	set-hook -ga client-active 'run-shell "$script set-server-link-by-name #{hook_client} client-active"'
+}
+set-hook -ga client-attached 'run-shell "$script set-server-link #{client_tty} client-attached"'
+set-hook -ga session-created 'run-shell "$script set-server-link #{client_tty} session-created"'
+EOF
+}
+
+setup_bashrc() {
+	set_tsock_section "$HOME/.bashrc" <<EOF
+if [[ \$- == *i* ]]; then
+	if [ -z "\$TMUX" ]; then
+		$script set-tty-link
+	else
+		export SSH_AUTH_SOCK="\$($script show-server-link)"
+	fi
+fi
+EOF
+}
+
 #### Feature checks ##########################################################
 
 check_number_at_least() {
@@ -372,10 +420,20 @@ elif [ "$1" = "set-server-link" ]; then
 	else
 		set_server_link "$1"
 	fi
+elif [ "$1" = "set-server-link-by-name" ]; then
+	log "$1 $2"
+	shift
+	ctty="$(get_named_client_tty)"
+	if [ -n "$ctty" ]; then
+		set_server_link "$ctty"
+	fi
 elif [ "$1" = "show-server-link" ]; then
 	get_server_link_path
 elif [ "$1" = "has-client-active-hook" ]; then
 	has_client_active_hook "$2"
+elif [ "$1" = "setup" ]; then
+	setup_tmux_conf
+	setup_bashrc
 elif [ -n "$TSOCK_TESTONLY_COMMANDS" ]; then
 	if [ "$1" = "get-device-filename" ]; then
 		get_device_filename "$2"
