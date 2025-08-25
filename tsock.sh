@@ -277,7 +277,7 @@ has_manual_config() {
 		elif [ "$line" = "$TSOCK_SECTION_END" ]; then
 			rc_section=tail
 		elif [ $rc_section != installation ]; then
-			if echo "$line" | grep -Eq 'tsock\.sh[ \t]+(set-tty-link|(set|show)-server-link)'; then
+			if echo "$line" | grep -Eq 'tsock\.sh[[:space:]]+(set-tty-link|(set|show)-server-link)'; then
 				return
 			fi
 		fi
@@ -334,9 +334,7 @@ set_tsock_section() {
 #### Feature checks ##########################################################
 
 check_number_at_least() {
-	if [ "$(echo "$2 >= $1" | bc)" != "1" ]; then
-		false
-	fi
+	awk -v n="$2" -v c="$1" 'BEGIN{ exit !(c+0 <= n+0) }'
 }
 
 has_client_active_hook() {
