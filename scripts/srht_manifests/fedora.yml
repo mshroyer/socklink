@@ -1,5 +1,6 @@
 image: fedora/latest
 packages:
+  - awk
   - python3
   - tmux
 sources:
