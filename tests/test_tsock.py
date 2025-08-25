@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from textwrap import dedent
+from time import sleep
 
 import pytest
 
@@ -81,9 +82,35 @@ class TestSshAuthSock:
         assert auth_sock == terminal2.get_auth_sock()
 
         # Attaching a second client should immediately redirect the server
-        # socket to the new client
+        # link to the new client
         assert not terminal1.points_to_login_auth_sock(auth_sock)
         assert terminal2.points_to_login_auth_sock(auth_sock)
+
+    def test_second_client_detach(self, sandbox: Sandbox, stub: TsockStub):
+        stub.run("setup")
+
+        tmux_sock = sandbox.reserve_tmux_socket()
+        terminal1 = Terminal(
+            sandbox, login_sock=True, debug_filename="terminal1-debug.txt"
+        )
+        terminal1.run(f"tmux -S {tmux_sock}")
+        auth_sock = terminal1.get_auth_sock()
+        assert auth_sock is not None
+        assert terminal1.points_to_login_auth_sock(auth_sock)
+
+        terminal2 = Terminal(
+            sandbox, login_sock=True, debug_filename="terminal2-debug.txt"
+        )
+        terminal2.run(f"tmux -S {tmux_sock} attach")
+        terminal2.run("echo hi")
+
+        # When the first terminal becomes active again, the server link should
+        # end up pointing back at it once the hook has a moment to run.
+        terminal1.run("echo hi")
+        sleep(0.1)
+
+        assert terminal1.points_to_login_auth_sock(auth_sock)
+        assert not terminal2.points_to_login_auth_sock(auth_sock)
 
 
 class TestCommands:

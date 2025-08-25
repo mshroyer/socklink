@@ -423,7 +423,7 @@ elif [ "$1" = "set-server-link" ]; then
 elif [ "$1" = "set-server-link-by-name" ]; then
 	log "$1 $2"
 	shift
-	ctty="$(get_named_client_tty)"
+	ctty="$(get_named_client_tty "$1")"
 	if [ -n "$ctty" ]; then
 		set_server_link "$ctty"
 	fi

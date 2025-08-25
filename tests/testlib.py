@@ -87,11 +87,6 @@ class Sandbox:
             self._shutdown_tmux_socket(socket)
         self._tmux_sockets = []
 
-    def write_debug(self, msg):
-        with open(self.root / "debug.txt", "a") as f:
-            print(msg, file=f)
-            f.flush()
-
     def _setup_dotfiles(self):
         with open(self.root / "home" / ".bashrc", "a") as f:
             print(f"PS1='{PROMPT_MAGIC} $? \\n'", file=f)
@@ -118,6 +113,7 @@ class Terminal:
     child: pexpect.spawn
     tty: str
     login_auth_sock: Optional[Path]
+    debug_filename: str
     _reader_thread: Thread
     _fifo_w: TextIO
 
@@ -126,9 +122,11 @@ class Terminal:
         sandbox: Sandbox,
         shell: str = "bash",
         login_sock: bool = True,
+        debug_filename: str = "debug.txt",
     ):
         self.sandbox = sandbox
         self.shell = shell
+        self.debug_filename = debug_filename
 
         if login_sock:
             self._setup_login_auth_sock()
@@ -141,7 +139,7 @@ class Terminal:
 
         self.tty = self.run("tty", stdout=True) or ""
 
-        self.sandbox.write_debug("Finished init")
+        self._write_debug("Finished init")
 
     def run(self, command: str, stdout: bool = False) -> Optional[str]:
         """Sends a command to the pexpect child
@@ -161,7 +159,7 @@ class Terminal:
             command = "{} >{}".format(command, stdout_txt)
 
         self.child.sendline(command)
-        self.sandbox.write_debug(f"command = {command}")
+        self._write_debug(f"command = {command}")
         exit_code = self._wait_for_prompt()
 
         if stdout or exit_code != 0:
@@ -179,7 +177,7 @@ class Terminal:
         try:
             while True:
                 bs = self.child.read_nonblocking(size=self.child.maxread, timeout=0.1)
-                self.sandbox.write_debug(f"drained {len(bs)} bytes from read buffer")
+                self._write_debug(f"drained {len(bs)} bytes from read buffer")
         except pexpect.TIMEOUT:
             pass
 
@@ -217,13 +215,18 @@ class Terminal:
     def _wait_for_prompt(self) -> int:
         while True:
             raw_line = self.child.readline()
-            self.sandbox.write_debug(f"raw_line = {raw_line}")
+            self._write_debug(f"raw_line = {raw_line}")
             line = raw_line.decode("utf-8").strip("\r\n")
             m = PROMPT_RE.match(line)
             if m:
                 exit_code = int(m.group(1))
-                self.sandbox.write_debug(f"exit_code = {exit_code}")
+                self._write_debug(f"exit_code = {exit_code}")
                 return exit_code
+
+    def _write_debug(self, msg):
+        with open(self.sandbox.root / self.debug_filename, "a") as f:
+            print(msg, file=f)
+            f.flush()
 
     def __enter__(self):
         return self
