@@ -69,4 +69,4 @@ jobs:
       - name: Upload artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 scripts/release.py upload tsock.sh
+        run: python3 scripts/release.py upload socklink.sh
