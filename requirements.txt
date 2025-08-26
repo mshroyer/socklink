@@ -9,7 +9,7 @@ iniconfig==2.1.0
 packaging==25.0
     # via pytest
 pexpect==4.9.0
-    # via tsock-tests (pyproject.toml)
+    # via socklink-tests (pyproject.toml)
 pluggy==1.6.0
     # via pytest
 ptyprocess==0.7.0
@@ -17,4 +17,4 @@ ptyprocess==0.7.0
 pygments==2.19.2
     # via pytest
 pytest==8.4.1
-    # via tsock-tests (pyproject.toml)
+    # via socklink-tests (pyproject.toml)

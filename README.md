@@ -1,4 +1,4 @@
-# tsock.sh
+# socklink.sh
 
 A zero-dependency, cross-platform `SSH_AUTH_SOCK` manager for tmux.
 

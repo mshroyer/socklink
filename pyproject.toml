@@ -1,7 +1,7 @@
 [project]
-name = "tsock-tests"
+name = "socklink-tests"
 version = "0.1"
-description = "Integration tests for tsock.sh"
+description = "Integration tests for socklink.sh"
 requires-python = ">=3.11"
 dependencies = [
     "pexpect>=4.9.0",

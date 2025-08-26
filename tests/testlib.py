@@ -48,8 +48,8 @@ class Sandbox:
         monkeypatch.setenv("HOME", str(root / "home"))
         monkeypatch.setenv("TERM", "xterm")
         monkeypatch.setenv("TMUX_TMPDIR", str(root / "tmp" / "tmux"))
-        monkeypatch.setenv("TSOCK_DIR", str(root / "tmp" / "tsock"))
-        monkeypatch.setenv("TSOCK_LOG", str(root / "tsock.log"))
+        monkeypatch.setenv("SOCKLINK_DIR", str(root / "tmp" / "socklink"))
+        monkeypatch.setenv("SOCKLINK_LOG", str(root / "socklink.log"))
 
         monkeypatch.delenv("SSH_AUTH_SOCK", raising=False)
         monkeypatch.delenv("TMUX", raising=False)
@@ -185,7 +185,7 @@ class Terminal:
         """Gets the current value of SSH_AUTH_SOCK in the active shell
 
         Note that this issues a command on the shell, so it may change state
-        if you have tsock.sh attached to shell hooks.
+        if you have socklink.sh attached to shell hooks.
 
         """
 
@@ -246,8 +246,8 @@ class TerminalCommandError(Exception):
         self.stderr = stderr
 
 
-class TsockStub:
-    """An instance of the tsock script that can be invoked directly"""
+class SocklinkStub:
+    """An instance of the socklink script that can be invoked directly"""
 
     path: Path
 
@@ -255,10 +255,10 @@ class TsockStub:
         self.path = path
 
         # Enable access to test-only functions
-        sandbox.monkeypatch.setenv("TSOCK_TESTONLY_COMMANDS", "1")
+        sandbox.monkeypatch.setenv("SOCKLINK_TESTONLY_COMMANDS", "1")
 
     def run(self, *args: str | Path, stdin: Optional[str] = None) -> str:
-        """Run a tsock.sh subcommand and return its stdout
+        """Run a socklink.sh subcommand and return its stdout
 
         Runs the subcommand directly, without constructing a sandboxed
         environment.
@@ -273,7 +273,7 @@ class TsockStub:
         )
 
     def run_test(self, *args: str | Path, stdin: Optional[str] = None) -> bool:
-        """Runs a tsock.sh subcommand and interprets success as a boolean"""
+        """Runs a socklink.sh subcommand and interprets success as a boolean"""
 
         try:
             self.run(*args, stdin=stdin)

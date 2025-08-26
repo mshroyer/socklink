@@ -115,7 +115,7 @@ class SourceHutClient:
         headers = {
             "Authorization": f"Bearer {self._token}",
             "Content-Type": "application/json",
-            "User-Agent": "tsock/srht.py",
+            "User-Agent": "socklink/srht.py",
         }
         transport = AIOHTTPTransport("https://builds.sr.ht/query", headers=headers)
         return Client(transport=transport)
@@ -306,8 +306,8 @@ class JobManager:
         name = manifest_file.with_suffix("").name
         return await self._client.submit_job(
             manifest_file,
-            note=f"tsock.sh tests for {name}{self._trigger}",
-            tags=["tsock", name],
+            note=f"socklink.sh tests for {name}{self._trigger}",
+            tags=["socklink", name],
             execute=False,
         )
 

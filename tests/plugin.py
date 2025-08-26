@@ -7,15 +7,15 @@ import pytest
 from tests.testlib import (
     Sandbox,
     Terminal,
-    TsockStub,
+    SocklinkStub,
     fail_with_subprocess_error,
     get_project_dir,
 )
 
 
 @pytest.fixture(scope="session")
-def tsock() -> Path:
-    return get_project_dir() / "tsock.sh"
+def socklink() -> Path:
+    return get_project_dir() / "socklink.sh"
 
 
 @pytest.fixture
@@ -33,8 +33,8 @@ def terminal(sandbox) -> Generator[Terminal, None, None]:
 
 
 @pytest.fixture
-def stub(tsock: Path, sandbox: Sandbox) -> TsockStub:
-    return TsockStub(tsock, sandbox)
+def stub(socklink: Path, sandbox: Sandbox) -> SocklinkStub:
+    return SocklinkStub(socklink, sandbox)
 
 
 # Wrap test case invocations to clarify subprocess errors

@@ -35,47 +35,47 @@
 # macOS Sequoia 15.4.
 #
 # For the latest version see:
-# https://github.com/mshroyer/config/blob/master/cfg.bin/tsock.sh
-# or ~mshroyer/cfg.bin/tsock.sh on the sdf.org cluster or MetaArray
+# https://github.com/mshroyer/config/blob/master/cfg.bin/socklink.sh
+# or ~mshroyer/cfg.bin/socklink.sh on the sdf.org cluster or MetaArray
 
 VERSION=0.1.0
 
 set -e
 set -C  # noclobber for lock file
 
-if [ -f "$HOME/.tsock.conf" ]; then
-	. "$HOME/.tsock.conf"
+if [ -f "$HOME/.socklink.conf" ]; then
+	. "$HOME/.socklink.conf"
 fi
 
 # $UID is not portable
 MYUID="$(id -u)"
-if [ -z "$TSOCK_TMPDIR" ]; then
-	TSOCK_TMPDIR="/tmp"
+if [ -z "$SOCKLINK_TMPDIR" ]; then
+	SOCKLINK_TMPDIR="/tmp"
 fi
-if [ -z "$TSOCK_DIR" ]; then
-	TSOCK_DIR="$TSOCK_TMPDIR/tsock-$MYUID"
+if [ -z "$SOCKLINK_DIR" ]; then
+	SOCKLINK_DIR="$SOCKLINK_TMPDIR/socklink-$MYUID"
 fi
-SERVERSDIR="$TSOCK_DIR/servers"
-TTYSDIR="$TSOCK_DIR/ttys"
-LOCKFILE="$TSOCK_DIR/lock"
+SERVERSDIR="$SOCKLINK_DIR/servers"
+TTYSDIR="$SOCKLINK_DIR/ttys"
+LOCKFILE="$SOCKLINK_DIR/lock"
 
 show_usage() {
 	cat <<'EOF'
-tsock.sh - Wrangle SSH agent sockets for tmux sessions
+socklink.sh - Wrangle SSH agent sockets for tmux sessions
 
 Usage:
-    tsock.sh set-tty-link
-    tsock.sh set-server-link [client_tty]
-    tsock.sh set-server-link-by-name client_name
-    tsock.sh show-server-link
-    tsock.sh version
-    tsock.sh help
+    socklink.sh set-tty-link
+    socklink.sh set-server-link [client_tty]
+    socklink.sh set-server-link-by-name client_name
+    socklink.sh show-server-link
+    socklink.sh version
+    socklink.sh help
 EOF
 }
 
 log() {
-	if [ -n "$TSOCK_LOG" ]; then
-		echo "$(date +'%Y-%m-%d %H:%M:%S') $1" >>"$TSOCK_LOG"
+	if [ -n "$SOCKLINK_LOG" ]; then
+		echo "$(date +'%Y-%m-%d %H:%M:%S') $1" >>"$SOCKLINK_LOG"
 	fi
 	if [ -n "$2" ]; then
 		echo "$1" >&2
@@ -156,7 +156,7 @@ get_tty_link_path() {
 }
 
 set_tty_link() {
-	ensure_dir "$TSOCK_DIR"
+	ensure_dir "$SOCKLINK_DIR"
 	ensure_dir "$TTYSDIR"
 	ensure_dir "$SERVERSDIR"
 
@@ -232,7 +232,7 @@ set_server_link() {
 
 	log "set_server_link: changing $serverlink -> $ttylink"
 
-	ensure_dir "$TSOCK_DIR"
+	ensure_dir "$SOCKLINK_DIR"
 	ensure_dir "$SERVERSDIR"
 
 	take_lock
@@ -266,8 +266,8 @@ gc_server_links() {
 
 #### Installation ############################################################
 
-TSOCK_SECTION_BEGIN='### TSOCK INSTALLATION BEGIN'
-TSOCK_SECTION_END='### TSOCK INSTALLATION END'
+SOCKLINK_SECTION_BEGIN='### SOCKLINK INSTALLATION BEGIN'
+SOCKLINK_SECTION_END='### SOCKLINK INSTALLATION END'
 
 # Ensures non-empty files have a trailing newline, otherwise read -r will fail
 # to return the last line.
@@ -282,18 +282,18 @@ ensure_trailing_newline() {
 	esac
 }
 
-# Checks whether the file given as an argument contains manual tsock
+# Checks whether the file given as an argument contains manual socklink
 # configuration--that is, outside of an explicitly marked configuration
 # section as created by this script.
 has_manual_config() {
 	rc_section=head
 	while IFS= read -r line; do
-		if [ "$line" = "$TSOCK_SECTION_BEGIN" ]; then
+		if [ "$line" = "$SOCKLINK_SECTION_BEGIN" ]; then
 			rc_section=installation
-		elif [ "$line" = "$TSOCK_SECTION_END" ]; then
+		elif [ "$line" = "$SOCKLINK_SECTION_END" ]; then
 			rc_section=tail
 		elif [ $rc_section != installation ]; then
-			if echo "$line" | grep -Eq 'tsock\.sh[[:space:]]+(set-tty-link|(set|show)-server-link)'; then
+			if echo "$line" | grep -Eq 'socklink\.sh[[:space:]]+(set-tty-link|(set|show)-server-link)'; then
 				return
 			fi
 		fi
@@ -301,10 +301,10 @@ has_manual_config() {
 	false
 }
 
-# Creates or replaces the tsock installation section in the file given in $1,
+# Creates or replaces the socklink installation section in the file given in $1,
 # using the text piped into this function.
-set_tsock_section() {
-	rc_tempdir=$(mktemp -d "$TSOCK_TMPDIR/tsock-rc-XXXXXXXX")
+set_socklink_section() {
+	rc_tempdir=$(mktemp -d "$SOCKLINK_TMPDIR/socklink-rc-XXXXXXXX")
 	rc_section=head
 	rc_existing_content=
 
@@ -318,9 +318,9 @@ set_tsock_section() {
 	fi
 
 	while IFS= read -r line; do
-		if [ "$line" = "$TSOCK_SECTION_BEGIN" ]; then
+		if [ "$line" = "$SOCKLINK_SECTION_BEGIN" ]; then
 			rc_section=installation
-		elif [ "$line" = "$TSOCK_SECTION_END" ]; then
+		elif [ "$line" = "$SOCKLINK_SECTION_END" ]; then
 			rc_section=tail
 		elif [ $rc_section != installation ]; then
 			rc_existing_content=1
@@ -332,11 +332,11 @@ set_tsock_section() {
 	if [ $rc_section = head ] && [ -n "$rc_existing_content" ]; then
 		printf '\n' >>"$rc_tempdir/installation"
 	fi
-	echo "$TSOCK_SECTION_BEGIN" >>"$rc_tempdir/installation"
+	echo "$SOCKLINK_SECTION_BEGIN" >>"$rc_tempdir/installation"
 	while IFS= read line; do
 		echo "$line" >>"$rc_tempdir/installation"
 	done
-	echo "$TSOCK_SECTION_END" >>"$rc_tempdir/installation"
+	echo "$SOCKLINK_SECTION_END" >>"$rc_tempdir/installation"
 
 	touch "$rc_tempdir/head"
 	touch "$rc_tempdir/tail"
@@ -358,7 +358,7 @@ get_script() {
 setup_tmux_conf() {
 	script="$(get_script)"
 
-	set_tsock_section "$HOME/.tmux.conf" <<EOF
+	set_socklink_section "$HOME/.tmux.conf" <<EOF
 if-shell -b '$script has-client-active-hook' {
 	set-hook -ga client-active 'run-shell "$script set-server-link-by-name #{hook_client} client-active"'
 }
@@ -368,7 +368,7 @@ EOF
 }
 
 setup_bashrc() {
-	set_tsock_section "$HOME/.bashrc" <<EOF
+	set_socklink_section "$HOME/.bashrc" <<EOF
 if [[ \$- == *i* ]]; then
 	if [ -z "\$TMUX" ]; then
 		$script set-tty-link
@@ -434,13 +434,13 @@ elif [ "$1" = "has-client-active-hook" ]; then
 elif [ "$1" = "setup" ]; then
 	setup_tmux_conf
 	setup_bashrc
-elif [ -n "$TSOCK_TESTONLY_COMMANDS" ]; then
+elif [ -n "$SOCKLINK_TESTONLY_COMMANDS" ]; then
 	if [ "$1" = "get-device-filename" ]; then
 		get_device_filename "$2"
 	elif [ "$1" = "get-filename-device" ]; then
 		get_filename_device "$2"
-	elif [ "$1" = "set-tsock-section" ]; then
-		set_tsock_section "$2"
+	elif [ "$1" = "set-socklink-section" ]; then
+		set_socklink_section "$2"
 	elif [ "$1" = "has-manual-config" ]; then
 		has_manual_config "$2"
 	else
