@@ -60,7 +60,7 @@ TTYSDIR="$TSOCK_DIR/ttys"
 LOCKFILE="$TSOCK_DIR/lock"
 
 show_usage() {
-cat <<'EOF'
+	cat <<'EOF'
 tsock.sh - Wrangle SSH agent sockets for tmux sessions
 
 Usage:
