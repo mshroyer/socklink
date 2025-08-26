@@ -348,7 +348,11 @@ set_socklink_section() {
 }
 
 get_script() {
-	script="$(realpath "$0")"
+	if which realpath >>/dev/null; then
+		script="$(realpath "$0")"
+	else
+		script="$0"
+	fi
 	if echo "$script" | grep -q "^$HOME/"; then
 		script="\$HOME${script#"$HOME"}"
 	fi
