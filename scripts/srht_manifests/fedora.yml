@@ -7,5 +7,5 @@ sources:
   - {{ repo }}#{{ commit }}
 tasks:
   - test: |
-      cd tsock
+      cd socklink
       ./scripts/test.sh
