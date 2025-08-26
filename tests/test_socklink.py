@@ -13,6 +13,12 @@ from tests.testlib import (
 )
 
 
+def delay():
+    """Wait some amount of time in hopes tmux hooks have settled"""
+
+    sleep(0.25)
+
+
 class TestLib:
     def test_error(self, terminal: Terminal):
         with pytest.raises(TerminalCommandError):
@@ -75,6 +81,7 @@ class TestSshAuthSock:
         terminal1.run(f"tmux -S {tmux_sock}")
         auth_sock = terminal1.get_auth_sock()
         assert auth_sock is not None
+        delay()
         assert terminal1.points_to_login_auth_sock(auth_sock)
 
         terminal2 = Terminal(sandbox, login_sock=True)
@@ -107,7 +114,7 @@ class TestSshAuthSock:
         # When the first terminal becomes active again, the server link should
         # end up pointing back at it once the hook has a moment to run.
         terminal1.run("echo hi")
-        sleep(0.1)
+        delay()
 
         assert terminal1.points_to_login_auth_sock(auth_sock)
         assert not terminal2.points_to_login_auth_sock(auth_sock)
