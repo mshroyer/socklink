@@ -5,6 +5,11 @@ packages:
 sources:
   - {{ repo }}#{{ commit }}
 tasks:
+  # NetBSD 10 ships with tmux3.2a in /usr/bin, which doesn't support the
+  # client-active hook.  We can use the newer tmux from pkgsrc to test our
+  # integration with that hook:
   - test: |
+      PATH="/usr/pkg/bin:$PATH"
+      export PATH
       cd socklink
       ./scripts/test.sh
