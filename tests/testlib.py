@@ -1,6 +1,5 @@
 """Test helpers"""
 
-import fcntl
 import os
 from pathlib import Path
 import re
@@ -24,25 +23,6 @@ PROMPT_RE = re.compile(f".*{re.escape(PROMPT_MAGIC)} (\\d+).*")
 
 def get_project_dir() -> Path:
     return Path(os.path.realpath(__file__)).parents[1]
-
-
-class LockedReader:
-    """Opens a file for reading with an exclusive advisory lock"""
-
-    path: Path
-    f: TextIO
-
-    def __init__(self, path: Path):
-        self.path = path
-
-    def __enter__(self):
-        self.f = open(self.path, "r")
-        fcntl.flock(self.f.fileno(), fcntl.LOCK_EX)
-        return self
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        fcntl.flock(self.f.fileno(), fcntl.LOCK_UN)
-        self.f.close()
 
 
 def resolve_symlink(link: Optional[Path]) -> Optional[Path]:
@@ -193,7 +173,7 @@ class Terminal:
         if stdout:
             # Instead of capturing output with pexpect, pipe it into a file so
             # we don't have to deal with tmux window decorations.
-            command = f"( flock -n {stdout_txt}; {command} >{stdout_txt} )"
+            command = f"{command} >{stdout_txt}"
 
         self.child.sendline(command)
         self._write_debug(f"command = {command}")
@@ -206,8 +186,7 @@ class Terminal:
             raise TerminalCommandError(exit_code, stderr_txt.read_text().rstrip("\n"))
 
         if stdout:
-            with LockedReader(stdout_txt) as r:
-                return "\n".join(r.f.readlines()).rstrip("\n")
+            return stdout_txt.read_text().rstrip("\n")
 
     def _drain_read_buffer(self):
         # Ensure we've drained the output buffer so that the next prompt we
