@@ -35,10 +35,9 @@
 # macOS Sequoia 15.4.
 #
 # For the latest version see:
-# https://github.com/mshroyer/config/blob/master/cfg.bin/socklink.sh
-# or ~mshroyer/cfg.bin/socklink.sh on the sdf.org cluster or MetaArray
+# https://github.com/mshroyer/socklink/blob/main/socklink.sh
 
-VERSION=0.1.0
+VERSION=0.2.0
 
 set -e
 set -C  # noclobber for lock file
