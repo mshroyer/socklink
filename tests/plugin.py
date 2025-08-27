@@ -1,6 +1,6 @@
 from pathlib import Path
 import subprocess
-from typing import Generator
+from typing import Generator, Protocol
 
 import pytest
 
@@ -27,9 +27,49 @@ def sandbox(
 
 
 @pytest.fixture
-def terminal(sandbox) -> Generator[Terminal, None, None]:
-    with Terminal(sandbox) as t:
+def tmux_sock(sandbox: Sandbox) -> Path:
+    return sandbox.reserve_tmux_socket()
+
+
+class DebugFilenameProvider:
+    n: int
+
+    def __init__(self):
+        self.n = 1
+
+    def make_filename(self) -> str:
+        return f"terminal{self.n}-debug.txt"
+
+
+@pytest.fixture
+def debug_filename_provider() -> DebugFilenameProvider:
+    return DebugFilenameProvider()
+
+
+@pytest.fixture
+def terminal(
+    sandbox: Sandbox, debug_filename_provider: DebugFilenameProvider
+) -> Generator[Terminal, None, None]:
+    with Terminal(sandbox, debug_filename=debug_filename_provider.make_filename()) as t:
         yield t
+
+
+class MakeTerminal(Protocol):
+    def __call__(self, **kwargs) -> Terminal: ...
+
+
+@pytest.fixture
+def make_terminal(
+    sandbox, debug_filename_provider: DebugFilenameProvider
+) -> MakeTerminal:
+    def make_terminal(login_sock: bool = True):
+        return Terminal(
+            sandbox,
+            login_sock=login_sock,
+            debug_filename=debug_filename_provider.make_filename(),
+        )
+
+    return make_terminal
 
 
 @pytest.fixture

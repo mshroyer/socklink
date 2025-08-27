@@ -122,7 +122,7 @@ class Terminal:
         sandbox: Sandbox,
         shell: str = "bash",
         login_sock: bool = True,
-        debug_filename: str = "debug.txt",
+        debug_filename: str = "terminal-debug.txt",
     ):
         self.sandbox = sandbox
         self.shell = shell

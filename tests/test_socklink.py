@@ -5,6 +5,7 @@ from time import sleep
 
 import pytest
 
+from tests.plugin import MakeTerminal
 from tests.testlib import (
     Sandbox,
     Terminal,
@@ -50,8 +51,8 @@ class TestFeatureChecks:
 
 
 class TestSshAuthSock:
-    def test_unset(self, sandbox: Sandbox):
-        terminal = Terminal(sandbox, login_sock=False)
+    def test_unset(self, make_terminal: MakeTerminal):
+        terminal = make_terminal(login_sock=False)
         assert terminal.get_auth_sock() is None
 
     def test_set(self, terminal: Terminal):
@@ -62,29 +63,33 @@ class TestSshAuthSock:
         terminal.run(f"tmux -S {socket}")
         assert terminal.get_auth_sock() is not None
 
-    def test_default_setup(self, sandbox: Sandbox, stub: SocklinkStub):
+    def test_default_setup(
+        self, tmux_sock: Path, make_terminal: MakeTerminal, stub: SocklinkStub
+    ):
         stub.run("setup")
 
-        socket = sandbox.reserve_tmux_socket()
-        terminal = Terminal(sandbox, login_sock=True)
-        terminal.run(f"tmux -S {socket}")
+        # When testing setup, we have to explicilty make the terminal after
+        # running setup so that its newly-setup login shell hooks run.
+        terminal = make_terminal()
+        terminal.run(f"tmux -S {tmux_sock}")
 
         auth_sock = terminal.get_auth_sock()
         assert auth_sock is not None
         assert terminal.points_to_login_auth_sock(auth_sock)
 
-    def test_second_client(self, sandbox: Sandbox, stub: SocklinkStub):
+    def test_second_concurrent_client(
+        self, tmux_sock: Path, make_terminal: MakeTerminal, stub: SocklinkStub
+    ):
         stub.run("setup")
 
-        tmux_sock = sandbox.reserve_tmux_socket()
-        terminal1 = Terminal(sandbox, login_sock=True)
+        terminal1 = make_terminal(login_sock=True)
         terminal1.run(f"tmux -S {tmux_sock}")
         auth_sock = terminal1.get_auth_sock()
         assert auth_sock is not None
         delay()
         assert terminal1.points_to_login_auth_sock(auth_sock)
 
-        terminal2 = Terminal(sandbox, login_sock=True)
+        terminal2 = make_terminal(login_sock=True)
         terminal2.run(f"tmux -S {tmux_sock} attach")
         assert auth_sock == terminal2.get_auth_sock()
 
@@ -93,21 +98,18 @@ class TestSshAuthSock:
         assert not terminal1.points_to_login_auth_sock(auth_sock)
         assert terminal2.points_to_login_auth_sock(auth_sock)
 
-    def test_second_client_detach(self, sandbox: Sandbox, stub: SocklinkStub):
+    def test_switching_active_client(
+        self, tmux_sock: Path, make_terminal: MakeTerminal, stub: SocklinkStub
+    ):
         stub.run("setup")
 
-        tmux_sock = sandbox.reserve_tmux_socket()
-        terminal1 = Terminal(
-            sandbox, login_sock=True, debug_filename="terminal1-debug.txt"
-        )
+        terminal1 = make_terminal(login_sock=True)
         terminal1.run(f"tmux -S {tmux_sock}")
         auth_sock = terminal1.get_auth_sock()
         assert auth_sock is not None
         assert terminal1.points_to_login_auth_sock(auth_sock)
 
-        terminal2 = Terminal(
-            sandbox, login_sock=True, debug_filename="terminal2-debug.txt"
-        )
+        terminal2 = make_terminal(login_sock=True)
         terminal2.run(f"tmux -S {tmux_sock} attach")
         terminal2.run("echo hi")
 
