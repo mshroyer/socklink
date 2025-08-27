@@ -9,7 +9,6 @@ import tempfile
 from threading import Thread
 from typing import List, Optional, TextIO
 
-from jinja2.nodes import FilterBlock
 import pexpect
 import pytest
 
