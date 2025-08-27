@@ -238,15 +238,18 @@ class JobManager:
         self._max_concurrency = max_concurrency
         self._trigger = "" if trigger is None else f" - {trigger}"
 
-    async def start_group_from_manifest_dir(self, manifest_dir: Path | str):
+    async def start_group_from_manifest(self, manifest: Path | str):
         """Starts a job group from YAML manifest files in a directory
 
         Returns the ID of the running group.
 
         """
 
-        manifest_dir = Path(os.fspath(manifest_dir))
-        manifests = list(manifest_dir.glob("*.yml"))
+        manifest = Path(os.fspath(manifest))
+        if manifest.is_dir():
+            manifests = list(manifest.glob("*.yml"))
+        else:
+            manifests = [manifest]
 
         self._jobs = await _run_with_bounded_concurrency(
             self._max_concurrency,
@@ -417,7 +420,9 @@ async def main():
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
-        "manifest_dir", type=Path, help="A directory containing job manifest templates"
+        "manifest",
+        type=Path,
+        help="A directory containing job manifest templates, or a single manifest file",
     )
     parser.add_argument(
         "--repo", type=str, help="URL of git repo containing the commit to test"
@@ -444,7 +449,7 @@ async def main():
             client, max_concurrency=args.max_concurrency, trigger=args.trigger
         )
 
-        await manager.start_group_from_manifest_dir(args.manifest_dir)
+        await manager.start_group_from_manifest(args.manifest)
 
         print("### Started jobs ###\n")
         manager.print_job_links(False)
