@@ -25,6 +25,23 @@ def get_project_dir() -> Path:
     return Path(os.path.realpath(__file__)).parents[1]
 
 
+def resolve_symlink(link: Optional[Path]) -> Optional[Path]:
+    """Resolves the file ultimately pointed to by a symlink
+
+    Returns None if the target file doesn't exist.
+
+    """
+
+    if link is None:
+        return None
+
+    target = link.resolve()
+    if target.exists():
+        return target
+    else:
+        return None
+
+
 class Sandbox:
     """A sandbox for running a test case
 
@@ -192,22 +209,6 @@ class Terminal:
         sock = self.run("echo $SSH_AUTH_SOCK", stdout=True)
         if sock is not None and sock != "":
             return Path(sock)
-
-    def points_to_login_auth_sock(self, symlink: Path | str | None) -> bool:
-        """Checks whether this is our login SSH_AUTH_SOCK
-
-        Determines whether the SSH_AUTH_SOCK symlink resolves to this
-        terminal's login SSH_AUTH_SOCK, if any.
-
-        """
-
-        if symlink is None:
-            return False
-
-        symlink = Path(os.fspath(symlink))
-        return (
-            symlink.exists() and Path(os.path.realpath(symlink)) == self.login_auth_sock
-        )
 
     def _setup_login_auth_sock(self):
         self.login_auth_sock = self.sandbox.make_unique_file(
