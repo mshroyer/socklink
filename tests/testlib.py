@@ -193,13 +193,16 @@ class Terminal:
         if sock is not None and sock != "":
             return Path(sock)
 
-    def points_to_login_auth_sock(self, symlink: Path | str) -> bool:
+    def points_to_login_auth_sock(self, symlink: Path | str | None) -> bool:
         """Checks whether this is our login SSH_AUTH_SOCK
 
         Determines whether the SSH_AUTH_SOCK symlink resolves to this
         terminal's login SSH_AUTH_SOCK, if any.
 
         """
+
+        if symlink is None:
+            return False
 
         symlink = Path(os.fspath(symlink))
         return (
@@ -210,6 +213,7 @@ class Terminal:
         self.login_auth_sock = self.sandbox.make_unique_file(
             "auth_sock-", subdir="home"
         )
+        self._write_debug(f"login_auth_sock: {self.login_auth_sock}")
         self.sandbox.monkeypatch.setenv("SSH_AUTH_SOCK", str(self.login_auth_sock))
 
     def _wait_for_prompt(self) -> int:

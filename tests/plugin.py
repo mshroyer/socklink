@@ -38,7 +38,9 @@ class DebugFilenameProvider:
         self.n = 1
 
     def make_filename(self) -> str:
-        return f"terminal{self.n}-debug.txt"
+        name = f"terminal{self.n}-debug.txt"
+        self.n += 1
+        return name
 
 
 @pytest.fixture
