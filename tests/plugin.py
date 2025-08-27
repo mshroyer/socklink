@@ -31,28 +31,28 @@ def tmux_sock(sandbox: Sandbox) -> Path:
     return sandbox.reserve_tmux_socket()
 
 
-class DebugFilenameProvider:
+class TermNameProvider:
     n: int
 
     def __init__(self):
         self.n = 1
 
-    def make_filename(self) -> str:
-        name = f"terminal{self.n}-debug.txt"
+    def make_name(self) -> str:
+        name = f"terminal{self.n}"
         self.n += 1
         return name
 
 
 @pytest.fixture
-def debug_filename_provider() -> DebugFilenameProvider:
-    return DebugFilenameProvider()
+def term_name_provider() -> TermNameProvider:
+    return TermNameProvider()
 
 
 @pytest.fixture
 def terminal(
-    sandbox: Sandbox, debug_filename_provider: DebugFilenameProvider
+    sandbox: Sandbox, term_name_provider: TermNameProvider
 ) -> Generator[Terminal, None, None]:
-    with Terminal(sandbox, debug_filename=debug_filename_provider.make_filename()) as t:
+    with Terminal(term_name_provider.make_name(), sandbox) as t:
         yield t
 
 
@@ -61,14 +61,12 @@ class MakeTerminal(Protocol):
 
 
 @pytest.fixture
-def make_terminal(
-    sandbox, debug_filename_provider: DebugFilenameProvider
-) -> MakeTerminal:
+def make_terminal(sandbox, term_name_provider: TermNameProvider) -> MakeTerminal:
     def make_terminal(login_sock: bool = True):
         return Terminal(
+            term_name_provider.make_name(),
             sandbox,
             login_sock=login_sock,
-            debug_filename=debug_filename_provider.make_filename(),
         )
 
     return make_terminal

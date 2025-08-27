@@ -118,6 +118,21 @@ class Sandbox:
         self.shutdown_all_tmux_sockets()
 
 
+class ReaderThread(Thread):
+    """A background thread for reading from a FIFO"""
+
+    text: str
+    _fifo: Path
+
+    def __init__(self, fifo: Path):
+        self.text = ""
+        self._fifo = fifo
+
+    def run(self):
+        with open(self._fifo, "r") as f:
+            self.text = "\n".join(f.readlines()).rstrip("\n")
+
+
 class Terminal:
     """A pexpect-managed terminal running a shell
 
@@ -126,24 +141,25 @@ class Terminal:
 
     """
 
+    name: str
     sandbox: Sandbox
     child: pexpect.spawn
     tty: str
     login_auth_sock: Optional[Path]
-    debug_filename: str
     _reader_thread: Thread
     _fifo_w: TextIO
 
     def __init__(
         self,
+        name: str,
         sandbox: Sandbox,
         shell: str = "bash",
         login_sock: bool = True,
-        debug_filename: str = "terminal-debug.txt",
     ):
+        self.name = name
         self.sandbox = sandbox
         self.shell = shell
-        self.debug_filename = debug_filename
+        self.debug_filename = f"{name}-debug.txt"
 
         if login_sock:
             self._setup_login_auth_sock()
@@ -166,8 +182,8 @@ class Terminal:
 
         """
 
-        stdout_txt = self.sandbox.root / "stdout.txt"
-        stderr_txt = self.sandbox.root / "stderr.txt"
+        stdout_txt = self.sandbox.root / f"{self.name}-stdout.txt"
+        stderr_txt = self.sandbox.root / f"{self.name}-stderr.txt"
 
         command = f"{command} 2>{stderr_txt}"
         if stdout:
