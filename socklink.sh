@@ -43,6 +43,7 @@ set -e
 set -C  # noclobber for lock file
 
 if [ -f "$HOME/.socklink.conf" ]; then
+	# shellcheck disable=SC1091
 	. "$HOME/.socklink.conf"
 fi
 

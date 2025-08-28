@@ -16,7 +16,7 @@ format_file() {
 ' 2>>/dev/null
 }
 
-check_file() {
+check_file_format() {
 	out=$(mktemp /tmp/authshoe-format-XXXXXXXX.sh)
 
 	differ=
@@ -44,11 +44,15 @@ process_files() {
 	done
 	if [ -n "$error" ]; then
 		return 1
+	else
+		echo "$1 successful"
 	fi
 }
 
 if [ "$1" = "check" ]; then
-	process_files check_file
+	process_files check_file_format
+elif [ "$1" = "shellcheck" ]; then
+	process_files shellcheck
 else
 	process_files format_file
 fi

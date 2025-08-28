@@ -23,9 +23,9 @@ python_version_at_least() {
 # minimum version requirement.
 get_python_bin() {
 	for bin in $PYTHON_BINS; do
-		if which $bin >/dev/null 2>&1 \
-				&& python_version_at_least $bin $PYTHON_MIN; then
-			echo $bin
+		if which "$bin" >/dev/null 2>&1 \
+				&& python_version_at_least "$bin" "$PYTHON_MIN"; then
+			echo "$bin"
 			return
 		fi
 	done
@@ -39,9 +39,11 @@ setup_venv() {
 		py="$(get_python_bin)"
 		"$py" -m venv "${PROJECT}/.venv"
 	fi
+
+	# shellcheck disable=SC1091
 	. "${PROJECT}/.venv/bin/activate"
 	pip install -r requirements.txt
 }
 
 setup_venv
-pytest -v $@
+pytest -v "$@"
