@@ -141,11 +141,12 @@ set_symlink() {
 # Clean up any of the tty links that no longer both refer to an existing tty
 # owned by us, and point to a still-present authentication socket.
 gc_tty_links() {
-	for ttylink in $(ls "$TTYSDIR"); do
-		if [ ! -O "$(get_filename_device "$ttylink")" ] \
-			   || [ ! -O "$(readlink "$TTYSDIR/$ttylink")" ]; then
-			log "gc_tty_links: removing $TTYSDIR/$ttylink"
-			rm "$TTYSDIR/$ttylink"
+	for ttylink in "$TTYSDIR"/*; do
+		[ -e "$ttylink" ] || continue
+		if [ ! -O "$(get_filename_device $(basename "$ttylink"))" ] \
+			   || [ ! -O "$(readlink "$ttylink")" ]; then
+			log "gc_tty_links: removing $ttylink"
+			rm "$ttylink"
 		fi
 	done
 }
@@ -254,11 +255,12 @@ get_named_client_tty() {
 }
 
 gc_server_links() {
-	for link in $(ls "$SERVERSDIR"); do
-		pid_uid="$(get_pid_uid "$link")"
+	for link in "$SERVERSDIR"/*; do
+		[ -e "$link" ] || continue
+		pid_uid="$(get_pid_uid $(basename "$link"))"
 		if [ "$pid_uid" != "$MYUID" ]; then
-			log "gc_server_links: removing $SERVERSDIR/$link"
-			rm "$SERVERSDIR/$link"
+			log "gc_server_links: removing $link"
+			rm "$link"
 		fi
 	done
 }
