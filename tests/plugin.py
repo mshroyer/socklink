@@ -6,7 +6,7 @@ import pytest
 
 from tests.testlib import (
     Sandbox,
-    Terminal,
+    Term,
     SocklinkStub,
     fail_with_subprocess_error,
     get_project_dir,
@@ -38,7 +38,7 @@ class TermNameProvider:
         self.n = 1
 
     def make_name(self) -> str:
-        name = f"terminal{self.n}"
+        name = f"term{self.n}"
         self.n += 1
         return name
 
@@ -49,27 +49,27 @@ def term_name_provider() -> TermNameProvider:
 
 
 @pytest.fixture
-def terminal(
+def term(
     sandbox: Sandbox, term_name_provider: TermNameProvider
-) -> Generator[Terminal, None, None]:
-    with Terminal(term_name_provider.make_name(), sandbox) as t:
+) -> Generator[Term, None, None]:
+    with Term(term_name_provider.make_name(), sandbox) as t:
         yield t
 
 
-class MakeTerminal(Protocol):
-    def __call__(self, **kwargs) -> Terminal: ...
+class MakeTerm(Protocol):
+    def __call__(self, **kwargs) -> Term: ...
 
 
 @pytest.fixture
-def make_terminal(sandbox, term_name_provider: TermNameProvider) -> MakeTerminal:
-    def make_terminal(login_sock: bool = True):
-        return Terminal(
+def make_term(sandbox, term_name_provider: TermNameProvider) -> MakeTerm:
+    def fn(login_sock: bool = True):
+        return Term(
             term_name_provider.make_name(),
             sandbox,
             login_sock=login_sock,
         )
 
-    return make_terminal
+    return fn
 
 
 @pytest.fixture

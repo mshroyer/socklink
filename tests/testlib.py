@@ -134,7 +134,7 @@ class ReaderThread(Thread):
             self.text = "\n".join(f.readlines()).rstrip("\n")
 
 
-class Terminal:
+class Term:
     """A pexpect-managed terminal running a shell
 
     Starts a pseudoterminal running the specified shell on initialization, and
@@ -204,7 +204,7 @@ class Terminal:
 
         if exit_code != 0:
             subprocess.run(["sync"], check=True)
-            raise TerminalCommandError(exit_code, stderr_txt.read_text().rstrip("\n"))
+            raise TermCommandError(exit_code, stderr_txt.read_text().rstrip("\n"))
 
         if stdout_reader is not None:
             stdout_reader.join()
@@ -261,7 +261,7 @@ class Terminal:
         self.child.close(force=True)
 
 
-class TerminalCommandError(Exception):
+class TermCommandError(Exception):
     """An error running a command on the terminal."""
 
     exit_code: int

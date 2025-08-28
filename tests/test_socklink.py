@@ -5,11 +5,11 @@ from time import sleep
 
 import pytest
 
-from tests.plugin import MakeTerminal
+from tests.plugin import MakeTerm
 from tests.testlib import (
     Sandbox,
-    Terminal,
-    TerminalCommandError,
+    Term,
+    TermCommandError,
     SocklinkStub,
     resolve_symlink,
 )
@@ -22,9 +22,9 @@ def delay():
 
 
 class TestLib:
-    def test_error(self, terminal: Terminal):
-        with pytest.raises(TerminalCommandError):
-            terminal.run("false")
+    def test_error(self, term: Term):
+        with pytest.raises(TermCommandError):
+            term.run("false")
 
 
 class TestFunctions:
@@ -52,107 +52,107 @@ class TestFeatureChecks:
 
 
 class TestSshAuthSock:
-    def test_unset(self, make_terminal: MakeTerminal):
-        terminal = make_terminal(login_sock=False)
-        assert terminal.get_auth_sock() is None
+    def test_unset(self, make_term: MakeTerm):
+        term = make_term(login_sock=False)
+        assert term.get_auth_sock() is None
 
-    def test_set(self, terminal: Terminal):
-        assert terminal.get_auth_sock() is not None
+    def test_set(self, term: Term):
+        assert term.get_auth_sock() is not None
 
-    def test_tmux_session(self, sandbox: Sandbox, terminal: Terminal):
+    def test_tmux_session(self, sandbox: Sandbox, term: Term):
         socket = sandbox.reserve_tmux_socket()
-        terminal.run(f"tmux -S {socket}")
-        assert terminal.get_auth_sock() is not None
+        term.run(f"tmux -S {socket}")
+        assert term.get_auth_sock() is not None
 
     def test_default_setup(
-        self, tmux_sock: Path, make_terminal: MakeTerminal, stub: SocklinkStub
+        self, tmux_sock: Path, make_term: MakeTerm, stub: SocklinkStub
     ):
         stub.run("setup")
 
         # When testing setup, we have to explicilty make the terminal after
         # running setup so that its newly-setup login shell hooks run.
-        terminal = make_terminal()
-        terminal.run(f"tmux -S {tmux_sock}")
+        term = make_term()
+        term.run(f"tmux -S {tmux_sock}")
 
-        auth_sock = terminal.get_auth_sock()
-        assert resolve_symlink(auth_sock) == terminal.login_auth_sock
+        auth_sock = term.get_auth_sock()
+        assert resolve_symlink(auth_sock) == term.login_auth_sock
 
     def test_second_concurrent_client(
-        self, tmux_sock: Path, make_terminal: MakeTerminal, stub: SocklinkStub
+        self, tmux_sock: Path, make_term: MakeTerm, stub: SocklinkStub
     ):
         stub.run("setup")
 
-        terminal1 = make_terminal(login_sock=True)
-        terminal1.run(f"tmux -S {tmux_sock}")
-        auth_sock = terminal1.get_auth_sock()
+        term1 = make_term(login_sock=True)
+        term1.run(f"tmux -S {tmux_sock}")
+        auth_sock = term1.get_auth_sock()
         delay()
-        assert resolve_symlink(auth_sock) == terminal1.login_auth_sock
+        assert resolve_symlink(auth_sock) == term1.login_auth_sock
 
-        terminal2 = make_terminal(login_sock=True)
-        terminal2.run(f"tmux -S {tmux_sock} attach")
-        assert auth_sock == terminal2.get_auth_sock()
+        term2 = make_term(login_sock=True)
+        term2.run(f"tmux -S {tmux_sock} attach")
+        assert auth_sock == term2.get_auth_sock()
         delay()
 
         # Attaching a second client should immediately redirect the server
         # link to the new client
-        assert resolve_symlink(auth_sock) != terminal1.login_auth_sock
-        assert resolve_symlink(auth_sock) == terminal2.login_auth_sock
+        assert resolve_symlink(auth_sock) != term1.login_auth_sock
+        assert resolve_symlink(auth_sock) == term2.login_auth_sock
 
     def test_switching_connected_cilent(
-        self, tmux_sock: Path, make_terminal: MakeTerminal, stub: SocklinkStub
+        self, tmux_sock: Path, make_term: MakeTerm, stub: SocklinkStub
     ):
         stub.run("setup")
 
-        terminal1 = make_terminal(login_sock=True)
-        terminal1.run(f"tmux -S {tmux_sock}")
-        auth_sock = terminal1.get_auth_sock()
-        assert resolve_symlink(auth_sock) == terminal1.login_auth_sock
-        terminal1.run("tmux detach")
+        term1 = make_term(login_sock=True)
+        term1.run(f"tmux -S {tmux_sock}")
+        auth_sock = term1.get_auth_sock()
+        assert resolve_symlink(auth_sock) == term1.login_auth_sock
+        term1.run("tmux detach")
 
-        terminal2 = make_terminal(login_sock=True)
-        terminal2.run(f"tmux -S {tmux_sock} attach")
+        term2 = make_term(login_sock=True)
+        term2.run(f"tmux -S {tmux_sock} attach")
         delay()
-        assert resolve_symlink(auth_sock) == terminal2.login_auth_sock
-        terminal2.run("tmux detach")
+        assert resolve_symlink(auth_sock) == term2.login_auth_sock
+        term2.run("tmux detach")
 
-        terminal1.run(f"tmux -S {tmux_sock} attach")
+        term1.run(f"tmux -S {tmux_sock} attach")
         delay()
-        assert resolve_symlink(auth_sock) == terminal1.login_auth_sock
+        assert resolve_symlink(auth_sock) == term1.login_auth_sock
 
     def test_switching_active_client(
-        self, tmux_sock: Path, make_terminal: MakeTerminal, stub: SocklinkStub
+        self, tmux_sock: Path, make_term: MakeTerm, stub: SocklinkStub
     ):
         stub.run("setup")
 
-        terminal1 = make_terminal(login_sock=True)
-        terminal1.run(f"tmux -S {tmux_sock}")
-        auth_sock = terminal1.get_auth_sock()
-        assert resolve_symlink(auth_sock) == terminal1.login_auth_sock
+        term1 = make_term(login_sock=True)
+        term1.run(f"tmux -S {tmux_sock}")
+        auth_sock = term1.get_auth_sock()
+        assert resolve_symlink(auth_sock) == term1.login_auth_sock
 
-        terminal2 = make_terminal(login_sock=True)
-        terminal2.run(f"tmux -S {tmux_sock} attach")
-        terminal2.run("echo hi")
+        term2 = make_term(login_sock=True)
+        term2.run(f"tmux -S {tmux_sock} attach")
+        term2.run("echo hi")
 
         # When the first terminal becomes active again, the server link should
         # end up pointing back at it once the hook has a moment to run.
-        terminal1.run("echo hi")
+        term1.run("echo hi")
         delay()
 
-        assert resolve_symlink(auth_sock) == terminal1.login_auth_sock
-        assert resolve_symlink(auth_sock) != terminal2.login_auth_sock
+        assert resolve_symlink(auth_sock) == term1.login_auth_sock
+        assert resolve_symlink(auth_sock) != term2.login_auth_sock
 
 
 class TestCommands:
-    def test_show_server_link_unset(self, terminal: Terminal, socklink: Path):
-        output = terminal.run(f"{socklink} show-server-link", stdout=True)
+    def test_show_server_link_unset(self, term: Term, socklink: Path):
+        output = term.run(f"{socklink} show-server-link", stdout=True)
         assert output == ""
 
-    def test_set_tty_link(self, sandbox: Sandbox, terminal: Terminal, socklink: Path):
-        terminal.run(f"{socklink} set-tty-link")
+    def test_set_tty_link(self, sandbox: Sandbox, term: Term, socklink: Path):
+        term.run(f"{socklink} set-tty-link")
         ttys_dir = sandbox.root / "tmp" / "socklink" / "ttys"
         tty_socks = os.listdir(ttys_dir)
         assert len(tty_socks) == 1
-        assert resolve_symlink(ttys_dir / tty_socks[0]) == terminal.login_auth_sock
+        assert resolve_symlink(ttys_dir / tty_socks[0]) == term.login_auth_sock
 
 
 class TestInstallation:
