@@ -30,4 +30,6 @@ jobs:
           pip install -r dev-requirements.txt
 
       - name: Lint
-        run: scripts/lint.sh
+        run: |
+          . .venv/bin/activate
+          scripts/lint.sh
