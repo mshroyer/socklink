@@ -91,6 +91,7 @@ class TestSshAuthSock:
         terminal2 = make_terminal(login_sock=True)
         terminal2.run(f"tmux -S {tmux_sock} attach")
         assert auth_sock == terminal2.get_auth_sock()
+        delay()
 
         # Attaching a second client should immediately redirect the server
         # link to the new client
