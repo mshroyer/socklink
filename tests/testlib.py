@@ -233,9 +233,8 @@ class Terminal:
             return Path(sock)
 
     def _setup_login_auth_sock(self):
-        self.login_auth_sock = self.sandbox.make_unique_file(
-            "auth_sock-", subdir="home"
-        )
+        self.login_auth_sock = self.sandbox.root / "home" / f"{self.name}-auth_sock"
+        self.login_auth_sock.touch()
         self._write_debug(f"login_auth_sock: {self.login_auth_sock}")
         self.sandbox.monkeypatch.setenv("SSH_AUTH_SOCK", str(self.login_auth_sock))
 
