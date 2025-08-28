@@ -3,7 +3,8 @@
 # Run tsock.sh's Python-based test suite
 #
 # Finds an appropriate version of Python, sets up a virtual environment in
-# .venv, installs test dependencies, and runs the tests.
+# .venv, installs test dependencies, and runs the tests.  This script is meant
+# to work on all platforms where socklink.sh runs.
 
 set -e
 
@@ -39,11 +40,9 @@ setup_venv() {
 		py="$(get_python_bin)"
 		"$py" -m venv "${PROJECT}/.venv"
 	fi
-
-	# shellcheck disable=SC1091
-	. "${PROJECT}/.venv/bin/activate"
-	pip install -r requirements.txt
 }
 
+cd "$PROJECT"
 setup_venv
-pytest -v "$@"
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python -m pytest -v "$@"

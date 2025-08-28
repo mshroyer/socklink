@@ -14,10 +14,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: astral-sh/ruff-action@v3
+      - name: Setup python
+        uses: actions/setup-python@v5
         with:
-          args: "check"
+          python-version: '3.13'
 
-      - uses: astral-sh/ruff-action@v3
-        with:
-          args: "format --check --diff"
+      # Get the same version of ruff as in our development environment.
+      - name: Setup venv
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install -r dev-requirements.txt
+
+      - name: Lint
+        run: scripts/lint.sh
