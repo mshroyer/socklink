@@ -202,7 +202,7 @@ take_lock() {
 			break
 		fi
 		sleep 0.1
-		n="$(expr "$n" - 1)"
+		n=$(("$n" - 1))
 		if [ "$(get_pid_uid "$(cat "$LOCKFILE")")" != "$MYUID" ]; then
 			log "removing stale lockfile $LOCKFILE" t
 			rm -f "$LOCKFILE"
