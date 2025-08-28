@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install packages
-        run: sudo apt install -y emacs shellcheck
+        run: sudo apt install -y emacs-nox shellcheck
 
       - name: Setup python
         uses: actions/setup-python@v5
