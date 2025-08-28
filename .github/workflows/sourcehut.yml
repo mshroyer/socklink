@@ -31,4 +31,5 @@ jobs:
           . .venv/bin/activate
           python scripts/srht.py scripts/srht_manifests \
               --repo https://github.com/${{ github.repository }} --commit ${{ github.sha }} \
-              --trigger "$run_url"
+              --trigger "$run_url" \
+              --public

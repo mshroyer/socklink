@@ -104,12 +104,20 @@ class SourceHutClient:
     _token: str
     _client: Client
     _session: AsyncClientSession
+    _job_visibility: Visibility
 
-    def __init__(self, repo: str, commit: str, token: str):
+    def __init__(
+        self,
+        repo: str,
+        commit: str,
+        token: str,
+        job_visibility: Visibility = Visibility.UNLISTED,
+    ):
         self.repo = repo
         self.commit = commit
         self._token = token
         self._client = self._make_client()
+        self._job_visibility = job_visibility
 
     def _make_client(self) -> Client:
         headers = {
@@ -125,7 +133,6 @@ class SourceHutClient:
         manifest_file: Path,
         note: str = "",
         tags: List[str] = list(),
-        visibility: Visibility = Visibility.UNLISTED,
         execute: bool = True,
     ) -> Job:
         """Submits a build manifest provided as YAML
@@ -157,7 +164,7 @@ class SourceHutClient:
             "secrets": False,
             "tags": tags,
             "execute": execute,
-            "visibility": str(visibility),
+            "visibility": str(self._job_visibility),
         }
 
         result = await self._session.execute(query)
@@ -434,6 +441,11 @@ async def main():
     parser.add_argument(
         "--max-concurrency", type=int, help="Max concurrency for API calls", default=4
     )
+    parser.add_argument(
+        "--public",
+        action="store_true",
+        help="Whether to make SourceHut jobs publicly listed",
+    )
     args = parser.parse_args()
 
     token = os.getenv("SOURCEHUT_ACCESS_TOKEN")
@@ -444,7 +456,8 @@ async def main():
     commit = args.commit or _get_default_commit()
     _check_commit_accessibility(repo, commit)
 
-    async with SourceHutClient(repo, commit, token) as client:
+    visibility = Visibility.PUBLIC if args.public else Visibility.UNLISTED
+    async with SourceHutClient(repo, commit, token, visibility) as client:
         manager = JobManager(
             client, max_concurrency=args.max_concurrency, trigger=args.trigger
         )
