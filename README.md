@@ -31,3 +31,32 @@ You can run the unit tests with:
 
 The tests will use your system versions of `tmux` and any shells available for
 test.
+
+## Limitations
+
+### Background control clients
+
+Because the hooks installed by the `setup` command rely on tmux's accounting
+of which client is currently "active", it's possible that if you have a
+control client running in the background along with your main, interactive
+tmux client, the control client might "steal" active status from your
+interactive client and redirect your `SSH_AUTH_SOCK` away from it.
+
+I haven't tested this scenario because it's not a setup that I personally use.
+Let me know if this is a problem for anyone in practice.
+
+### Old tmux versions
+
+tmux versions older than tmux 3.4 or OpenBSD 7.1 lack the `client-active` hook
+installed by `setup`.  Without this hook, attaching a new client will still
+switch `SSH_AUTH_SOCK` over to that client, but hopping between
+still-connected clients won't work automatically.
+
+If needed, you can work around this by running
+
+```
+socklink.sh set-server-link
+```
+
+from your shell, either manually as needed or as a bash preexec, zsh periodic
+function, or so on.
