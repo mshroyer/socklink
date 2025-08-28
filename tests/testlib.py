@@ -166,6 +166,8 @@ class Term:
 
         if login_sock:
             self._setup_login_auth_sock()
+        else:
+            sandbox.monkeypatch.delenv("SSH_AUTH_SOCK", raising=False)
 
         self.child = pexpect.spawn(shell, maxread=4096)
         self.child.setecho(False)

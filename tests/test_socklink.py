@@ -141,6 +141,43 @@ class TestSshAuthSock:
         assert resolve_symlink(auth_sock) == term1.login_auth_sock
         assert resolve_symlink(auth_sock) != term2.login_auth_sock
 
+    def test_client_without_login_sock(
+        self, tmux_sock: Path, make_term: MakeTerm, stub: SocklinkStub
+    ):
+        stub.run("setup")
+
+        term1 = make_term(login_sock=True)
+        term1.run(f"tmux -S {tmux_sock}")
+        auth_sock = term1.get_auth_sock()
+
+        # Connecting the second client without an SSH_AUTH_SOCK of its own
+        # should overwrite the login socket mapped for the first client.  This
+        # way, for example, if client 1 has a hardware token with
+        # proof-of-presence, SSH won't try to use that when the user is
+        # sitting at client 2, and may fall back to other authentication
+        # methods if possible.
+        term2 = make_term(login_sock=False)
+        term2.run(f"tmux -S {tmux_sock} attach")
+        delay()
+        assert resolve_symlink(auth_sock) is None
+
+    def test_multiple_sessions(
+        self, tmux_sock: Path, make_term: MakeTerm, stub: SocklinkStub
+    ):
+        stub.run("setup")
+
+        term1 = make_term(login_sock=True)
+        term1.run(f"tmux -S {tmux_sock} new-session -s sess1")
+        auth_sock1 = term1.get_auth_sock()
+
+        term2 = make_term(login_sock=True)
+        term2.run(f"tmux -S {tmux_sock} new-session -s sess2")
+        auth_sock2 = term2.get_auth_sock()
+
+        # Shells running in the two sessions should share the same
+        # server-keyed authentication socket.
+        assert auth_sock1 == auth_sock2
+
 
 class TestCommands:
     def test_show_server_link_unset(self, term: Term, socklink: Path):
