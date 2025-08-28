@@ -94,7 +94,7 @@ get_device_filename() {
 		echo "device name $1 containing '+' or space is unsupported" >&2
 		exit 1
 	fi
-	echo $1 | cut -c2- | tr / +
+	echo "$1" | cut -c2- | tr / +
 }
 
 # Reverses get_device_filename
@@ -177,7 +177,7 @@ get_active_client_tty() {
 		socket=$(echo "$TMUX" | cut -d, -f1)
 		tty=$(tmux -S "$socket" display-message -p '#{client_tty}')
 		log "get_active_client_tty $socket: $tty"
-		echo $tty
+		echo "$tty"
 	fi
 }
 
@@ -245,10 +245,10 @@ set_server_link() {
 # #{hook_client_tty}.
 get_named_client_tty() {
 	for client in $(tmux list-clients -F '#{client_name}:#{client_tty}'); do
-		cname=$(echo $client | cut -d: -f1)
-		ctty=$(echo $client | cut -d: -f2)
+		cname=$(echo "$client" | cut -d: -f1)
+		ctty=$(echo "$client" | cut -d: -f2)
 		if [ "$cname" = "$1" ]; then
-			echo $ctty
+			echo "$ctty"
 			return
 		fi
 	done
@@ -334,7 +334,7 @@ set_socklink_section() {
 		printf '\n' >>"$rc_tempdir/installation"
 	fi
 	echo "$SOCKLINK_SECTION_BEGIN" >>"$rc_tempdir/installation"
-	while IFS= read line; do
+	while IFS= read -r line; do
 		echo "$line" >>"$rc_tempdir/installation"
 	done
 	echo "$SOCKLINK_SECTION_END" >>"$rc_tempdir/installation"
@@ -399,9 +399,9 @@ has_client_active_hook() {
 	number="$(echo "$verstr" | sed -E 's/^tmux ((.*)-)?([0-9]+\.[0-9]+)(.*)/\3/')"
 
 	if [ "$prefix" = "openbsd" ]; then
-		check_number_at_least 7.1 $number
+		check_number_at_least 7.1 "$number"
 	else
-		check_number_at_least 3.3 $number
+		check_number_at_least 3.3 "$number"
 	fi
 }
 
