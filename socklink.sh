@@ -143,7 +143,7 @@ set_symlink() {
 gc_tty_links() {
 	for ttylink in "$TTYSDIR"/*; do
 		[ -e "$ttylink" ] || continue
-		if [ ! -O "$(get_filename_device $(basename "$ttylink"))" ] \
+		if [ ! -O "$(get_filename_device "$(basename "$ttylink")")" ] \
 			   || [ ! -O "$(readlink "$ttylink")" ]; then
 			log "gc_tty_links: removing $ttylink"
 			rm "$ttylink"
@@ -168,7 +168,7 @@ set_tty_link() {
 	gc_server_links
 
 	if [ -n "$SSH_AUTH_SOCK" ] && [ -O "$SSH_AUTH_SOCK" ]; then
-		set_symlink "$SSH_AUTH_SOCK" "$(get_tty_link_path $(tty))"
+		set_symlink "$SSH_AUTH_SOCK" "$(get_tty_link_path "$(tty)")"
 	fi
 }
 
@@ -203,7 +203,7 @@ take_lock() {
 		fi
 		sleep 0.1
 		n="$(expr "$n" - 1)"
-		if [ "$(get_pid_uid $(cat "$LOCKFILE"))" != "$MYUID" ]; then
+		if [ "$(get_pid_uid "$(cat "$LOCKFILE")")" != "$MYUID" ]; then
 			log "removing stale lockfile $LOCKFILE" t
 			rm -f "$LOCKFILE"
 		fi
@@ -257,7 +257,7 @@ get_named_client_tty() {
 gc_server_links() {
 	for link in "$SERVERSDIR"/*; do
 		[ -e "$link" ] || continue
-		pid_uid="$(get_pid_uid $(basename "$link"))"
+		pid_uid="$(get_pid_uid "$(basename "$link")")"
 		if [ "$pid_uid" != "$MYUID" ]; then
 			log "gc_server_links: removing $link"
 			rm "$link"
@@ -287,12 +287,12 @@ ensure_trailing_newline() {
 # configuration--that is, outside of an explicitly marked configuration
 # section as created by this script.
 has_manual_config() {
-	rc_section=head
+	rc_section="head"
 	while IFS= read -r line; do
 		if [ "$line" = "$SOCKLINK_SECTION_BEGIN" ]; then
 			rc_section=installation
 		elif [ "$line" = "$SOCKLINK_SECTION_END" ]; then
-			rc_section=tail
+			rc_section="tail"
 		elif [ $rc_section != installation ]; then
 			if echo "$line" | grep -Eq 'socklink\.sh[[:space:]]+(set-tty-link|(set|show)-server-link)'; then
 				return
@@ -306,7 +306,7 @@ has_manual_config() {
 # using the text piped into this function.
 set_socklink_section() {
 	rc_tempdir=$(mktemp -d "$SOCKLINK_TMPDIR/socklink-rc-XXXXXXXX")
-	rc_section=head
+	rc_section="head"
 	rc_existing_content=
 
 	if [ ! -e "$1" ]; then
@@ -322,7 +322,7 @@ set_socklink_section() {
 		if [ "$line" = "$SOCKLINK_SECTION_BEGIN" ]; then
 			rc_section=installation
 		elif [ "$line" = "$SOCKLINK_SECTION_END" ]; then
-			rc_section=tail
+			rc_section="tail"
 		elif [ $rc_section != installation ]; then
 			rc_existing_content=1
 			echo "$line" >>"$rc_tempdir/$rc_section"
