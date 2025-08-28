@@ -125,6 +125,7 @@ class ReaderThread(Thread):
     _fifo: Path
 
     def __init__(self, fifo: Path):
+        super().__init__()
         self.text = ""
         self._fifo = fifo
 
@@ -161,6 +162,8 @@ class Terminal:
         self.shell = shell
         self.debug_filename = f"{name}-debug.txt"
 
+        os.mkfifo(sandbox.root / f"{name}-stdout.fifo")
+
         if login_sock:
             self._setup_login_auth_sock()
 
@@ -182,27 +185,30 @@ class Terminal:
 
         """
 
-        stdout_txt = self.sandbox.root / f"{self.name}-stdout.txt"
+        stdout_fifo = self.sandbox.root / f"{self.name}-stdout.fifo"
         stderr_txt = self.sandbox.root / f"{self.name}-stderr.txt"
+
+        stdout_reader = None
 
         command = f"{command} 2>{stderr_txt}"
         if stdout:
             # Instead of capturing output with pexpect, pipe it into a file so
             # we don't have to deal with tmux window decorations.
-            command = f"{command} >{stdout_txt}"
+            command = f"{command} >{stdout_fifo}"
+            stdout_reader = ReaderThread(stdout_fifo)
+            stdout_reader.start()
 
         self.child.sendline(command)
         self._write_debug(f"command = {command}")
         exit_code = self._wait_for_prompt()
 
-        if stdout or exit_code != 0:
-            subprocess.run(["sync"], check=True)
-
         if exit_code != 0:
+            subprocess.run(["sync"], check=True)
             raise TerminalCommandError(exit_code, stderr_txt.read_text().rstrip("\n"))
 
-        if stdout:
-            return stdout_txt.read_text().rstrip("\n")
+        if stdout_reader is not None:
+            stdout_reader.join()
+            return stdout_reader.text.rstrip("\n")
 
     def _drain_read_buffer(self):
         # Ensure we've drained the output buffer so that the next prompt we
