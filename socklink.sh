@@ -137,7 +137,8 @@ ensure_dir() {
 		log "expected $1 to be owned by UID $MYUID" 1
 		exit 1
 	fi
-	if [ "$(stat_mode "$1")" != 700 ]; then
+	mode="$(stat_mode "$1")"
+	if [ "$mode" != 700 ]; then
 		chmod 700 "$1"
 	fi
 }
@@ -214,7 +215,8 @@ take_lock() {
 		fi
 		sleep 0.1
 		n=$(("$n" - 1))
-		if [ "$(get_pid_uid "$(cat "$LOCKFILE")")" != "$MYUID" ]; then
+		uid="$(get_pid_uid "$(cat "$LOCKFILE")")"
+		if [ "$uid" != "$MYUID" ]; then
 			log "removing stale lockfile $LOCKFILE" t
 			rm -f "$LOCKFILE"
 		fi
