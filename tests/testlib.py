@@ -108,6 +108,9 @@ class Sandbox:
         with open(self.root / "home" / ".bashrc", "a") as f:
             print(f"PS1='{PROMPT_MAGIC} $? \\n'", file=f)
 
+        with open(self.root / "home" / ".zshrc", "a") as f:
+            print(f"PROMPT=$'{PROMPT_MAGIC} %? \\n'", file=f)
+
         with open(self.root / "home" / ".tmux.conf", "a") as f:
             print('set -g default-command "bash"', file=f)
 
@@ -154,12 +157,11 @@ class Term:
         self,
         name: str,
         sandbox: Sandbox,
-        shell: str = "bash",
         login_sock: bool = True,
     ):
         self.name = name
         self.sandbox = sandbox
-        self.shell = shell
+        self.shell = os.getenv("TEST_SHELL") or "bash"
         self.debug_filename = f"{name}-debug.txt"
 
         os.mkfifo(sandbox.root / f"{name}-stdout.fifo")
@@ -169,7 +171,7 @@ class Term:
         else:
             sandbox.monkeypatch.delenv("SSH_AUTH_SOCK", raising=False)
 
-        self.child = pexpect.spawn(shell, maxread=4096)
+        self.child = pexpect.spawn(self.shell, maxread=4096)
 
         self._output_lines = []
         self._drain_read_buffer()

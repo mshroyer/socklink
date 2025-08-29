@@ -1,7 +1,9 @@
 import os
 from pathlib import Path
+import shutil
 from time import sleep
 
+import pytest
 
 from tests.plugin import MakeTerm
 from tests.testlib import (
@@ -10,6 +12,32 @@ from tests.testlib import (
     SocklinkStub,
     resolve_symlink,
 )
+
+
+@pytest.fixture(
+    params=[
+        pytest.param(
+            "bash",
+            marks=pytest.mark.skipif(
+                shutil.which("bash") is None, reason="bash not found"
+            ),
+        ),
+        pytest.param(
+            "zsh",
+            marks=pytest.mark.skipif(
+                shutil.which("zsh") is None, reason="zsh not found"
+            ),
+        ),
+    ],
+    ids=lambda s: s,
+)
+def shell(request):
+    return request.param
+
+
+@pytest.fixture(autouse=True)
+def _expose_shell(monkeypatch, shell):
+    monkeypatch.setenv("TEST_SHELL", shell)
 
 
 def delay():
