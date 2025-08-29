@@ -1,3 +1,4 @@
+import os
 from textwrap import dedent
 
 
@@ -13,6 +14,18 @@ def test_get_device_filename(stub: SocklinkStub):
 
 def test_get_filename_device(stub: SocklinkStub):
     assert stub.run("get-filename-device", "dev+pts+12") == "/dev/pts/12"
+
+
+def test_stat_mode(sandbox: Sandbox, stub: SocklinkStub):
+    path = sandbox.root / "foo.txt"
+    path.touch()
+    path.chmod(0o644)
+
+    assert stub.run("stat-mode", path) == "644"
+
+
+def test_get_pid_uid(stub: SocklinkStub):
+    assert stub.run("get-pid-uid", str(os.getpid())) == str(os.getuid())
 
 
 def test_client_active_hook(stub: SocklinkStub):

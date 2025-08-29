@@ -479,6 +479,10 @@ elif [ -n "$SOCKLINK_TESTONLY_COMMANDS" ]; then
 		set_socklink_section "$2"
 	elif [ "$1" = "has-manual-config" ]; then
 		has_manual_config "$2"
+	elif [ "$1" = "stat-mode" ]; then
+		stat_mode "$2"
+	elif [ "$1" = "get-pid-uid" ]; then
+		get_pid_uid "$2"
 	else
 		show_usage
 		exit 1
