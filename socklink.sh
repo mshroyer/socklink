@@ -108,11 +108,20 @@ stat_mode() {
 	if [ -z "$UNAME" ]; then
 		UNAME="$(uname)"
 	fi
-	if [ "$UNAME" = "Linux" ]; then
-		stat -c '%a' "$1"
-	else
-		stat -f '%Lp' "$1"
-	fi
+	case "$UNAME" in
+		Linux|SunOS)
+			stat -c '%a' "$1"
+			;;
+
+		*BSD)
+			stat -f '%Lp' "$1"
+			;;
+
+		*)
+			echo "Don't know how to stat file mode on $UNAME" >&2
+			exit 1
+			;;
+	esac
 }
 
 get_pid_uid() {
