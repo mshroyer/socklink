@@ -170,7 +170,6 @@ class Term:
             sandbox.monkeypatch.delenv("SSH_AUTH_SOCK", raising=False)
 
         self.child = pexpect.spawn(shell, maxread=4096)
-        self.child.setecho(False)
 
         self._output_lines = []
         self._drain_read_buffer()
