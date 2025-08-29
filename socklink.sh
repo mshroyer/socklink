@@ -385,6 +385,24 @@ fi
 EOF
 }
 
+setup_zshrc() {
+	set_socklink_section "$HOME/.zshrc" <<EOF
+if [[ -o interactive ]]; then
+	if [ -z "\$TMUX" ]; then
+		$script set-tty-link
+	else
+		export SSH_AUTH_SOCK="\$($script show-server-link)"
+	fi
+fi
+EOF
+}
+
+setup() {
+	setup_tmux_conf
+	setup_bashrc
+	setup_zshrc
+}
+
 #### Feature checks ##########################################################
 
 check_number_at_least() {
@@ -438,8 +456,7 @@ elif [ "$1" = "show-server-link" ]; then
 elif [ "$1" = "has-client-active-hook" ]; then
 	has_client_active_hook "$2"
 elif [ "$1" = "setup" ]; then
-	setup_tmux_conf
-	setup_bashrc
+	setup
 elif [ -n "$SOCKLINK_TESTONLY_COMMANDS" ]; then
 	if [ "$1" = "get-device-filename" ]; then
 		get_device_filename "$2"
