@@ -191,7 +191,7 @@ class Term:
 
         stdout_reader = None
 
-        command = f"{command} 2>{stderr_txt}"
+        command = f"{command} 2> >(tee {stderr_txt} >&2)"
         if stdout:
             # Instead of capturing output with pexpect, pipe it into a file so
             # we don't have to deal with tmux window decorations.

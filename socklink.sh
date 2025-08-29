@@ -239,7 +239,8 @@ set_server_link() {
 	# This may be called frequently, as a ZSH hook or periodically, so
 	# let's optimize the happy path where the link is already set
 	# correctly.
-	if [ "$(readlink "$serverlink")" = "$ttylink" ]; then
+	target="$(readlink "$serverlink")" || target=
+	if [ "$target" = "$ttylink" ]; then
 		exit 0
 	fi
 
