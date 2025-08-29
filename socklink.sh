@@ -110,17 +110,12 @@ stat_mode() {
 		UNAME="$(uname)"
 	fi
 	case "$UNAME" in
-		Linux|SunOS)
-			stat -c '%a' "$1"
-			;;
-
 		*BSD|Darwin)
 			stat -f '%Lp' "$1"
 			;;
 
 		*)
-			echo "Don't know how to stat file mode on $UNAME" >&2
-			exit 1
+			stat -c '%a' "$1"
 			;;
 	esac
 }
