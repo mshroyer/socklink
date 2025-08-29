@@ -103,6 +103,7 @@ get_filename_device() {
 	echo "/$(echo "$1" | tr + /)"
 }
 
+# Gets the octal mode of a file
 UNAME=
 stat_mode() {
 	if [ -z "$UNAME" ]; then
@@ -113,7 +114,7 @@ stat_mode() {
 			stat -c '%a' "$1"
 			;;
 
-		*BSD)
+		*BSD|Darwin)
 			stat -f '%Lp' "$1"
 			;;
 
