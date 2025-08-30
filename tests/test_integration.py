@@ -24,7 +24,7 @@ from tests.testlib import (
             ),
         ),
         pytest.param(
-            "zsh",
+            "zsh --no-globalrcs",
             marks=pytest.mark.skipif(
                 shutil.which("zsh") is None, reason="zsh not found"
             ),
