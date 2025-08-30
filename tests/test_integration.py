@@ -24,7 +24,7 @@ from tests.testlib import (
             ),
         ),
         pytest.param(
-            "zsh --no-globalrcs",
+            "zsh",
             marks=pytest.mark.skipif(
                 shutil.which("zsh") is None, reason="zsh not found"
             ),
@@ -38,6 +38,9 @@ def shell(request):
 
 @pytest.fixture(autouse=True)
 def _expose_shell(monkeypatch, shell):
+    if shell == "zsh":
+        # Fixes GitHub Actions Ubuntu 22.04
+        shell = "zsh --no-globalrcs"
     monkeypatch.setenv("TEST_SHELL", shell)
 
 
