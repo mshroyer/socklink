@@ -2,6 +2,7 @@ image: archlinux
 packages:
   - python
   - tmux
+  - zsh
 sources:
   - {{ repo }}#{{ commit }}
 tasks:

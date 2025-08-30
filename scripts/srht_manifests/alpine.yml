@@ -2,6 +2,7 @@ image: alpine/latest
 packages:
   - python3
   - tmux
+  - zsh
 sources:
   - {{ repo }}#{{ commit }}
 tasks:

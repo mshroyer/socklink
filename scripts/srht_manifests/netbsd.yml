@@ -1,7 +1,9 @@
 image: netbsd/latest
 packages:
+  - bash
   - python312
   - tmux
+  - zsh
 sources:
   - {{ repo }}#{{ commit }}
 tasks:

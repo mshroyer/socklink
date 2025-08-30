@@ -3,6 +3,7 @@ packages:
   - awk
   - python3
   - tmux
+  - zsh
 sources:
   - {{ repo }}#{{ commit }}
 tasks:

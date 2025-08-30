@@ -1,7 +1,9 @@
 image: freebsd/latest
 packages:
+  - bash
   - python3
   - tmux
+  - zsh
 sources:
   - {{ repo }}#{{ commit }}
 tasks:
