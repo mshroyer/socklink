@@ -1,10 +1,12 @@
 """Test helpers"""
 
+from datetime import timedelta
 import os
 from pathlib import Path
 import re
 import subprocess
 import tempfile
+import time
 from threading import Thread
 from typing import List, Optional, TextIO
 
@@ -106,10 +108,10 @@ class Sandbox:
 
     def _setup_dotfiles(self):
         with open(self.root / "home" / ".bashrc", "a") as f:
-            print(f"PS1='{PROMPT_MAGIC} $? \\n'", file=f)
+            print(f"PS1='\\n{PROMPT_MAGIC} $? \\n\\n'", file=f)
 
         with open(self.root / "home" / ".zshrc", "a") as f:
-            print(f"PROMPT=$'{PROMPT_MAGIC} %? \\n'", file=f)
+            print(f"PROMPT=$'\\n{PROMPT_MAGIC} %? \\n\\n'", file=f)
 
         shell = os.getenv("TEST_SHELL") or "bash"
         with open(self.root / "home" / ".tmux.conf", "a") as f:
@@ -120,22 +122,6 @@ class Sandbox:
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.shutdown_all_tmux_sockets()
-
-
-class ReaderThread(Thread):
-    """A background thread for reading from a FIFO"""
-
-    text: str
-    _fifo: Path
-
-    def __init__(self, fifo: Path):
-        super().__init__()
-        self.text = ""
-        self._fifo = fifo
-
-    def run(self):
-        with open(self._fifo, "r") as f:
-            self.text = "\n".join(f.readlines()).rstrip("\n")
 
 
 class Term:
@@ -151,7 +137,6 @@ class Term:
     child: pexpect.spawn
     tty: str
     login_auth_sock: Optional[Path]
-    _reader_thread: Thread
     _fifo_w: TextIO
 
     def __init__(
@@ -164,8 +149,6 @@ class Term:
         self.sandbox = sandbox
         self.shell = os.getenv("TEST_SHELL") or "bash"
         self.debug_filename = f"{name}-debug.txt"
-
-        os.mkfifo(sandbox.root / f"{name}-stdout.fifo")
 
         if login_sock:
             self._setup_login_auth_sock()
@@ -182,7 +165,9 @@ class Term:
 
         self._write_debug("Finished init")
 
-    def run(self, command: str, stdout: bool = False) -> Optional[str]:
+    def run(
+        self, command: str, stdout: bool = False, stderr: bool = True
+    ) -> Optional[str]:
         """Sends a command to the pexpect child
 
         If stdout is True, the output will be piped to a file and then
@@ -190,30 +175,48 @@ class Term:
 
         """
 
-        stdout_fifo = self.sandbox.root / f"{self.name}-stdout.fifo"
+        stdout_txt = self.sandbox.root / f"{self.name}-stdout.txt"
+        stdout_txt.unlink(missing_ok=True)
         stderr_txt = self.sandbox.root / f"{self.name}-stderr.txt"
+        stderr_txt.unlink(missing_ok=True)
 
-        stdout_reader = None
-
-        command = f"{command} 2> >(tee {stderr_txt} >&2)"
+        # Instead of capturing output with pexpect, pipe it into a file so we
+        # don't have to deal with tmux window decorations.
+        if stderr:
+            command = f"{command} 2> >(tee '{stderr_txt}.tmp' >&2 && mv '{stderr_txt}.tmp' '{stderr_txt}')"
         if stdout:
-            # Instead of capturing output with pexpect, pipe it into a file so
-            # we don't have to deal with tmux window decorations.
-            command = f"{command} >{stdout_fifo}"
-            stdout_reader = ReaderThread(stdout_fifo)
-            stdout_reader.start()
+            command = f"{command} > >(tee '{stdout_txt}.tmp' && mv '{stdout_txt}.tmp' '{stdout_txt}')"
 
+        self._drain_read_buffer()
+        self._write_debug(f"command = {command}")
         self.child.sendline(command)
-        self._write_debug(f"\ncommand = {command}")
+
         exit_code = self._wait_for_prompt()
 
         if exit_code != 0:
-            subprocess.run(["sync"], check=True)
-            raise TermCommandError(exit_code, stderr_txt.read_text().rstrip("\n"))
+            raise TermCommandError(
+                exit_code, self._read_output(stderr_txt).rstrip("\n") if stderr else ""
+            )
 
-        if stdout_reader is not None:
-            stdout_reader.join()
-            return stdout_reader.text.rstrip("\n")
+        if exit_code == 0 and stdout:
+            return self._read_output(stdout_txt).rstrip("\n")
+
+        self._write_debug("")
+
+    @staticmethod
+    def _read_output(path: Path) -> str:
+        poll_interval = timedelta(milliseconds=25)
+        max_wait = timedelta(seconds=2)
+        start = time.monotonic()
+
+        while True:
+            try:
+                return path.read_text()
+            except FileNotFoundError as e:
+                now = time.monotonic()
+                if (now - start) > max_wait.total_seconds():
+                    raise e
+                time.sleep(poll_interval.total_seconds())
 
     def _drain_read_buffer(self):
         # Ensure we've drained the output buffer so that the next prompt we

@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import platform
 import shutil
 from time import sleep
 
@@ -43,7 +44,12 @@ def _expose_shell(monkeypatch, shell):
 def delay():
     """Wait some amount of time in hopes tmux hooks have settled"""
 
-    sleep(0.25)
+    if platform.system() == "Darwin":
+        # macOS is flakier than the others when it comes to reading the
+        # updated target of the server symlink
+        sleep(0.5)
+    else:
+        sleep(0.25)
 
 
 def test_show_server_link_unset(term: Term, socklink: Path):
