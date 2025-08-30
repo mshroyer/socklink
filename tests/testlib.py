@@ -185,6 +185,7 @@ class Term:
             command = f"{command} 2> >(tee '{stderr_txt}.tmp' >&2 && mv '{stderr_txt}.tmp' '{stderr_txt}')"
         if stdout:
             command = f"{command} > >(tee '{stdout_txt}.tmp' && mv '{stdout_txt}.tmp' '{stdout_txt}')"
+        command = f"{command} && sync"
 
         self._drain_read_buffer()
         self._write_debug(f"command = {command}")
