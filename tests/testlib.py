@@ -7,7 +7,6 @@ import re
 import subprocess
 import tempfile
 import time
-from threading import Thread
 from typing import List, Optional, TextIO
 
 import pexpect
