@@ -111,8 +111,9 @@ class Sandbox:
         with open(self.root / "home" / ".zshrc", "a") as f:
             print(f"PROMPT=$'{PROMPT_MAGIC} %? \\n'", file=f)
 
+        shell = os.getenv("TEST_SHELL") or "bash"
         with open(self.root / "home" / ".tmux.conf", "a") as f:
-            print('set -g default-command "bash"', file=f)
+            print(f'set -g default-command "{shell}"', file=f)
 
     def __enter__(self):
         return self
@@ -171,6 +172,7 @@ class Term:
         else:
             sandbox.monkeypatch.delenv("SSH_AUTH_SOCK", raising=False)
 
+        self._write_debug(f"Spawning shell {self.shell}")
         self.child = pexpect.spawn(self.shell, maxread=4096)
 
         self._output_lines = []
@@ -202,7 +204,7 @@ class Term:
             stdout_reader.start()
 
         self.child.sendline(command)
-        self._write_debug(f"command = {command}")
+        self._write_debug(f"\ncommand = {command}")
         exit_code = self._wait_for_prompt()
 
         if exit_code != 0:
