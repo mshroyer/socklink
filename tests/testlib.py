@@ -107,10 +107,10 @@ class Sandbox:
 
     def _setup_dotfiles(self):
         with open(self.root / "home" / ".bashrc", "a") as f:
-            print(f"PS1='\\n{PROMPT_MAGIC} $? \\n\\n'", file=f)
+            print(f"PS1='\\n{PROMPT_MAGIC} $?:\\n\\n'", file=f)
 
         with open(self.root / "home" / ".zshrc", "a") as f:
-            print(f"PROMPT=$'\\n{PROMPT_MAGIC} %? \\n\\n'", file=f)
+            print(f"PROMPT=$'\\n{PROMPT_MAGIC} %?:\\n\\n'", file=f)
 
         shell = os.getenv("TEST_SHELL") or "bash"
         with open(self.root / "home" / ".tmux.conf", "a") as f:
@@ -217,6 +217,10 @@ class Term:
                     raise e
                 time.sleep(poll_interval.total_seconds())
 
+    def _wait_for_prompt(self) -> int:
+        self.child.expect(PROMPT_MAGIC + r" (\d+):")
+        return int(self.child.match.group(1))
+
     def _drain_read_buffer(self):
         # Ensure we've drained the output buffer so that the next prompt we
         # see is in response to this command finishing.
@@ -244,17 +248,6 @@ class Term:
         self.login_auth_sock.touch()
         self._write_debug(f"login_auth_sock: {self.login_auth_sock}")
         self.sandbox.monkeypatch.setenv("SSH_AUTH_SOCK", str(self.login_auth_sock))
-
-    def _wait_for_prompt(self) -> int:
-        while True:
-            raw_line = self.child.readline()
-            self._write_debug(f"raw_line = {raw_line}")
-            line = raw_line.decode("utf-8").strip("\r\n")
-            m = PROMPT_RE.match(line)
-            if m:
-                exit_code = int(m.group(1))
-                self._write_debug(f"exit_code = {exit_code}")
-                return exit_code
 
     def _write_debug(self, msg):
         with open(self.sandbox.root / self.debug_filename, "a") as f:
