@@ -10,7 +10,7 @@ tasks:
   # reason it's missing on SourceHut's Alpine Linux runners.
   - make_fd: |
       if [ ! -e /dev/fd ]; then
-        ln -s /proc/self/fd /dev/fd
+        sudo ln -s /proc/self/fd /dev/fd
       fi
 
   - test: |
