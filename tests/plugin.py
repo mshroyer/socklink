@@ -32,6 +32,8 @@ def tmux_sock(sandbox: Sandbox) -> Path:
 
 
 class TermNameProvider:
+    """Generates a unique per-test name for a terminal"""
+
     n: int
 
     def __init__(self):
@@ -61,13 +63,19 @@ class MakeTerm(Protocol):
 
 
 @pytest.fixture
-def make_term(sandbox, term_name_provider: TermNameProvider) -> MakeTerm:
+def make_term(
+    request: pytest.FixtureRequest,
+    sandbox: Sandbox,
+    term_name_provider: TermNameProvider,
+) -> MakeTerm:
     def fn(login_sock: bool = True):
-        return Term(
+        term = Term(
             term_name_provider.make_name(),
             sandbox,
             login_sock=login_sock,
         )
+        request.addfinalizer(lambda: term.close())
+        return term
 
     return fn
 

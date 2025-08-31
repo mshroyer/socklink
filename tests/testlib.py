@@ -243,6 +243,9 @@ class Term:
         if sock is not None and sock != "":
             return Path(sock)
 
+    def close(self):
+        self.child.close(force=True)
+
     def _setup_login_auth_sock(self):
         self.login_auth_sock = self.sandbox.root / "home" / f"{self.name}-auth_sock"
         self.login_auth_sock.touch()
@@ -258,7 +261,7 @@ class Term:
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        self.child.close(force=True)
+        self.close()
 
 
 class TermCommandError(Exception):
