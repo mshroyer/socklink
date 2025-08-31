@@ -105,11 +105,15 @@ get_filename_device() {
 
 # Gets the octal mode of a file
 UNAME=
-stat_mode() {
+get_uname() {
 	if [ -z "$UNAME" ]; then
 		UNAME="$(uname)"
 	fi
-	case "$UNAME" in
+	echo "$UNAME"
+}
+
+stat_mode() {
+	case "$(get_uname)" in
 		*BSD|Darwin)
 			stat -f '%Lp' "$1"
 			;;
@@ -121,7 +125,7 @@ stat_mode() {
 }
 
 get_pid_uid() {
-	if [ "$UNAME" = "Linux" ] && [ -e "/proc/$1/status" ]; then
+	if [ "$(get_uname)" = "Linux" ] && [ -e "/proc/$1/status" ]; then
 		# The ps invocation below also works for most Linux
 		# distributions, however Alpine Linux's busybox ps doesn't
 		# support -o uid.
