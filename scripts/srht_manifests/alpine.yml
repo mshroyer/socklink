@@ -6,6 +6,13 @@ packages:
 sources:
   - {{ repo }}#{{ commit }}
 tasks:
+  # /dev/fd is needed for bash to pipe to subshell commands, but for some
+  # reason it's missing on SourceHut's Alpine Linux runners.
+  - make_fd: |
+      if [ ! -e /dev/fd ]; then
+        ln -s /proc/self/fd /dev/fd
+      fi
+
   - test: |
       cd socklink
       ./scripts/test.sh
