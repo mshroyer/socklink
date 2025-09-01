@@ -1,4 +1,5 @@
 import os
+import subprocess
 from textwrap import dedent
 
 
@@ -27,9 +28,15 @@ def test_stat_mode(sandbox: Sandbox, stub: SocklinkStub):
 def test_get_pid_uid(stub: SocklinkStub):
     assert stub.run("get-pid-uid", os.getpid()) == str(os.getuid())
 
+    # Use the PID of a child shell that's just terminated as an
+    # unlikely-to-be-live process ID.
+    nonexistent_pid = int(
+        subprocess.check_output(["echo $$"], shell=True).decode("utf-8").rstrip("\n")
+    )
+
     # Asking for the UID of a non-existent process should succeed and return
     # the empty string
-    assert stub.run("get-pid-uid", 0) == ""
+    assert stub.run("get-pid-uid", nonexistent_pid) == ""
 
 
 def test_client_active_hook(stub: SocklinkStub):
