@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import platform
 import shutil
+import subprocess
 from time import sleep
 
 import pytest
@@ -243,6 +244,9 @@ def test_gc_server_links(
         delay()
         assert len(list(servers.glob("*"))) == 1
         term1.run("exit")
+
+    # It should have terminated after exiting, but anyhow
+    subprocess.run(["tmux", "-S", tmux_sock, "kill-server"], check=False)
 
     delay()
     with make_term(login_sock=True):
