@@ -248,7 +248,7 @@ def test_gc_server_links(
     # It should have terminated after exiting, but anyhow
     subprocess.run(["tmux", "-S", tmux_sock, "kill-server"], check=False)
 
-    delay()
+    sleep(2)
     with make_term(login_sock=True):
         # Server link gc runs in set-tty-link, so the link for the now-killed
         # server should no longer be present here:
