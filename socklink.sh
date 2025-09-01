@@ -286,11 +286,12 @@ get_named_client_tty() {
 
 gc_server_links() {
 	for link in "$SERVERSDIR"/*; do
-		[ -e "$link" ] || continue
+		[ -L "$link" ] || [ -e "$link" ] || continue
+
 		pid_uid="$(get_pid_uid "$(basename "$link")")"
 		if [ "$pid_uid" != "$MYUID" ]; then
 			log "gc_server_links: removing $link"
-			rm "$link"
+			rm -f "$link"
 		fi
 	done
 }

@@ -230,3 +230,21 @@ def test_gc_tty_links(sandbox: Sandbox, make_term: MakeTerm, stub: SocklinkStub)
     # sockets.
     with make_term(login_sock=True):
         assert len(list(ttys.glob("*"))) == 1
+
+
+def test_gc_server_links(
+    sandbox: Sandbox, tmux_sock: Path, make_term: MakeTerm, stub: SocklinkStub
+):
+    stub.run("setup")
+    servers = sandbox.root / "tmp" / "socklink" / "servers"
+
+    with make_term(login_sock=True) as term1:
+        term1.run(f"tmux -S {tmux_sock}")
+        delay()
+        assert len(list(servers.glob("*"))) == 1
+        term1.run("exit")
+
+    with make_term(login_sock=True):
+        # Server link gc runs in set-tty-link, so the link for the now-killed
+        # server should no longer be present here:
+        assert len(list(servers.glob("*"))) == 0
