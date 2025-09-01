@@ -244,6 +244,7 @@ def test_gc_server_links(
         assert len(list(servers.glob("*"))) == 1
         term1.run("exit")
 
+    delay()
     with make_term(login_sock=True):
         # Server link gc runs in set-tty-link, so the link for the now-killed
         # server should no longer be present here:
