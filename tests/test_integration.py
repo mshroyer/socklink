@@ -39,7 +39,7 @@ def shell(request):
 @pytest.fixture(autouse=True)
 def _expose_shell(monkeypatch, shell):
     if shell == "zsh":
-        # Fixes GitHub Actions Ubuntu 22.04
+        # Fixes GitHub Actions on Ubuntu 24.04
         shell = "zsh --no-globalrcs"
     monkeypatch.setenv("TEST_SHELL", shell)
 
@@ -68,12 +68,12 @@ def test_set_tty_link(sandbox: Sandbox, term: Term, socklink: Path):
     assert resolve_symlink(ttys_dir / tty_socks[0]) == term.login_auth_sock
 
 
-def test_unset(make_term: MakeTerm):
+def test_login_sock_unset(make_term: MakeTerm):
     term = make_term(login_sock=False)
     assert term.get_auth_sock() is None
 
 
-def test_set(term: Term):
+def test_login_sock_set(term: Term):
     assert term.get_auth_sock() is not None
 
 
@@ -197,3 +197,36 @@ def test_multiple_sessions(tmux_sock: Path, make_term: MakeTerm, stub: SocklinkS
     # Shells running in the two sessions should share the same
     # server-keyed authentication socket.
     assert auth_sock1 == auth_sock2
+
+
+def test_gc_tty_links(sandbox: Sandbox, make_term: MakeTerm, stub: SocklinkStub):
+    stub.run("setup")
+    ttys = sandbox.root / "tmp" / "socklink" / "ttys"
+
+    with make_term(login_sock=True):
+        assert len(list(ttys.glob("*"))) == 1
+
+    # Opening a second term after the first has closed should GC the original
+    # link when set-tty-link runs, if the same pty name isn't reused; either
+    # way we're still at one link in the directory.
+    with make_term(login_sock=True):
+        assert len(list(ttys.glob("*"))) == 1
+
+        # Opening a third term while the second should leave the existing link
+        # in place, on the other hand.
+        with make_term(login_sock=True):
+            assert len(list(ttys.glob("*"))) == 2
+
+            with make_term(login_sock=True):
+                assert len(list(ttys.glob("*"))) == 3
+
+                with make_term(login_sock=True):
+                    assert len(list(ttys.glob("*"))) == 4
+
+    # We aren't reusing all of the above ptys at this point, so here we will
+    # have needed to GC at least three of them (or four, if the current isn't
+    # reused) for the test to succeed.  In particular, this makes sure we
+    # aren't failing to enumerate and GC links to now-nonexistent auth
+    # sockets.
+    with make_term(login_sock=True):
+        assert len(list(ttys.glob("*"))) == 1

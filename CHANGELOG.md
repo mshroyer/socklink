@@ -1,5 +1,12 @@
 # tsock.sh Changelog
 
+## v0.3.0-dev
+
+- Support zsh in the `setup` subcommand.
+- Fix and regression test silently-broken server link handling on Alpine Linux
+  due to its incompatible ps implementation.
+- Generally improved test coverage and more reliable integration tests.
+
 ## v0.2.0
 
 - Renames the project to "socklink" to avoid confusion with the existing

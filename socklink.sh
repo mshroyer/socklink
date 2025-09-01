@@ -36,18 +36,21 @@
 #
 # For the latest version see:
 # https://github.com/mshroyer/socklink/blob/main/socklink.sh
+#
+# Users of sdf.org can also find the latest release at ~mshroyer/socklink.sh
+# on either the regular cluster or MetaArray.
 
-VERSION=0.2.0
+VERSION="0.3.0-dev"
 
-set -e
-set -C  # noclobber for lock file
+set -eC  # noclobber for lock file
 
-if [ -f "$HOME/.socklink.conf" ]; then
-	# shellcheck disable=SC1091
-	. "$HOME/.socklink.conf"
+CONFFILE="$HOME/.socklink.conf"
+if [ -f "$CONFFILE" ]; then
+	# shellcheck disable=SC1090
+	. "$CONFFILE"
 fi
 
-# $UID is not portable
+# $UID is not totally portable
 MYUID="$(id -u)"
 if [ -z "$SOCKLINK_TMPDIR" ]; then
 	SOCKLINK_TMPDIR="/tmp"
@@ -84,8 +87,8 @@ log() {
 
 ### Auth socket management ###################################################
 
-# Converts absolute path to a device node into a string that can be used as a
-# filename: /dev/pts/98 -> dev+pts+98
+# Reversably maps an absolute path of a device node to a string that can be
+# used as a filename: /dev/pts/98 -> dev+pts+98
 get_device_filename() {
 	echo "$1" | grep -q '^/dev/' || {
 		echo "expected path starting with /dev/" >&2
@@ -159,12 +162,19 @@ set_symlink() {
 # Clean up any of the tty links that no longer both refer to an existing tty
 # owned by us, and point to a still-present authentication socket.
 gc_tty_links() {
-	for ttylink in "$TTYSDIR"/*; do
-		[ -e "$ttylink" ] || continue
-		if [ ! -O "$(get_filename_device "$(basename "$ttylink")")" ] \
-			   || [ ! -O "$(readlink "$ttylink")" ]; then
-			log "gc_tty_links: removing $ttylink"
-			rm "$ttylink"
+	for tty_link in "$TTYSDIR"/*; do
+		[ -L "$tty_link" ] || [ -e "$tty_link" ] || continue
+
+		tty_device="$(get_filename_device "$(basename "$tty_link")")"
+		if [ ! -O "$tty_device" ]; then
+			log "gc_tty_links: removing $tty_link: $tty_device missing or not owned"
+			rm -f "$tty_link"
+			continue
+		fi
+		tty_sock="$(readlink "$tty_link")"
+		if [ ! -O "$tty_sock" ]; then
+			log "gc_tty_links: removing $tty_link: $tty_sock missing or not owned"
+			rm -f "$tty_link"
 		fi
 	done
 }
@@ -240,23 +250,23 @@ set_server_link() {
 	if [ -z "$serverlink" ]; then
 		return
 	fi
-	ttylink="$(get_tty_link_path "$1")"
+	tty_link="$(get_tty_link_path "$1")"
 
 	# This may be called frequently, as a ZSH hook or periodically, so
 	# let's optimize the happy path where the link is already set
 	# correctly.
 	target="$(readlink "$serverlink")" || target=
-	if [ "$target" = "$ttylink" ]; then
+	if [ "$target" = "$tty_link" ]; then
 		exit 0
 	fi
 
-	log "set_server_link: changing $serverlink -> $ttylink"
+	log "set_server_link: changing $serverlink -> $tty_link"
 
 	ensure_dir "$SOCKLINK_DIR"
 	ensure_dir "$SERVERSDIR"
 
 	take_lock
-	set_symlink "$ttylink" "$serverlink"
+	set_symlink "$tty_link" "$serverlink"
 }
 
 # Allow for setting the server link with a client identified by name instead

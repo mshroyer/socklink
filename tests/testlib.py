@@ -149,6 +149,7 @@ class Term:
         self.shell = os.getenv("TEST_SHELL") or "bash"
         self.debug_filename = f"{name}-debug.txt"
 
+        self.login_auth_sock = None
         if login_sock:
             self._setup_login_auth_sock()
         else:
@@ -244,6 +245,11 @@ class Term:
             return Path(sock)
 
     def close(self):
+        # When clients disconnect by SSH, their authentication sockets go
+        # away, so let's mirror that behavior here.
+        if self.login_auth_sock is not None:
+            self.login_auth_sock.unlink(missing_ok=True)
+
         self.child.close(force=True)
 
     def _setup_login_auth_sock(self):

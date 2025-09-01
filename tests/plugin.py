@@ -74,6 +74,7 @@ def make_term(
             sandbox,
             login_sock=login_sock,
         )
+
         request.addfinalizer(lambda: term.close())
         return term
 
