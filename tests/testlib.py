@@ -292,7 +292,7 @@ class SocklinkStub:
         # Enable access to test-only functions
         sandbox.monkeypatch.setenv("SOCKLINK_TESTONLY_COMMANDS", "1")
 
-    def run(self, *args: str | Path, stdin: Optional[str] = None) -> str:
+    def run(self, *args: str | Path | int, stdin: Optional[str] = None) -> str:
         """Run a socklink.sh subcommand and return its stdout
 
         Runs the subcommand directly, without constructing a sandboxed

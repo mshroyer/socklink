@@ -25,7 +25,11 @@ def test_stat_mode(sandbox: Sandbox, stub: SocklinkStub):
 
 
 def test_get_pid_uid(stub: SocklinkStub):
-    assert stub.run("get-pid-uid", str(os.getpid())) == str(os.getuid())
+    assert stub.run("get-pid-uid", os.getpid()) == str(os.getuid())
+
+    # Asking for the UID of a non-existent process should succeed and return
+    # the empty string
+    assert stub.run("get-pid-uid", 0) == ""
 
 
 def test_client_active_hook(stub: SocklinkStub):

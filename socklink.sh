@@ -128,11 +128,11 @@ stat_mode() {
 }
 
 get_pid_uid() {
-	if [ "$(get_uname)" = "Linux" ] && [ -e "/proc/$1/status" ]; then
+	if [ "$(get_uname)" = "Linux" ] && [ -e "/proc/$$/status" ]; then
 		# The ps invocation below also works for most Linux
 		# distributions, however Alpine Linux's busybox ps doesn't
 		# support -o uid.
-		awk '/^Uid:/ { print $2; }' "/proc/$1/status"
+		awk '/^Uid:/ { print $2; }' "/proc/$1/status" || echo ""
 	else
 		ps -o uid -p "$1" | awk 'NR==2 { print $1; }'
 	fi
