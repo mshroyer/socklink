@@ -206,7 +206,7 @@ class Term:
     @staticmethod
     def _read_output(path: Path) -> str:
         poll_interval = timedelta(milliseconds=25)
-        max_wait = timedelta(seconds=2)
+        max_wait = timedelta(seconds=4)
         start = time.monotonic()
 
         while True:
