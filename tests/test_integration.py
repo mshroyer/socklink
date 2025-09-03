@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import platform
+import re
 import shutil
 import subprocess
 from time import sleep
@@ -94,6 +95,16 @@ def test_default_setup(tmux_sock: Path, make_term: MakeTerm, stub: SocklinkStub)
 
     auth_sock = term.get_auth_sock()
     assert resolve_symlink(auth_sock) == term.login_auth_sock
+
+    # Additionally to in the shell running within tmux, the server itself
+    # should have SSH_AUTH_SOCK set in its global environment.
+    env = subprocess.check_output(
+        ["tmux", "-S", tmux_sock, "show-environment", "-g"]
+    ).decode("utf-8")
+    pat = re.compile(r"^SSH_AUTH_SOCK=(.*)$", re.MULTILINE)
+    m = pat.search(env)
+    assert m is not None
+    assert Path(m.group(1)) == auth_sock
 
 
 def test_second_concurrent_client(
