@@ -125,7 +125,7 @@ get_pid_uid() {
 		# The ps invocation below also works for most Linux
 		# distributions, however Alpine Linux's busybox ps doesn't
 		# support -o uid.
-		awk '/^Uid:/ { print $2; }' "/proc/$1/status" || echo ""
+		awk '/^Uid:/ { print $2; }' "/proc/$1/status" 2>>/dev/null || echo -n ""
 	else
 		ps -o uid -p "$1" | awk 'NR==2 { print $1; }'
 	fi
