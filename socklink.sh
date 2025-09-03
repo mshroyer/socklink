@@ -120,12 +120,20 @@ stat_mode() {
 	esac
 }
 
+BUSYBOX_PS=
 get_pid_uid() {
-	if [ "$(uname)" = "Linux" ] && [ -e "/proc/$$/status" ]; then
+	if [ -z "$BUSYBOX_PS" ] && [ "$(uname)" = "Linux" ]; then
+		ps="$(which ps)"
+		if [ -L "$ps" ] && [ "$(basename "$(readlink "$ps")")" = "busybox" ]; then
+			BUSYBOX_PS=1
+		fi
+	fi
+
+	if [ -n "$BUSYBOX_PS" ]; then
 		# The ps invocation below also works for most Linux
-		# distributions, however Alpine Linux's busybox ps doesn't
-		# support -o uid.
-		awk '/^Uid:/ { print $2; }' "/proc/$1/status" 2>>/dev/null || echo -n ""
+		# distributions, however Alpine Linux's busybox ps
+		# implementation doesn't support -o uid.
+		awk '/^Uid:/ { print $2; }' "/proc/$1/status" 2>>/dev/null || echo ""
 	else
 		ps -o uid -p "$1" | awk 'NR==2 { print $1; }'
 	fi
