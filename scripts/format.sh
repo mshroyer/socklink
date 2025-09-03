@@ -5,6 +5,8 @@
 
 set -e
 
+PROJECT=$(cd "$(dirname "$0")/.." && pwd)
+
 format_file() {
 	emacs -q -nw --batch "$1" --eval '
 (progn
@@ -17,7 +19,7 @@ format_file() {
 }
 
 check_file_format() {
-	out=$(mktemp /tmp/authshoe-format-XXXXXXXX.sh)
+	out=$(mktemp /tmp/socklink-format-XXXXXXXX.sh)
 
 	differ=
 	cat "$1" >>"$out"
@@ -34,7 +36,7 @@ check_file_format() {
 }
 
 list_files() {
-	find "$(dirname "$(dirname "$0")")" -name '*.sh' -and -not -path '*/.venv/*'
+	find "$PROJECT" -name '*.sh' -and -not -path '*/.venv/*'
 }
 
 process_files() {
