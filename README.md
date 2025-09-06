@@ -13,9 +13,9 @@ caught bugs that would have otherwise shipped with this script.
 
 | OS                                                        |                                                                                                                                                                       Status | Runs on        |
 |-----------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------:|
-| [macOS Latest](https://github.com/actions/runner-images)  |    [![macOS status](https://github.com/mshroyer/socklink/actions/workflows/test-macos.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-macos.yml) | push, schedule |
-| SourceHut                                                 |  [![SourceHut status](https://github.com/mshroyer/socklink/actions/workflows/sourcehut.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/sourcehut.yml) | schedule       |
 | [Ubuntu Latest](https://github.com/actions/runner-images) | [![Ubuntu status](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml) | push, schedule |
+| [macOS Latest](https://github.com/actions/runner-images)  |    [![macOS status](https://github.com/mshroyer/socklink/actions/workflows/test-macos.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-macos.yml) | push, schedule |
+| [SourceHut](https://builds.sr.ht/~mshroyer/socklink)      |  [![SourceHut status](https://github.com/mshroyer/socklink/actions/workflows/sourcehut.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/sourcehut.yml) | schedule       |
 
 Ubuntu and macOS tests run on GitHub Actions.  I use SourceHut build's [wide
 platform support](https://man.sr.ht/builds.sr.ht/) to additionally test on:
