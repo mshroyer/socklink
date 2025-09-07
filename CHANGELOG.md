@@ -1,4 +1,4 @@
-# tsock.sh Changelog
+# socklink.sh Changelog
 
 ## v0.3.0
 
