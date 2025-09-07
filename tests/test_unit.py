@@ -39,19 +39,21 @@ def test_get_pid_uid(stub: SocklinkStub):
     assert stub.run("get-pid-uid", nonexistent_pid) == ""
 
 
-def test_client_active_hook(stub: SocklinkStub):
-    assert not stub.run_test("has-client-active-hook", "tmux 3.2")
-    assert stub.run_test("has-client-active-hook", "tmux 3.3")
+def test_tmux_feature(stub: SocklinkStub):
+    assert not stub.run_test("test-tmux-feature", "client-active-hook", "tmux 3.2")
+    assert stub.run_test("test-tmux-feature", "client-active-hook", "tmux 3.3")
 
     # Debian 12
-    assert stub.run_test("has-client-active-hook", "tmux 3.3a")
+    assert stub.run_test("test-tmux-feature", "client-active-hook", "tmux 3.3a")
 
     # AlmaLinux 10
-    assert stub.run_test("has-client-active-hook", "tmux next-3.4")
+    assert stub.run_test("test-tmux-feature", "client-active-hook", "tmux next-3.4")
 
     # OpenBSD
-    assert not stub.run_test("has-client-active-hook", "tmux openbsd-7.0")
-    assert stub.run_test("has-client-active-hook", "tmux openbsd-7.7")
+    assert not stub.run_test(
+        "test-tmux-feature", "client-active-hook", "tmux openbsd-7.0"
+    )
+    assert stub.run_test("test-tmux-feature", "client-active-hook", "tmux openbsd-7.7")
 
 
 def test_set_section_no_file(sandbox: Sandbox, stub: SocklinkStub):

@@ -445,7 +445,7 @@ setup_tmux_conf() {
 	script="$(get_script)"
 
 	set_socklink_section "$HOME/.tmux.conf" <<EOF
-if-shell -b '$script has-client-active-hook' {
+if-shell -b '$script test-tmux-feature client-active-hook' {
 	set-hook -ga client-active 'run-shell "$script -c client-active set-server-link-by-name #{hook_client}"'
 }
 set-hook -ga client-attached 'run-shell "$script -c client-attached set-server-link #{client_tty}"'
@@ -490,19 +490,33 @@ check_number_at_least() {
 	awk -v n="$2" -v c="$1" 'BEGIN{ exit !(c+0 <= n+0) }'
 }
 
-has_client_active_hook() {
-	verstr="$1"
+# Tests whether a named tmux feature is available in our environment.
+#
+# An optional version argument gives the tmux version string to consider.  If
+# unspecified, the version of the tmux on our $PATH is queried.
+test_tmux_feature() {
+	feature="$1"
+	verstr="$2"
 	if [ -z "$verstr" ]; then
 		verstr="$(tmux -V)"
 	fi
+
 	prefix="$(echo "$verstr" | sed -E 's/^tmux ((.*)-)?([0-9]+\.[0-9]+)(.*)/\2/')"
 	number="$(echo "$verstr" | sed -E 's/^tmux ((.*)-)?([0-9]+\.[0-9]+)(.*)/\3/')"
 
-	if [ "$prefix" = "openbsd" ]; then
-		check_number_at_least 7.1 "$number"
-	else
-		check_number_at_least 3.3 "$number"
-	fi
+	case "$feature" in
+		client-active-hook)
+			if [ "$prefix" = "openbsd" ]; then
+				check_number_at_least 7.1 "$number"
+			else
+				check_number_at_least 3.3 "$number"
+			fi
+			;;
+		*)
+			log "test_tmux_feature: Unknown feature '$feature'" t
+			exit 1
+			;;
+	esac
 }
 
 #### Main ####################################################################
@@ -549,8 +563,10 @@ elif [ "$1" = "show-server-link" ]; then
 	get_server_link_path
 elif [ "$1" = "set-tmux-env" ]; then
 	set_tmux_env
-elif [ "$1" = "has-client-active-hook" ]; then
-	has_client_active_hook "$2"
+elif [ "$1" = "test-tmux-feature" ]; then
+	log "$@"
+	shift
+	test_tmux_feature "$@"
 elif [ "$1" = "setup" ]; then
 	log "$@"
 	setup
