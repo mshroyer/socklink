@@ -25,11 +25,11 @@
 # If you're using a different shell than zsh or bash, manually add an init
 # script for that shell of the form:
 #
-#     if [[ -n "$THIS_IS_AN_INTERACTIVE_SESSION" ]]; then
-#             if [ -z "\$TMUX" ]; then
+#     if [ -n "$THIS_IS_AN_INTERACTIVE_SESSION" ]; then
+#             if [ -z "$TMUX" ]; then
 #                     socklink.sh set-tty-link -c shell-init
 #             else
-#                     export SSH_AUTH_SOCK="\$(socklink.sh show-server-link)"
+#                     export SSH_AUTH_SOCK="$(socklink.sh show-server-link)"
 #             fi
 #     fi
 #
@@ -46,7 +46,7 @@
 # Copyright (c) 2025 Mark Shroyer
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the “Software”), to deal
+# of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
@@ -55,7 +55,7 @@
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
