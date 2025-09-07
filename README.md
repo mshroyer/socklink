@@ -4,6 +4,9 @@ A zero-dependency, cross-platform `SSH_AUTH_SOCK` manager for tmux.
 
 (It's just a shell script!  The Python is all test automation.)
 
+See [this blog post](https://markshroyer.com/2025/09/socklink/) for a more
+detailed overview.
+
 ## Installation
 
 Copy the [latest release](https://github.com/mshroyer/socklink/releases) to
