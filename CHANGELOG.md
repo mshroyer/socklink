@@ -1,6 +1,6 @@
 # socklink.sh Changelog
 
-## v0.3.1-dev
+## v0.3.1
 
 - Print notice about restarting shells and tmux after running `setup`.
 - Fix some mistakes in the script's header comment.
