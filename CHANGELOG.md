@@ -1,7 +1,9 @@
 # tsock.sh Changelog
 
-## v0.3.0-dev
+## v0.3.0
 
+- Backwards-incompatible command line flag changes; re-run `setup` after
+  updating.
 - Support zsh in the `setup` subcommand.
 - Fix and regression test silently-broken server link handling on Alpine Linux
   due to its incompatible ps implementation.

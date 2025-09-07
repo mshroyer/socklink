@@ -1,13 +1,14 @@
 #!/bin/sh
 
-# tmux SSH authentication socket wrangler
+# A cross-platform SSH_AUTH_SOCK manager for tmux
 #
 # This maintains a two-level symlink map of a user's tmux server PIDs to the
-# SSH_AUTH_SOCKs they opened their current clients with.  The first level maps
-# the server PID to a filename representing a client tty/pty; the second level
-# maps that tty filename to the original auth socket.  The second level may be
-# missing if, for example, the client logged in without SSH agent forwarding.
-# This is intentional and seems to result in desired behavior from OpenSSH.
+# SSH_AUTH_SOCKs that they opened their active clients with.  The first level
+# maps the server PID to a filename representing a client tty; the second
+# level maps that tty filename to the original auth socket.  The second level
+# may be missing if, for example, the client logged in without SSH agent
+# forwarding.  This is intentional and seems to result in desired behavior
+# from OpenSSH.
 #
 # The purpose is that when hooked up correctly, this script will make SSH
 # authentication requests "just work", in that they'll be directed to the
@@ -16,31 +17,54 @@
 # hardware authenticator at your physical workstation, such as a YubiKey with
 # touch enabled.
 #
-# (Ideally we might have per-session accounting of the active client and then
-# per-pane mappings to original SSH_AUTH_SOCKs, allowing for the panes to be
-# moved between sessions.  But that's a heck of a lot more bookkeeping!)
+# To use, save this script somewhere and then run:
 #
-# set-tty-link saves the client tty -> auth socket link.  This should be
-# called when starting a non-tmux interactive shell, before it starts a tmux
-# client.
+#     socklink.sh setup
 #
-# set-server-link saves the server PID -> client tty link.  This should be
-# called with the new client's tty when the active client changes.  If called
-# without an argument, it will look up the most-recent client automatically.
+# which will configure the necessary hooks in .tmux.conf, .zshrc, and .bashrc.
+# If you're using a different shell than zsh or bash, manually add an init
+# script for that shell of the form:
 #
-# show-server-link gets the path to the server's PID link.  This should be
-# used to set SSH_AUTH_SOCK in new shells created within tmux.
+#     if [[ -n "$THIS_IS_AN_INTERACTIVE_SESSION" ]]; then
+#             if [ -z "\$TMUX" ]; then
+#                     socklink.sh set-tty-link -c shell-init
+#             else
+#                     export SSH_AUTH_SOCK="\$(socklink.sh show-server-link)"
+#             fi
+#     fi
 #
-# Works on Debian 12, AlmaLinux 9, OpenBSD 7.6, FreeBSD 14.2, NetBSD 9.3, and
-# macOS Sequoia 15.4.
+# Works on Debian 12, AlmaLinux 10, OpenBSD 7.7, FreeBSD 14.3, NetBSD 9.3, and
+# macOS Sequoia 15.4, among others.
 #
-# For the latest version see:
-# https://github.com/mshroyer/socklink/blob/main/socklink.sh
+# For the latest release or more info see:
+# https://github.com/mshroyer/socklink/
 #
 # Users of sdf.org can also find the latest release at ~mshroyer/socklink.sh
 # on either the regular cluster or MetaArray.
+#
+#
+# Copyright (c) 2025 Mark Shroyer
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the “Software”), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
-VERSION="0.3.0-dev"
+
+VERSION="0.3.0"
 
 set -eC  # noclobber for lock file
 
@@ -73,8 +97,8 @@ Usage:
     socklink.sh set-tmux-env
     socklink.sh show-server-link
     socklink.sh setup
-    socklink.sh version
-    socklink.sh help
+    socklink.sh -V
+    socklink.sh -h
 EOF
 }
 
