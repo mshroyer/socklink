@@ -13,6 +13,7 @@ from tests.testlib import (
     Sandbox,
     Term,
     SocklinkStub,
+    get_project_dir,
     resolve_symlink,
 )
 
@@ -129,7 +130,7 @@ def test_second_concurrent_client(
     assert resolve_symlink(auth_sock) == term2.login_auth_sock
 
 
-def test_switching_connected_cilent(
+def test_switching_connected_client(
     tmux_sock: Path, make_term: MakeTerm, stub: SocklinkStub
 ):
     stub.run("setup")
@@ -264,3 +265,16 @@ def test_gc_server_links(
         # Server link gc runs in set-tty-link, so the link for the now-killed
         # server should no longer be present here:
         assert len(list(servers.glob("*"))) == 0
+
+
+def test_space_in_script_path(sandbox: Sandbox, tmux_sock: Path, make_term: MakeTerm):
+    # Make a custom SocklinkStub that runs the script from a path containing a
+    # space.
+    script_dir = sandbox.root / "script dir"
+    script_dir.mkdir()
+    shutil.copy(get_project_dir() / "socklink.sh", script_dir)
+    stub = SocklinkStub(script_dir / "socklink.sh", sandbox)
+
+    # Now we can reuse existing tests and make sure they still work with the
+    # custom fixture.
+    test_switching_connected_client(tmux_sock, make_term, stub)

@@ -445,12 +445,12 @@ setup_tmux_conf() {
 	script="$(get_script)"
 
 	set_socklink_section "$HOME/.tmux.conf" <<EOF
-if-shell -b '$script test-tmux-feature client-active-hook' {
-	set-hook -ga client-active 'run-shell "$script -c client-active set-server-link-by-name #{hook_client}"'
+if-shell -b '"$script" test-tmux-feature client-active-hook' {
+	set-hook -ga client-active 'run-shell "\"$script\" -c client-active set-server-link-by-name \"#{hook_client}\""'
 }
-set-hook -ga client-attached 'run-shell "$script -c client-attached set-server-link #{client_tty}"'
-set-hook -ga session-created 'run-shell "$script -c session-created set-server-link #{client_tty}"'
-set-hook -ga session-created 'run-shell "$script -c session-created set-tmux-env"'
+set-hook -ga client-attached 'run-shell "\"$script\" -c client-attached set-server-link \"#{client_tty}\""'
+set-hook -ga session-created 'run-shell "\"$script\" -c session-created set-server-link \"#{client_tty}\""'
+set-hook -ga session-created 'run-shell "\"$script\" -c session-created set-tmux-env"'
 EOF
 }
 
@@ -458,9 +458,9 @@ setup_bashrc() {
 	set_socklink_section "$HOME/.bashrc" <<EOF
 if [[ \$- == *i* ]]; then
 	if [ -z "\$TMUX" ]; then
-		$script set-tty-link -c shell-init
+		"$script" set-tty-link -c shell-init
 	else
-		export SSH_AUTH_SOCK="\$($script show-server-link)"
+		export SSH_AUTH_SOCK="\$("$script" show-server-link)"
 	fi
 fi
 EOF
@@ -470,9 +470,9 @@ setup_zshrc() {
 	set_socklink_section "$HOME/.zshrc" <<EOF
 if [[ -o interactive ]]; then
 	if [ -z "\$TMUX" ]; then
-		$script set-tty-link -c shell-init
+		"$script" set-tty-link -c shell-init
 	else
-		export SSH_AUTH_SOCK="\$($script show-server-link)"
+		export SSH_AUTH_SOCK="\$("$script" show-server-link)"
 	fi
 fi
 EOF
