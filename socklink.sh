@@ -549,14 +549,14 @@ if [ -n "$help_flag" ] || [ "$1" = "help" ]; then
 elif [ -n "$version_flag" ]; then
 	echo "$VERSION"
 elif [ "$1" = "set-tty-link" ]; then
-	log "$@"
+	log "$*"
 	set_tty_link
 elif [ "$1" = "set-server-link" ]; then
-	log "$@"
+	log "$*"
 	shift
 	set_server_link "$@"
 elif [ "$1" = "set-server-link-by-name" ]; then
-	log "$@"
+	log "$*"
 	shift
 	set_server_link_by_name "$@"
 elif [ "$1" = "show-server-link" ]; then
@@ -564,11 +564,11 @@ elif [ "$1" = "show-server-link" ]; then
 elif [ "$1" = "set-tmux-env" ]; then
 	set_tmux_env
 elif [ "$1" = "test-tmux-feature" ]; then
-	log "$@"
+	log "$*"
 	shift
 	test_tmux_feature "$@"
 elif [ "$1" = "setup" ]; then
-	log "$@"
+	log "$*"
 	setup
 elif [ -n "$SOCKLINK_TESTONLY_COMMANDS" ]; then
 	if [ "$1" = "get-device-filename" ]; then
