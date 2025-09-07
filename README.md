@@ -13,10 +13,10 @@ your filesystem, then run
 socklink.sh setup
 ```
 
-The script will install hooks to your `.tmux.conf`, `.bashrc`, and `.zshrc`
-files.  If you're using a different interactive shell than bash or zsh, you
-can manually setup the necessary hooks by adding the equivalent of the
-following to your shell's init file:
+The script will install the necessary hooks to your `.tmux.conf`, `.bashrc`,
+and `.zshrc` files.  If you're using a different interactive shell than bash
+or zsh, you can instead manually setup the hooks by adding the equivalent of
+the following to your shell's init file:
 
 ```
 if [ -n "$THIS_IS_AN_INTERACTIVE_SESSION" ]; then
@@ -29,6 +29,10 @@ fi
 ```
 
 After setup, restart any tmux sessions and any interactive shells.
+
+No additional dependencies should be needed outside of what's present in
+tested operating systems' base installations, with the exception of Fedora
+where `awk` may not necessarily be installed by default.
 
 ## Platform support and tests
 
@@ -109,6 +113,16 @@ isn't working as expected for you, here are some things you can try:
    match what you see when you detach tmux and run `tty`.  If not, it's likely
    the `socklink.sh set-server-link` tmux hook isn't being invoked as
    expected.
+
+Logging can be enabled by setting the `SOCKLINK_LOG` environment variable to a
+log file's path, or by adding
+
+```
+SOCKLINK_LOG="/some/path/to/socklink.log"
+```
+
+to `~/.socklink.conf`.  Heads up that there's no log rotation, so this file
+will (slowly) grow unbounded.
 
 ## License
 
