@@ -2,11 +2,11 @@
 
 # A cross-platform SSH_AUTH_SOCK manager for tmux
 #
-# This maintains a two-level symlink map of a user's tmux server PIDs to the
-# SSH_AUTH_SOCKs that they opened their active clients with.  The first level
-# maps the server PID to a filename representing a client tty; the second
-# level maps that tty filename to the original auth socket.  The second level
-# may be missing if, for example, the client logged in without SSH agent
+# This script helps maintain a two-level symlink map of a user's tmux server
+# PIDs to the SSH_AUTH_SOCKs that they opened their active clients with.  The
+# first level maps the server PID to a filename representing a client tty; the
+# second level maps that tty filename to the original auth socket.  The second
+# level may be missing if, for example, the client logged in without SSH agent
 # forwarding.  This is intentional and seems to result in desired behavior
 # from OpenSSH.
 #
@@ -39,8 +39,10 @@
 # For the latest release or more info see:
 # https://github.com/mshroyer/socklink/
 #
-# Users of sdf.org can also find the latest release at ~mshroyer/socklink.sh
-# on either the regular cluster or MetaArray.
+# Users of sdf.org can also find the latest release at ~mshroyer/socklink.sh,
+# on either the regular cluster or MetaArray.  (But I'd strongly recommend
+# copying it to your own home directory instead of running it directly from
+# there, in case a future version breaks something for you.)
 #
 #
 # Copyright (c) 2025 Mark Shroyer
@@ -506,6 +508,8 @@ setup() {
 	setup_tmux_conf
 	setup_bashrc
 	setup_zshrc
+
+	echo "Setup complete for zsh and bash. Please restart tmux and your login shell."
 }
 
 #### Feature checks ##########################################################

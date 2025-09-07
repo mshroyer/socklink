@@ -1,5 +1,10 @@
 # socklink.sh Changelog
 
+## v0.3.1-dev
+
+- Print notice about restarting shells and tmux after running `setup`.
+- Fix some mistakes in the script's header comment.
+
 ## v0.3.0
 
 - Backwards-incompatible command line flag changes; re-run `setup` after
