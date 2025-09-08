@@ -3,7 +3,7 @@ on:
   workflow_call:
   workflow_dispatch:
   schedule:
-    - cron: "57 0 * * *"
+    - cron: "57 15 * * 1,4"
 
 jobs:
   sourcehut:
