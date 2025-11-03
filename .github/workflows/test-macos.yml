@@ -8,7 +8,7 @@ on:
       - "**"
   pull_request:
   schedule:
-    - cron: "57 15 * * 1,4"
+    - cron: "57 15 * * 1"
 
 jobs:
   test:
