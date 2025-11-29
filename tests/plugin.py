@@ -47,12 +47,8 @@ def match_locale(desired: str) -> Optional[str]:
 
 @pytest.fixture(
     params=[
-        pytest.param(
-            "en_US.UTF-8",
-            marks=pytest.mark.skipif(
-                match_locale("en_US.UTF-8") is None, reason="locale not available"
-            ),
-        ),
+        # Default locale
+        pytest.param(None),
         pytest.param(
             "he_IL.UTF-8",
             marks=pytest.mark.skipif(
@@ -73,9 +69,10 @@ def locale(request):
 
 @pytest.fixture(autouse=True)
 def _expose_locale(monkeypatch, locale):
-    available_locale = match_locale(locale)
-    monkeypatch.setenv("LANG", available_locale)
-    monkeypatch.setenv("LC_ALL", available_locale)
+    if locale is not None:
+        available_locale = match_locale(locale)
+        monkeypatch.setenv("LANG", available_locale)
+        monkeypatch.setenv("LC_ALL", available_locale)
 
 
 @pytest.fixture(scope="session")
