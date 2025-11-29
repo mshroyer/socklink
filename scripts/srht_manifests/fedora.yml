@@ -1,6 +1,8 @@
 image: fedora/rawhide
 packages:
   - awk
+  - glibc-langpack-he
+  - glibc-langpack-zh
   - python3
   - tmux
   - zsh
