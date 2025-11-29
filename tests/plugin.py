@@ -1,6 +1,6 @@
 from pathlib import Path
 import subprocess
-from typing import Generator, Protocol
+from typing import Generator, Optional, Protocol, Set
 
 import pytest
 
@@ -11,6 +11,71 @@ from tests.testlib import (
     fail_with_subprocess_error,
     get_project_dir,
 )
+
+
+_available_locales: Set[str] = set()
+
+
+def available_locales() -> Set[str]:
+    """Return the system's available locales"""
+
+    if not _available_locales:
+        _available_locales.update(
+            subprocess.check_output(["locale", "-a"], encoding="utf-8")
+            .rstrip()
+            .split("\n")
+        )
+
+    return _available_locales
+
+
+def match_locale(desired: str) -> Optional[str]:
+    """Match a desired locale with one available on the system, if any"""
+
+    if desired in available_locales():
+        return desired
+
+    # BSD systems use foo.UTF-8 locales, but RedHat-like uses the .utf8
+    # suffix instead.
+    if desired.endswith(".UTF-8"):
+        subbed = desired.replace(".UTF-8", ".utf8")
+        if subbed in available_locales():
+            return subbed
+
+    return None
+
+
+@pytest.fixture(
+    params=[
+        pytest.param(
+            "en_US.UTF-8",
+            marks=pytest.mark.skipif(
+                match_locale("en_US.UTF-8") is None, reason="locale not available"
+            ),
+        ),
+        pytest.param(
+            "he_IL.UTF-8",
+            marks=pytest.mark.skipif(
+                match_locale("he_IL.UTF-8") is None, reason="locale not available"
+            ),
+        ),
+        pytest.param(
+            "zh_CN",
+            marks=pytest.mark.skipif(
+                match_locale("zh_CN") is None, reason="locale not available"
+            ),
+        ),
+    ]
+)
+def locale(request):
+    return request.param
+
+
+@pytest.fixture(autouse=True)
+def _expose_locale(monkeypatch, locale):
+    available_locale = match_locale(locale)
+    monkeypatch.setenv("LANG", available_locale)
+    monkeypatch.setenv("LC_ALL", available_locale)
 
 
 @pytest.fixture(scope="session")
