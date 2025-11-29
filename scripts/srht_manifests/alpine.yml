@@ -1,5 +1,6 @@
 image: alpine/latest
 packages:
+  - musl-locales
   - python3
   - tmux
   - zsh
