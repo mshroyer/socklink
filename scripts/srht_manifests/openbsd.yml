@@ -1,7 +1,7 @@
 image: openbsd/latest
 packages:
   - bash
-  - python
+  - python%3.11
   - zsh
 sources:
   - {{ repo }}#{{ commit }}
