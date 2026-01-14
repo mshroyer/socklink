@@ -17,4 +17,8 @@ ptyprocess==0.7.0
 pygments==2.19.2
     # via pytest
 pytest==8.4.1
+    # via
+    #   pytest-retry
+    #   socklink-tests (pyproject.toml)
+pytest-retry==1.7.0
     # via socklink-tests (pyproject.toml)

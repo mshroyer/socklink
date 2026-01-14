@@ -78,6 +78,11 @@ pyproject-hooks==1.2.0
 pytest==8.4.1
     # via
     #   -c requirements.txt
+    #   pytest-retry
+    #   socklink-tests (pyproject.toml)
+pytest-retry==1.7.0
+    # via
+    #   -c requirements.txt
     #   socklink-tests (pyproject.toml)
 ruff==0.12.11
     # via socklink-tests (pyproject.toml)
