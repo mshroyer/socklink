@@ -13,6 +13,15 @@ PYTHON_BINS="python3.13 python3.12 python3.11 python3 python"
 
 PROJECT=$(cd "$(dirname "$0")/.." && pwd)
 
+RETRIES_FLAG=
+if [ "$(uname)" = "Darwin" ]; then
+	# On macOS I've been unable to find a non-flaky means of capturing
+	# stdout from shell commands run within tmux in pexpect sessions, so
+	# let's specifically enable retries there to minimize workflow
+	# failures.
+	RETRIES_FLAG='--retires=1'
+fi
+
 python_version_at_least() {
 	result=$("$1" -c "import sys; print(float(f'{sys.version_info[0]}.{sys.version_info[1]}') >= $2)")
 	if [ "$result" != "True" ]; then
@@ -45,4 +54,4 @@ setup_venv() {
 cd "$PROJECT"
 setup_venv
 .venv/bin/pip install -r requirements.txt
-.venv/bin/python -m pytest -v "$@"
+.venv/bin/python -m pytest "$RETRIES_FLAG" -v "$@"
