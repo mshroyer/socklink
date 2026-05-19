@@ -28,7 +28,7 @@ gql[aiohttp]==4.0.0
     # via socklink-tests (pyproject.toml)
 graphql-core==3.2.6
     # via gql
-idna==3.10
+idna==3.15
     # via
     #   anyio
     #   yarl
