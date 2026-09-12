@@ -13,7 +13,7 @@ Copy the [latest release](https://github.com/mshroyer/socklink/releases) to
 your filesystem, then run
 
 ```
-socklink.sh setup
+./socklink.sh setup
 ```
 
 The script will install the necessary hooks to your `.tmux.conf`, `.bashrc`,
@@ -35,7 +35,7 @@ After setup, restart any tmux sessions and any interactive shells.
 
 No additional dependencies should be needed outside of what's present in
 tested operating systems' base installations, with the exception of Fedora
-where `awk` may not necessarily be installed by default.
+where `awk` and `which` may not necessarily be installed by default.
 
 ## Platform support and tests
 
