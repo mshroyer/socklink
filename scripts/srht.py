@@ -448,6 +448,8 @@ async def main():
     )
     args = parser.parse_args()
 
+    # Needs a token with grant string:
+    # builds.sr.ht/PROFILE:RO builds.sr.ht/JOBS:RW
     token = os.getenv("SOURCEHUT_ACCESS_TOKEN")
     if token is None:
         raise ValueError("SOURCEHUT_ACCESS_TOKEN not set")
