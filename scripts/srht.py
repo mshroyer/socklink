@@ -365,25 +365,37 @@ async def _run_with_bounded_concurrency(
 
 
 def _get_default_repo() -> str:
-    repo_dir = Path(__file__).parent
-    repo = (
-        subprocess.check_output(
-            ["git", "-C", str(repo_dir), "remote", "get-url", "origin"]
+    repo_dir = Path(__file__).parent.parent
+    if (repo_dir / ".git").exists():
+        return (
+            subprocess.check_output(
+                ["git", "-C", str(repo_dir), "remote", "get-url", "origin"]
+            )
+            .decode("utf-8")
+            .rstrip()
         )
-        .decode("utf-8")
-        .rstrip()
-    )
-    return repo
+    elif (repo_dir / ".sl").exists():
+        return (
+            subprocess.check_output(["sl", "config", "paths.default"])
+            .decode("utf-8")
+            .rstrip()
+        )
+    else:
+        raise RuntimeError("Unknown source repo format")
 
 
 def _get_default_commit() -> str:
-    repo_dir = Path(__file__).parent
-    commit = (
-        subprocess.check_output(["git", "-C", str(repo_dir), "rev-parse", "HEAD"])
-        .decode("utf-8")
-        .rstrip()
-    )
-    return commit
+    repo_dir = Path(__file__).parent.parent
+    if (repo_dir / ".git").exists():
+        return (
+            subprocess.check_output(["git", "-C", str(repo_dir), "rev-parse", "HEAD"])
+            .decode("utf-8")
+            .rstrip()
+        )
+    elif (repo_dir / ".sl").exists():
+        return subprocess.check_output(["sl", "id"]).decode("utf-8").rstrip()
+    else:
+        raise RuntimeError("Unknown source repo format")
 
 
 def _check_commit_accessibility(repo: str, commit: str):
