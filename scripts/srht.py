@@ -393,7 +393,11 @@ def _get_default_commit() -> str:
             .rstrip()
         )
     elif (repo_dir / ".sl").exists():
-        return subprocess.check_output(["sl", "id"]).decode("utf-8").rstrip()
+        return (
+            subprocess.check_output(["sl", "log", "--template", r"{node}\n", "-r", "."])
+            .decode("utf-8")
+            .rstrip()
+        )
     else:
         raise RuntimeError("Unknown source repo format")
 
