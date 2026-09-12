@@ -5,10 +5,11 @@ A zero-dependency, cross-platform `SSH_AUTH_SOCK` manager for tmux.
 Ensures that as you jump between different SSH clients accessing the same
 remote tmux session, such as multiple laptops connecting to a long-running
 session on a dev server, your tmux panes' SSH authentication sockets always
-point to your present client's auth agent, which might be something like a
-YubiKey requiring local proof-of-presence.  Uses tmux hooks rather than
-running a daemon, is cross-platform across Linux distros/macOS/BSDs, and has
-no dependencies other than tmux itself and `/bin/sh`.
+point to your most recently active client's auth agent, which might be
+something like a YubiKey requiring local proof-of-presence.  Uses tmux hooks
+rather than running a daemon, is cross-platform across Linux
+distros/macOS/BSDs, and has no dependencies other than tmux itself and
+`/bin/sh`.
 
 (It's just a shell script!  The Python is all test automation.)
 
