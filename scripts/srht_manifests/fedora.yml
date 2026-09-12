@@ -5,6 +5,7 @@ packages:
   - glibc-langpack-zh
   - python3
   - tmux
+  - which
   - zsh
 sources:
   - {{ repo }}#{{ commit }}
