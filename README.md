@@ -1,6 +1,12 @@
 # socklink.sh
 
-A zero-dependency, cross-platform `SSH_AUTH_SOCK` manager for tmux.
+A zero-dependency, cross-platform `SSH_AUTH_SOCK` manager for tmux.  Ensures
+that as you hop between different SSH clients of the same remote tmux session
+(such as multiple laptops connecting to a long-running session on a dev
+server), your panes' authentication sockets always point to your current
+client's auth agent.  Uses tmux hooks rather than running a daemon, is
+cross-platform across Linux, macOS, and various BSDs, and has no dependencies
+besides `tmux` itself and `/bin/sh`.
 
 (It's just a shell script!  The Python is all test automation.)
 
