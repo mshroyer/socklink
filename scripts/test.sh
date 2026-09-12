@@ -35,6 +35,8 @@ get_python_bin() {
 	for bin in $PYTHON_BINS; do
 		if which "$bin" >/dev/null 2>&1 \
 				&& python_version_at_least "$bin" "$PYTHON_MIN"; then
+			ver=$("$bin" --version)
+			echo "Using binary name $bin, which reports version $ver" >&2
 			echo "$bin"
 			return
 		fi
