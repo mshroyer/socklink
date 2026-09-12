@@ -33,6 +33,7 @@ python_version_at_least() {
 # minimum version requirement.
 get_python_bin() {
 	for bin in $PYTHON_BINS; do
+		echo "Trying $bin" >&2
 		if which "$bin" >/dev/null 2>&1 \
 				&& python_version_at_least "$bin" "$PYTHON_MIN"; then
 			echo "$bin"
