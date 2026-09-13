@@ -19,7 +19,7 @@ if [ "$(uname)" = "Darwin" ]; then
 	# stdout from shell commands run within tmux in pexpect sessions, so
 	# let's specifically enable retries there to minimize workflow
 	# failures.
-	RETRIES_FLAG='--retries=1'
+	RETRIES_FLAG='--retries=2'
 fi
 
 python_version_at_least() {
