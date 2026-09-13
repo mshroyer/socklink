@@ -10,7 +10,7 @@ jobs:
   test:
     runs-on: ${{ inputs.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: Homebrew/actions/setup-homebrew@main
         if: ${{ contains(inputs.os, 'macos-') }}
@@ -24,9 +24,9 @@ jobs:
         if: ${{ contains(inputs.os, 'ubuntu-') }}
 
       - name: Setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
-          python-version: '3.13'
+          python-version: '3.14'
 
       - name: Run tests
         # Run the tests in ./pytest to avoid "File name too long" in the
