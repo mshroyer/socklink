@@ -23,7 +23,7 @@ client system.  Copy the [latest
 release](https://github.com/mshroyer/socklink/releases) to wherever you want
 to keep it on your server's filesystem, then run
 
-```
+```sh
 ./socklink.sh setup
 ```
 
@@ -72,7 +72,7 @@ automated testing there.
 
 You can run the tests locally with:
 
-```
+```sh
 ./scripts/test.sh
 ```
 
@@ -101,7 +101,7 @@ still-connected clients won't work automatically.
 
 If needed, you can work around this by running
 
-```
+```sh
 socklink.sh set-server-link
 ```
 
@@ -126,7 +126,7 @@ isn't working as expected for you, here are some things you can try:
 Logging can be enabled by setting the `SOCKLINK_LOG` environment variable to a
 log file's path, or by adding
 
-```
+```sh
 SOCKLINK_LOG="/some/path/to/socklink.log"
 ```
 
