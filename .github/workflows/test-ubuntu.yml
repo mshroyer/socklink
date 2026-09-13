@@ -15,4 +15,4 @@ jobs:
   test:
     uses: ./.github/workflows/test.yml
     with:
-      os: ubuntu-latest
+      os: ubuntu-26.04-arm
