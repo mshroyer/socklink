@@ -167,7 +167,7 @@ ensure_dir() {
 	if [ ! -d "$1" ]; then
 		mkdir -m700 "$1"
 	fi
-	if [ ! -O "$1" ]; then
+	if [ -z "$(find "$1" -prune -user "$MYUID")" ]; then
 		log "expected $1 to be owned by UID $MYUID" 1
 		exit 1
 	fi
@@ -191,13 +191,13 @@ gc_tty_links() {
 		[ -L "$tty_link" ] || [ -e "$tty_link" ] || continue
 
 		tty_device="$(get_filename_device "$(basename "$tty_link")")"
-		if [ ! -O "$tty_device" ]; then
+		if [ -z "$(find "$tty_device" -prune -user "$MYUID")" ]; then
 			log "gc_tty_links: removing $tty_link: $tty_device missing or not owned"
 			rm -f "$tty_link"
 			continue
 		fi
 		tty_sock="$(readlink "$tty_link")"
-		if [ ! -O "$tty_sock" ]; then
+		if [ -z "$(find "$tty_sock" -prune -user "$MYUID")" ]; then
 			log "gc_tty_links: removing $tty_link: $tty_sock missing or not owned"
 			rm -f "$tty_link"
 		fi
@@ -222,7 +222,7 @@ set_tty_link() {
 	gc_tty_links
 	gc_server_links
 
-	if [ -n "$SSH_AUTH_SOCK" ] && [ -O "$SSH_AUTH_SOCK" ]; then
+	if [ -n "$SSH_AUTH_SOCK" ] && [ -n "$(find "$SSH_AUTH_SOCK" -prune -user "$MYUID")" ]; then
 		set_symlink "$SSH_AUTH_SOCK" "$(get_tty_link_path "$(tty)")"
 	fi
 }

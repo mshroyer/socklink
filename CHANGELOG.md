@@ -1,5 +1,10 @@
 # socklink.sh Changelog
 
+## Unreleased
+
+- Avoid relying on non-standard `test -O`, as per
+  [SC3067](https://www.shellcheck.net/wiki/SC3067)
+
 ## v0.3.1
 
 - Print notice about restarting shells and tmux after running `setup`.
