@@ -211,10 +211,10 @@ class Term:
         while True:
             try:
                 return path.read_text()
-            except FileNotFoundError as e:
+            except FileNotFoundError:
                 now = time.monotonic()
                 if (now - start) > max_wait.total_seconds():
-                    raise e
+                    raise
                 time.sleep(poll_interval.total_seconds())
 
     def _wait_for_prompt(self) -> int:
