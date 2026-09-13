@@ -18,8 +18,10 @@ detailed overview.
 
 ## Installation
 
-Copy the [latest release](https://github.com/mshroyer/socklink/releases) to
-wherever you want to keep it on your filesystem, then run
+Socklink only needs to be installed on the system you're SSHing into, not your
+client system.  Copy the [latest
+release](https://github.com/mshroyer/socklink/releases) to wherever you want
+to keep it on your server's filesystem, then run
 
 ```
 ./socklink.sh setup
@@ -71,7 +73,7 @@ automated testing there.
 You can run the tests locally with:
 
 ```
-% scripts/test.sh
+./scripts/test.sh
 ```
 
 The tests will use your system versions of `tmux` and any shells available for
