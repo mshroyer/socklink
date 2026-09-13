@@ -32,7 +32,7 @@ and `.zshrc` files.  If you're using a different interactive shell than bash
 or zsh, you can instead manually setup the hooks by adding the equivalent of
 the following to your shell's init file:
 
-```
+```sh
 if [ -n "$THIS_IS_AN_INTERACTIVE_SESSION" ]; then
         if [ -z "$TMUX" ]; then
                 socklink.sh set-tty-link -c shell-init
