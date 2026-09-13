@@ -11,23 +11,22 @@ Returns a nonzero exit code if any jobs fail.
 
 import argparse
 import asyncio
-from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
-from datetime import timedelta
-from enum import Enum
-from pathlib import Path
-from typing import List, Optional, TypeVar
 import os
 import subprocess
 import sys
 import tempfile
 import time
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+from datetime import timedelta
+from enum import Enum
+from pathlib import Path
+from typing import TypeVar
 
+import jinja2
 from gql import Client, gql
 from gql.client import AsyncClientSession
 from gql.transport.aiohttp import AIOHTTPTransport
-import jinja2
-
 
 # GraphQL endpoint.
 ENDPOINT = "https://builds.sr.ht/query"
@@ -92,7 +91,7 @@ class Job:
 @dataclass
 class JobGroup:
     group_id: int
-    jobs: List[Job]
+    jobs: list[Job]
     canonical_name: str
 
 
@@ -132,7 +131,7 @@ class SourceHutClient:
         self,
         manifest_file: Path,
         note: str = "",
-        tags: List[str] = list(),
+        tags: list[str] = list(),
         execute: bool = True,
     ) -> Job:
         """Submits a build manifest provided as YAML
@@ -175,7 +174,7 @@ class SourceHutClient:
             status=JobStatus.UNKNOWN,
         )
 
-    async def create_group(self, jobs: List[Job], note: str = "", execute: bool = True):
+    async def create_group(self, jobs: list[Job], note: str = "", execute: bool = True):
         query = gql("""
           mutation createGroup($jobIds: [Int!]!, $execute: Boolean, $note: String) {
             createGroup(jobIds: $jobIds, execute: $execute, note: $note) {
@@ -232,14 +231,14 @@ class JobManager:
     _client: SourceHutClient
     _max_concurrency: int
     _trigger: str
-    _jobs: List[Job]
+    _jobs: list[Job]
     _start_time: float
 
     def __init__(
         self,
         client: SourceHutClient,
         max_concurrency: int = 3,
-        trigger: Optional[str] = None,
+        trigger: str | None = None,
     ):
         self._client = client
         self._max_concurrency = max_concurrency
@@ -271,7 +270,7 @@ class JobManager:
     def print_job_links(self, include_statuses: bool):
         def get_status(job: Job):
             if include_statuses:
-                return f"{str(job.status):<11}"
+                return f"{job.status!s:<11}"
             else:
                 return ""
 
@@ -292,12 +291,12 @@ class JobManager:
     @classmethod
     def _print_status_line_fn(
         cls, timestamp: str, fn: Callable[[Job], str]
-    ) -> Callable[[List[Job]], None]:
-        def result(jobs: List[Job]):
+    ) -> Callable[[list[Job]], None]:
+        def result(jobs: list[Job]):
             print(f"| {timestamp} |", end="")
             for job in jobs:
                 print(f" {fn(job):<{cls._job_column_width(job)}} |", end="")
-            print("")
+            print()
             sys.stdout.flush()
 
         return result
@@ -345,8 +344,8 @@ U = TypeVar("U")
 
 
 async def _run_with_bounded_concurrency(
-    max_concurrency: int, fn: Callable[[T], Awaitable[U]], args: List[T]
-) -> List[U]:
+    max_concurrency: int, fn: Callable[[T], Awaitable[U]], args: list[T]
+) -> list[U]:
     """Runs the callables with an upper bound on their concurrency
 
     We can use this to get some concurrency from our calls to SourceHut job

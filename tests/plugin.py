@@ -1,22 +1,22 @@
-from pathlib import Path
 import subprocess
-from typing import Generator, Optional, Protocol, Set
+from collections.abc import Generator
+from pathlib import Path
+from typing import Protocol
 
 import pytest
 
 from tests.testlib import (
     Sandbox,
-    Term,
     SocklinkStub,
+    Term,
     fail_with_subprocess_error,
     get_project_dir,
 )
 
+_available_locales: set[str] = set()
 
-_available_locales: Set[str] = set()
 
-
-def available_locales() -> Set[str]:
+def available_locales() -> set[str]:
     """Return the system's available locales"""
 
     if not _available_locales:
@@ -29,7 +29,7 @@ def available_locales() -> Set[str]:
     return _available_locales
 
 
-def match_locale(desired: str) -> Optional[str]:
+def match_locale(desired: str) -> str | None:
     """Match a desired locale with one available on the system, if any"""
 
     if desired in available_locales():

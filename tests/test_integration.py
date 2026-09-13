@@ -1,9 +1,9 @@
 import os
-from pathlib import Path
 import platform
 import re
 import shutil
 import subprocess
+from pathlib import Path
 from time import sleep
 
 import pytest
@@ -11,8 +11,8 @@ import pytest
 from tests.plugin import MakeTerm
 from tests.testlib import (
     Sandbox,
-    Term,
     SocklinkStub,
+    Term,
     get_project_dir,
     resolve_symlink,
 )

@@ -2,7 +2,6 @@ import os
 import subprocess
 from textwrap import dedent
 
-
 from tests.testlib import (
     Sandbox,
     SocklinkStub,

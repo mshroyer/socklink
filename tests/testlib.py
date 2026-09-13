@@ -1,17 +1,16 @@
 """Test helpers"""
 
-from datetime import timedelta
 import os
-from pathlib import Path
 import re
 import subprocess
 import tempfile
 import time
-from typing import List, Optional, TextIO
+from datetime import timedelta
+from pathlib import Path
+from typing import TextIO
 
 import pexpect
 import pytest
-
 
 # A sequence of magic characters to be included in the controlled shell's
 # prompt.  When we see this we know the previously issued command has
@@ -26,7 +25,7 @@ def get_project_dir() -> Path:
     return Path(os.path.realpath(__file__)).parents[1]
 
 
-def resolve_symlink(link: Optional[Path]) -> Optional[Path]:
+def resolve_symlink(link: Path | None) -> Path | None:
     """Resolves the file ultimately pointed to by a symlink
 
     Returns None if the target file doesn't exist.
@@ -53,7 +52,7 @@ class Sandbox:
 
     monkeypatch: pytest.MonkeyPatch
     root: Path
-    _tmux_sockets: List[Path]
+    _tmux_sockets: list[Path]
 
     def __init__(self, root: Path, monkeypatch: pytest.MonkeyPatch):
         self.monkeypatch = monkeypatch
@@ -75,7 +74,7 @@ class Sandbox:
         self._setup_dotfiles()
         os.chdir(root)
 
-    def make_unique_file(self, prefix: str, subdir: Optional[str] = None) -> Path:
+    def make_unique_file(self, prefix: str, subdir: str | None = None) -> Path:
         """Returns the path to a new, unique file in the sandbox"""
 
         if subdir is not None:
@@ -135,7 +134,7 @@ class Term:
     sandbox: Sandbox
     child: pexpect.spawn
     tty: str
-    login_auth_sock: Optional[Path]
+    login_auth_sock: Path | None
     _fifo_w: TextIO
 
     def __init__(
@@ -167,7 +166,7 @@ class Term:
 
     def run(
         self, command: str, stdout: bool = False, stderr: bool = True
-    ) -> Optional[str]:
+    ) -> str | None:
         """Sends a command to the pexpect child
 
         If stdout is True, the output will be piped to a file and then
@@ -232,7 +231,7 @@ class Term:
         except pexpect.TIMEOUT:
             pass
 
-    def get_auth_sock(self) -> Optional[Path]:
+    def get_auth_sock(self) -> Path | None:
         """Gets the current value of SSH_AUTH_SOCK in the active shell
 
         Note that this issues a command on the shell, so it may change state
@@ -292,7 +291,7 @@ class SocklinkStub:
         # Enable access to test-only functions
         sandbox.monkeypatch.setenv("SOCKLINK_TESTONLY_COMMANDS", "1")
 
-    def run(self, *args: str | Path | int, stdin: Optional[str] = None) -> str:
+    def run(self, *args: str | Path | int, stdin: str | None = None) -> str:
         """Run a socklink.sh subcommand and return its stdout
 
         Runs the subcommand directly, without constructing a sandboxed
@@ -307,7 +306,7 @@ class SocklinkStub:
             .rstrip()
         )
 
-    def run_test(self, *args: str | Path, stdin: Optional[str] = None) -> bool:
+    def run_test(self, *args: str | Path, stdin: str | None = None) -> bool:
         """Runs a socklink.sh subcommand and interprets success as a boolean"""
 
         try:

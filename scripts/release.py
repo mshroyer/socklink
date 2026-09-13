@@ -11,20 +11,18 @@ https://github.com/mshroyer/coursepointer/
 """
 
 import argparse
-from enum import Enum
 import json
-from pathlib import Path
 import re
 import subprocess
 import sys
 import time
-from typing import List, Optional
-
+from enum import Enum
+from pathlib import Path
 
 CI_WORKFLOWS = ["lint", "test-macos", "test-ubuntu"]
 
 
-def last_changelog_version() -> Optional[str]:
+def last_changelog_version() -> str | None:
     pattern = re.compile(r"^## v(\d+\.\d+\.\d+)$")
     with open("CHANGELOG.md") as f:
         for line in f:
@@ -52,7 +50,7 @@ def read_tag(tag: str) -> str:
     return rev_parse(f"tags/{tag}")
 
 
-def get_tags_at(rev: str) -> List[str]:
+def get_tags_at(rev: str) -> list[str]:
     output = subprocess.check_output(
         ["git", "tag", "--points-at", rev],
         universal_newlines=True,
@@ -60,7 +58,7 @@ def get_tags_at(rev: str) -> List[str]:
     return output.splitlines()
 
 
-def get_tagged_version(rev: str) -> Optional[str]:
+def get_tagged_version(rev: str) -> str | None:
     pattern = re.compile(r"^v(\d+\.\d+\.\d+)$")
     for tag in get_tags_at(rev):
         m = pattern.match(tag)
@@ -114,7 +112,7 @@ def query_ci_runs(workflow: str, sha: str) -> dict:
     return runs["workflow_runs"]
 
 
-def successful_run_id(workflow_runs: dict) -> Optional[int]:
+def successful_run_id(workflow_runs: dict) -> int | None:
     for run in workflow_runs:
         if (
             run["status"] == "completed"
@@ -125,7 +123,7 @@ def successful_run_id(workflow_runs: dict) -> Optional[int]:
     return None
 
 
-def pending_run_id(workflow_runs: dict) -> Optional[int]:
+def pending_run_id(workflow_runs: dict) -> int | None:
     for run in workflow_runs:
         if (
             run["status"]
@@ -207,21 +205,20 @@ def create(args: argparse.Namespace):
         print("No release version is tagged", file=sys.stderr)
         sys.exit(1)
 
-    with open("CHANGELOG.md") as r:
-        with open("release_notes.md", "w") as w:
-            current_version = False
-            past_padding = False
-            for line in r:
-                if current_version:
-                    if line.startswith("## "):
-                        break
+    with open("CHANGELOG.md") as r, open("release_notes.md", "w") as w:
+        current_version = False
+        past_padding = False
+        for line in r:
+            if current_version:
+                if line.startswith("## "):
+                    break
 
-                    if line.strip() != "":
-                        past_padding = True
-                    if past_padding:
-                        print(line.strip(), file=w)
-                elif line.strip() == f"## v{version}":
-                    current_version = True
+                if line.strip() != "":
+                    past_padding = True
+                if past_padding:
+                    print(line.strip(), file=w)
+            elif line.strip() == f"## v{version}":
+                current_version = True
 
     subprocess.run(
         [
