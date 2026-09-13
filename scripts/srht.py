@@ -131,7 +131,7 @@ class SourceHutClient:
         self,
         manifest_file: Path,
         note: str = "",
-        tags: list[str] = list(),
+        tags: list[str] | None = None,
         execute: bool = True,
     ) -> Job:
         """Submits a build manifest provided as YAML
@@ -141,6 +141,9 @@ class SourceHutClient:
         Returns its build number.
 
         """
+
+        if tags is None:
+            tags = []
 
         query = gql("""
           mutation submit ($manifest: String!, $tags: [String!], $note: String, $execute: Boolean, $visibility: Visibility, $secrets: Boolean!) {
