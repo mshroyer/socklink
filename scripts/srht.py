@@ -190,7 +190,7 @@ class SourceHutClient:
         """)
 
         query.variable_values = {
-            "jobIds": list(map(lambda j: j.job_id, jobs)),
+            "jobIds": [j.job_id for j in jobs],
             "note": note,
             "execute": execute,
         }
@@ -309,10 +309,10 @@ class JobManager:
         return max(len(job.nickname), 9)
 
     def are_jobs_terminated(self) -> bool:
-        return all(map(lambda j: j.status.is_terminal(), self._jobs))
+        return all(j.status.is_terminal() for j in self._jobs)
 
     def are_jobs_successful(self) -> bool:
-        return all(map(lambda j: j.status == JobStatus.SUCCESS, self._jobs))
+        return all(j.status == JobStatus.SUCCESS for j in self._jobs)
 
     async def _start_manifest(self, manifest_file: Path) -> Job:
         name = manifest_file.with_suffix("").name
