@@ -20,6 +20,10 @@ if [ "$(uname)" = "Darwin" ]; then
 	# let's specifically enable retries there to minimize workflow
 	# failures.
 	RETRIES_FLAG='--retries=2'
+
+	# Fix max path issues.
+	PYTEST_DEBUG_TEMPROOT=/tmp
+	export PYTEST_DEBUG_TEMPROOT
 fi
 
 python_version_at_least() {
