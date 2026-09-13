@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   lint_release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04-arm
 
     steps:
       - uses: actions/checkout@v7
@@ -24,7 +24,7 @@ jobs:
         run: python3 scripts/release.py lint
 
   await_ci:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04-arm
 
     steps:
       - uses: actions/checkout@v7
@@ -45,7 +45,7 @@ jobs:
 
   create_release:
     needs: sourcehut
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04-arm
 
     steps:
       - uses: actions/checkout@v7
@@ -58,7 +58,7 @@ jobs:
         run: python3 scripts/release.py create
 
   upload_script:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04-arm
     needs: create_release
 
     steps:
