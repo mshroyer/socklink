@@ -1,0 +1,49 @@
+#!/bin/sh
+
+PROJECT=$(cd "$(dirname "$0")/.." && pwd)
+cd "$PROJECT" || exit 1
+
+find_docker() {
+if podman -v >/dev/null 2>&1; then
+	which podman
+elif docker -v >/dev/null 2>&1; then
+	which docker
+else
+	echo "No podman or docker binary found!" >&2
+	exit 1
+fi
+}
+
+latest_mtime_recursive() {
+	path="$1"
+	find "$path" -print0 | xargs -0I{} date -r {} '+%s' | sort -nr | head -n 1
+}
+
+copy_ci_requirements() {
+	dest="$1"
+
+	if [ -z "$dest" ]; then
+		echo "Missing dest argument" >&2
+		exit 2
+	fi
+
+	items="\
+conftest.py
+dev-requirements.txt
+pyproject.toml
+pyrightconfig.json
+requirements.txt
+scripts
+socklink.sh
+tests
+"
+
+	if [ ! -d "$dest" ]; then
+		mkdir -p "$dest"
+	fi
+	rm -rf "${dest:?}"/*
+
+	for item in $items; do
+		cp -prl "$PROJECT/$item" "$dest/$item"
+	done
+}

@@ -8,10 +8,11 @@
 
 set -e
 
+SCRIPTS=$(cd "$(dirname "$0")" && pwd)
+. "$SCRIPTS/lib"
+
 PYTHON_MIN=3.11
 PYTHON_BINS="python3.15 python3.14 python3.13 python3.12 python3.11 python3 python"
-
-PROJECT=$(cd "$(dirname "$0")/.." && pwd)
 
 RETRIES_FLAG=
 if [ "$(uname)" = "Darwin" ]; then
@@ -57,7 +58,60 @@ setup_venv() {
 	fi
 }
 
-cd "$PROJECT"
-setup_venv
-.venv/bin/pip install -r requirements.txt
-.venv/bin/python -m pytest "$RETRIES_FLAG" -v "$@"
+run_in_container() {
+	distro="$1"
+	shift
+
+	if [ ! -d "$PROJECT/containers/$distro" ]; then
+		echo "Unknown container distro: $distro" >&2
+		exit 1
+	fi
+
+	copy_ci_requirements "$PROJECT/containers/$distro/files/socklink"
+
+	DOCKER="$(find_docker)"
+	FILES_CACHEBUST="$(latest_mtime_recursive "$PROJECT/containers/$distro")"
+	IMAGE_ID="$(mktemp)"
+	trap "rm -f $IMAGE_ID" EXIT
+
+	"$DOCKER" build --iidfile="$IMAGE_ID" "$PROJECT/containers/$distro" \
+		  "--build-arg=files_cachebust=$FILES_CACHEBUST"
+	"$DOCKER" run --rm "$(cat "$IMAGE_ID")" "/socklink/scripts/test.sh"
+}
+
+# shellcheck disable=SC2120
+run_tests() {
+	cd "$PROJECT" || exit 1
+
+	# Delete any per-container "files" directories copied over by
+	# run_in_container in order to prevent pytest from getting confused
+	# about non-toplevel conftest.py files.
+	for distro in ./containers/*; do
+		rm -rf "$distro/files"
+	done
+
+	setup_venv
+	.venv/bin/pip install -r requirements.txt
+	.venv/bin/python -m pytest "$RETRIES_FLAG" -v "$@"
+}
+
+container_flag=
+while getopts c:h flag
+do
+	case "$flag" in
+		c)
+			container_flag="$OPTARG"
+			;;
+		*)
+		        echo "Unknown flag: $flag" >&2
+			exit 1
+			;;
+	esac
+done
+shift $((OPTIND - 1))
+
+if [ -n "$container_flag" ]; then
+	run_in_container "$container_flag"
+else
+	run_tests
+fi
