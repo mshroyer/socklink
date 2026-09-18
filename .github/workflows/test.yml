@@ -29,6 +29,4 @@ jobs:
           python-version: '3.14'
 
       - name: Run tests
-        # Run the tests in ./pytest to avoid "File name too long" in the
-        # default location on macOS
-        run: scripts/test.sh --basetemp ./pytest
+        run: scripts/test.sh
