@@ -4,14 +4,14 @@ PROJECT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$PROJECT" || exit 1
 
 find_docker() {
-if podman -v >/dev/null 2>&1; then
-	which podman
-elif docker -v >/dev/null 2>&1; then
-	which docker
-else
-	echo "No podman or docker binary found!" >&2
-	exit 1
-fi
+	if podman -v >/dev/null 2>&1; then
+		which podman
+	elif docker -v >/dev/null 2>&1; then
+		which docker
+	else
+		echo "No podman or docker binary found!" >&2
+		exit 1
+	fi
 }
 
 latest_mtime_recursive() {
