@@ -18,8 +18,11 @@ format_file() {
 ' 2>>/dev/null
 }
 
-check_file_format() {
-	out=$(mktemp /tmp/socklink-format-XXXXXXXX.sh)
+format_check_file() {
+	out="$(mktemp /tmp/socklink-format-XXXXXXXX.sh)"
+
+	# shellcheck disable=SC2064
+	trap "rm -f $out" EXIT
 
 	differ=
 	cat "$1" >>"$out"
@@ -29,32 +32,41 @@ check_file_format() {
 	}
 	if [ -n "$differ" ]; then
 		diff -u "$1" "$out"
-		rm -f "$out"
 		return 1
 	fi
-	rm -f "$out"
 }
 
 list_files() {
-	find "$PROJECT" -name '*.sh' -and -not -path '*/.venv/*'
+	find "$PROJECT" \( -name '*.sh' -or -name 'lib' \) -and -not -path '*/.venv/*'
 }
 
 process_files() {
-	error=
-	for f in $(list_files); do
-		$1 "$f"
-	done
-	if [ -n "$error" ]; then
-		return 1
-	else
-		echo "$1 successful"
-	fi
+	batch_mode="$1"
+	cmd="$2"
+
+	case "$batch_mode" in
+		individually)
+			for f in $(list_files); do
+				"$cmd" "$f"
+			done
+			;;
+
+		batched)
+			files="$(list_files)"
+			echo "$files" | xargs "$cmd"
+			;;
+
+		*)
+			echo "Unknown batch mode $batch_mode" >&2
+			exit 2
+			;;
+	esac
 }
 
 if [ "$1" = "check" ]; then
-	process_files check_file_format
+	process_files individually format_check_file
 elif [ "$1" = "shellcheck" ]; then
-	process_files shellcheck
+	process_files batched shellcheck
 else
-	process_files format_file
+	process_files individually format_file
 fi

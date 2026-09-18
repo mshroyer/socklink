@@ -1,0 +1,4 @@
+external-sources=false
+disable=SC1091
+
+disable=SC2064
