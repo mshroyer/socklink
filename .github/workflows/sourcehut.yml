@@ -2,8 +2,6 @@ name: SourceHut
 on:
   workflow_call:
   workflow_dispatch:
-  schedule:
-    - cron: "57 15 * * 1"
 
 jobs:
   sourcehut:
