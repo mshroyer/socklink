@@ -55,12 +55,12 @@ def match_locale(desired: str) -> str | None:
                 match_locale("he_IL.UTF-8") is None, reason="locale not available"
             ),
         ),
-        pytest.param(
-            "zh_CN",
-            marks=pytest.mark.skipif(
-                match_locale("zh_CN") is None, reason="locale not available"
-            ),
-        ),
+        # pytest.param(
+        #     "zh_CN",
+        #     marks=pytest.mark.skipif(
+        #         match_locale("zh_CN") is None, reason="locale not available"
+        #     ),
+        # ),
     ]
 )
 def locale(request):

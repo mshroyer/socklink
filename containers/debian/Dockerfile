@@ -3,7 +3,7 @@ FROM debian:latest
 RUN apt update
 RUN apt install -y locales procps python3 python3-venv tmux zsh
 
-RUN sed -i -e 's/^# *he_IL/he_IL/' -e 's/^# *zh_CN/zh_CN/' /etc/locale.gen
+RUN sed -i -e 's/^# *he_IL/he_IL/' /etc/locale.gen
 RUN locale-gen
 
 ARG files_cachebust=1
