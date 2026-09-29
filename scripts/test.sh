@@ -77,7 +77,7 @@ run_tests_in_container() {
 	"$DOCKER" build --iidfile="$IMAGE_ID" "$PROJECT/containers/$distro" \
 		  "--build-arg=files_cachebust=$FILES_CACHEBUST"
 	echo "$DOCKER" run -e "PYTEST_ARG=$PYTEST_ARG" --rm \
-		  "$(cat "$IMAGE_ID")" "/socklink/scripts/test.sh"
+	     "$(cat "$IMAGE_ID")" "/socklink/scripts/test.sh"
 	"$DOCKER" run -e "PYTEST_ARG=$PYTEST_ARG" --rm \
 		  "$(cat "$IMAGE_ID")" "/socklink/scripts/test.sh"
 }
