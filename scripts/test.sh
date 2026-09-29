@@ -58,7 +58,7 @@ setup_venv() {
 	fi
 }
 
-run_in_container() {
+run_tests_in_container() {
 	distro="$1"
 	shift
 
@@ -76,7 +76,10 @@ run_in_container() {
 
 	"$DOCKER" build --iidfile="$IMAGE_ID" "$PROJECT/containers/$distro" \
 		  "--build-arg=files_cachebust=$FILES_CACHEBUST"
-	"$DOCKER" run --rm "$(cat "$IMAGE_ID")" "/socklink/scripts/test.sh"
+	echo "$DOCKER" run -e "PYTEST_ARG=$PYTEST_ARG" --rm \
+		  "$(cat "$IMAGE_ID")" "/socklink/scripts/test.sh"
+	"$DOCKER" run -e "PYTEST_ARG=$PYTEST_ARG" --rm \
+		  "$(cat "$IMAGE_ID")" "/socklink/scripts/test.sh"
 }
 
 # shellcheck disable=SC2120
@@ -92,7 +95,7 @@ run_tests() {
 
 	setup_venv
 	.venv/bin/pip install -r requirements.txt
-	.venv/bin/python -m pytest $RETRIES_FLAG -v "$@"
+	.venv/bin/python -m pytest $RETRIES_FLAG -v "$PYTEST_ARG"
 }
 
 container_flag=
@@ -110,8 +113,12 @@ do
 done
 shift $((OPTIND - 1))
 
+if [ -n "$1" ]; then
+	PYTEST_ARG="$1"
+fi
+
 if [ -n "$container_flag" ]; then
-	run_in_container "$container_flag"
+	run_tests_in_container "$container_flag"
 else
-	run_tests "$@"
+	run_tests
 fi
