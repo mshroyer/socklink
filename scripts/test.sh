@@ -92,7 +92,7 @@ run_tests() {
 
 	setup_venv
 	.venv/bin/pip install -r requirements.txt
-	.venv/bin/python -m pytest "$RETRIES_FLAG" -v "$@"
+	.venv/bin/python -m pytest $RETRIES_FLAG -v "$@"
 }
 
 container_flag=
@@ -113,5 +113,5 @@ shift $((OPTIND - 1))
 if [ -n "$container_flag" ]; then
 	run_in_container "$container_flag"
 else
-	run_tests
+	run_tests "$@"
 fi
