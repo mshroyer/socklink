@@ -37,7 +37,9 @@ format_check_file() {
 }
 
 list_files() {
-	find "$PROJECT" \( -name '*.sh' -or -name 'lib' \) -and -not -path '*/.venv/*'
+	find "$PROJECT" \( -name '*.sh' -or -name 'lib' \) \
+	     -and -not -path '*/.venv/*' \
+	     -and -not -path '*/containers/*'
 }
 
 process_files() {
