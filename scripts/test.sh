@@ -41,15 +41,15 @@ get_python_bin() {
 		if which "$bin" >/dev/null 2>&1 \
 				&& python_version_at_least "$bin" "$PYTHON_MIN"; then
 			ver=$("$bin" --version)
-			echo "\n======================================================================" >&2
-			echo "                        SOCKLINK TEST SUITE\n" >&2
+			printf "\n======================================================================\n" >&2
+			printf "                        SOCKLINK TEST SUITE\n\n" >&2
 			uname -a >&2
 			if [ -f /etc/os-release ]; then
 				grep PRETTY_NAME /etc/os-release >&2
 			fi
 			tmux -V >&2
 			echo "Using $bin, version $ver" >&2
-			echo "======================================================================\n" >&2
+			printf "======================================================================\n\n" >&2
 			echo "$bin"
 			return
 		fi
@@ -97,7 +97,7 @@ run_tests_in_vm() {
 
 	setup_venv
 	.venv/bin/pip install -r requirements.txt
-	.venv/bin/python "$PROJECT/scripts/vm_test.py" "$vm_flag"
+	.venv/bin/python "$PROJECT/scripts/vm_test.py" "$vm"
 }
 
 # shellcheck disable=SC2120
