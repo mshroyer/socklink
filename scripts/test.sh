@@ -99,12 +99,18 @@ run_tests() {
 }
 
 container_flag=
-while getopts c:h flag
+vm_flag=
+while getopts c:m:h flag
 do
 	case "$flag" in
 		c)
 			container_flag="$OPTARG"
 			;;
+
+		m)
+			vm_flag="$OPTARG"
+			;;
+
 		*)
 		        echo "Unknown flag: $flag" >&2
 			exit 1
@@ -119,6 +125,12 @@ fi
 
 if [ -n "$container_flag" ]; then
 	run_tests_in_container "$container_flag"
+elif [ -n "$vm_flag" ]; then
+	make_ci_iso
+
+	setup_venv
+	.venv/bin/pip install -r requirements.txt
+	.venv/bin/python "$PROJECT/scripts/vm_test.py" "$vm_flag"
 else
 	run_tests
 fi

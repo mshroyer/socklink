@@ -44,6 +44,20 @@ tests
 	rm -rf "${dest:?}"/*
 
 	for item in $items; do
-		cp -prl "$PROJECT/$item" "$dest/$item"
+		cp -pr "$PROJECT/$item" "$dest/$item"
 	done
+}
+
+make_ci_iso() {
+	iso_out="$PROJECT/vms/socklink.iso"
+	mkdir -p "$(dirname "$iso_out")"
+
+	iso_src="$(mktemp -d)"
+	trap 'rm -rf -- "$iso_src"' EXIT
+
+	copy_ci_requirements "$iso_src/"
+	if [ -e "$iso_out" ]; then
+		rm -f "$iso_out"
+	fi
+	xorriso -as mkisofs -o "$iso_out" "$iso_src"
 }
