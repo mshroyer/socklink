@@ -82,6 +82,16 @@ run_tests_in_container() {
 		  "$(cat "$IMAGE_ID")" "/socklink/scripts/test.sh"
 }
 
+run_tests_in_vm() {
+	vm="$1"
+
+	make_ci_iso
+
+	setup_venv
+	.venv/bin/pip install -r requirements.txt
+	.venv/bin/python "$PROJECT/scripts/vm_test.py" "$vm_flag"
+}
+
 # shellcheck disable=SC2120
 run_tests() {
 	cd "$PROJECT" || exit 1
@@ -126,11 +136,7 @@ fi
 if [ -n "$container_flag" ]; then
 	run_tests_in_container "$container_flag"
 elif [ -n "$vm_flag" ]; then
-	make_ci_iso
-
-	setup_venv
-	.venv/bin/pip install -r requirements.txt
-	.venv/bin/python "$PROJECT/scripts/vm_test.py" "$vm_flag"
+	run_tests_in_vm "$vm_flag"
 else
 	run_tests
 fi
