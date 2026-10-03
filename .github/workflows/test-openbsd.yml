@@ -8,5 +8,6 @@ on:
 jobs:
   test:
     uses: ./.github/workflows/action-test-vm.yml
+    secrets: inherit
     with:
       vm: openbsd79
