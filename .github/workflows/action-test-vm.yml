@@ -26,6 +26,11 @@ jobs:
           sudo udevadm trigger --name-match=kvm
           ls -l /dev/kvm
 
+      - uses: actions/cache@v6
+        with:
+          path: cache
+          key: ${{ inputs.vm }}
+
       - name: Fetch vm
         env:
           SOCKLINK_TEST_VMS_ACCESS_KEY_ID: "${{ secrets.SOCKLINK_TEST_VMS_ACCESS_KEY_ID }}"
