@@ -74,7 +74,7 @@ def run_tests_in_vm(vm: str):
             if int(code) != 0:
                 raise RuntimeError(f"Command returned nonzero exit code: {code}")
 
-    qemu.expect("login: ")
+    qemu.expect("login: ", timeout=300)
     qemu.sendline("root")
     qemu.expect("Password:")
     qemu.sendline("socklink-test")
@@ -87,14 +87,14 @@ def run_tests_in_vm(vm: str):
 
     run("mkdir /mnt/cdrom", check=False)
 
-    if uname == "OpenBSD":
-        run("mount /dev/cd0c /mnt/cdrom")
+    if uname in ("OpenBSD", "NetBSD"):
+        run("mount /dev/cd0a /mnt/cdrom")
     else:
         raise ValueError(f"Unsupported operating system: {uname}")
 
     run("mkdir ~test/socklink")
     run("cp -pr /mnt/cdrom/* ~test/socklink/")
-    run("chown -R test:test ~test/socklink")
+    run("chown -R test ~test/socklink")
     run("cd ~test/socklink")
     run("su test")
     run("scripts/test.sh", timeout=600)
