@@ -54,6 +54,8 @@ def run_tests_in_vm(vm: str):
             str(socklink_iso),
             "-drive",
             f"file={vm_image},if=virtio",
+            "-display",
+            "none",
             "-serial",
             "stdio",
             "-snapshot",
