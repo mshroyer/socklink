@@ -88,7 +88,9 @@ def run_tests_in_vm(vm: str):
     run("mkdir /mnt/cdrom", check=False)
 
     if uname in ("OpenBSD", "NetBSD"):
-        run("mount /dev/cd0a /mnt/cdrom")
+        run("mount -t cd9660 /dev/cd0a /mnt/cdrom")
+    elif uname == "FreeBSD":
+        run("mount -t cd9660 /dev/cd0 /mnt/cdrom")
     else:
         raise ValueError(f"Unsupported operating system: {uname}")
 
