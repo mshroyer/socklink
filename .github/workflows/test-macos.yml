@@ -7,6 +7,6 @@ on:
 
 jobs:
   test:
-    uses: ./.github/workflows/test.yml
+    uses: ./.github/workflows/action-test-local.yml
     with:
       os: macos-latest

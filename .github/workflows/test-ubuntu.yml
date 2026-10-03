@@ -1,4 +1,4 @@
-name: Test Ubuntu
+name: test-ubuntu2604
 on:
   workflow_call:
   workflow_dispatch:
@@ -13,6 +13,6 @@ on:
 
 jobs:
   test:
-    uses: ./.github/workflows/test.yml
+    uses: ./.github/workflows/action-test-local.yml
     with:
       os: ubuntu-26.04-arm
