@@ -31,4 +31,7 @@ else
 	    "s3://${TEST_VMS_S3_BUCKET}/${vm_name}.qcow2.zst" "$CACHE"
 fi
 
+if [ ! -d "$PROJECT/vms" ]; then
+	mkdir "$PROJECT/vms"
+fi
 zstd --output-dir-flat "$PROJECT/vms" -d "$CACHE/${vm_name}.qcow2.zst"
