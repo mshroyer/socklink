@@ -9,12 +9,6 @@ on:
         required: false
         type: string
         default: ubuntu-26.04
-      access_key_id:
-        requried: true
-        type: string
-      secret_access_key:
-        required: true
-        type: string
 
 jobs:
   test:
@@ -23,12 +17,9 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Fetch vm
-        # env:
-        #   SOCKLINK_TEST_VMS_ACCESS_KEY_ID: ${{ secrets.SOCKLINK_TEST_VMS_ACCESS_KEY_ID }}
-        #   SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY: ${{ secrets.SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY }}
         env:
-          SOCKLINK_TEST_VMS_ACCESS_KEY_ID: ${{ inputs.access_key_id }}
-          SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY: ${{ inputs.secret_access_key }}
+          SOCKLINK_TEST_VMS_ACCESS_KEY_ID: ${{ secrets.SOCKLINK_TEST_VMS_ACCESS_KEY_ID }}
+          SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY: ${{ secrets.SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY }}
         run: scripts/fetch_vm.sh ${{ inputs.vm }}
 
       - name: Run tests in vm

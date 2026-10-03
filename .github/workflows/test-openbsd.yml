@@ -10,5 +10,3 @@ jobs:
     uses: ./.github/workflows/action-test-vm.yml
     with:
       vm: openbsd79
-      access_key_id: ${{ secrets.SOCKLINK_TEST_VMS_ACCESS_KEY_ID }}
-      secret_access_key: ${{ secrets.SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY }}
