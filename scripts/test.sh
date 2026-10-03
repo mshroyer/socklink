@@ -48,7 +48,7 @@ get_python_bin() {
 				grep PRETTY_NAME /etc/os-release >&2
 			fi
 			tmux -V >&2
-			echo "Using $bin, version $ver" >&2
+			echo "Using bin $bin, version $ver" >&2
 			printf "======================================================================\n\n" >&2
 			echo "$bin"
 			return

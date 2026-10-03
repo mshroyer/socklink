@@ -99,6 +99,9 @@ def run_tests_in_vm(vm: str):
     run("su test")
     run("scripts/test.sh", timeout=600)
 
+    # Avoid trailing non-newline output
+    print()
+
 
 def main():
     run_tests_in_vm(sys.argv[1])
