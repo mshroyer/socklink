@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install Ubuntu packages
-        run: sudo apt install -y qemu-system-x86 qemu-utils xorriso
+        run: sudo apt update && sudo apt install -y qemu-system-x86 qemu-utils xorriso
 
       - name: Fetch vm
         env:
