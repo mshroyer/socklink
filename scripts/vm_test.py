@@ -18,9 +18,12 @@ PROJECT = Path(__file__).absolute().parent.parent
 
 def find_qemu_bin() -> Path:
     rhel_qemu_bin = Path("/usr/libexec/qemu-kvm")
+    ubuntu_qemu_bin = Path("/usr/bin/qemu-system-x86")
 
     if rhel_qemu_bin.exists():
         return rhel_qemu_bin
+    elif ubuntu_qemu_bin.exists():
+        return ubuntu_qemu_bin
     else:
         raise RuntimeError("Unable to locate a qemu binary")
 
