@@ -1,4 +1,4 @@
-name: test-ub2604
+name: test-ubuntu
 on:
   workflow_call:
   workflow_dispatch:
