@@ -93,11 +93,25 @@ run_tests_in_container() {
 run_tests_in_vm() {
 	vm="$1"
 
-	make_ci_iso
-
 	setup_venv
 	.venv/bin/pip install -r requirements.txt
 	.venv/bin/python "$PROJECT/scripts/vm_test.py" "$vm"
+}
+
+run_tests_in_all_containers_and_vms() {
+	for c in "$PROJECT/containers"/*; do
+		if [ -d "$c" ]; then
+			c="$(basename "$c")"
+			run_tests_in_container "$c"
+		fi
+	done
+	for m in "$PROJECT/vms"/*.qcow2; do
+		if [ -f "$m" ]; then
+			m="$(basename "$m")"
+			m="${m%.qcow2}"
+			run_tests_in_vm "$m"
+		fi
+	done
 }
 
 # shellcheck disable=SC2120
@@ -116,11 +130,16 @@ run_tests() {
 	.venv/bin/python -m pytest $RETRIES_FLAG -v "$PYTEST_ARG"
 }
 
+all_flag=
 container_flag=
 vm_flag=
-while getopts c:m:h flag
+while getopts ac:m:h flag
 do
 	case "$flag" in
+		a)
+			all_flag=1
+			;;
+
 		c)
 			container_flag="$OPTARG"
 			;;
@@ -141,9 +160,13 @@ if [ -n "$1" ]; then
 	PYTEST_ARG="$1"
 fi
 
-if [ -n "$container_flag" ]; then
+if [ -n "$all_flag" ]; then
+	make_ci_iso
+	run_tests_in_all_containers_and_vms
+elif [ -n "$container_flag" ]; then
 	run_tests_in_container "$container_flag"
 elif [ -n "$vm_flag" ]; then
+	make_ci_iso
 	run_tests_in_vm "$vm_flag"
 else
 	run_tests
