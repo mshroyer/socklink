@@ -1,0 +1,12 @@
+name: test-archlinux
+on:
+  workflow_call:
+  workflow_dispatch:
+  schedule:
+    - cron: "57 15 * * 1"
+
+jobs:
+  test:
+    uses: ./.github/workflows/action-test-container.yml
+    with:
+      container: archlinux
