@@ -1,0 +1,16 @@
+name: Test
+on:
+  workflow_call:
+    inputs:
+      container:
+        required: true
+        type: string
+
+jobs:
+  test:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Run tests in container
+        run: scripts/test.sh -c ${{ inputs.container }}
