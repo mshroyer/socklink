@@ -6,7 +6,6 @@ SCRIPTS=$(cd "$(dirname "$0")" && pwd)
 . "$SCRIPTS/lib"
 
 CACHE="$PROJECT/cache"
-
 if [ ! -d "$CACHE" ]; then
 	mkdir "$CACHE"
 fi
