@@ -9,6 +9,11 @@ on:
         required: false
         type: string
         default: ubuntu-26.04
+    secrets:
+      SOCKLINK_TEST_VMS_ACCESS_KEY_ID:
+        required: true
+      SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY:
+        required: true
 
 jobs:
   test:
@@ -18,9 +23,9 @@ jobs:
 
       - name: Fetch vm
         env:
-          SOCKLINK_TEST_VMS_ACCESS_KEY_ID: ${{ secrets.SOCKLINK_TEST_VMS_ACCESS_KEY_ID }}
-          SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY: ${{ secrets.SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY }}
-        run: scripts/fetch_vm.sh ${{ inputs.vm }}
+          SOCKLINK_TEST_VMS_ACCESS_KEY_ID: "${{ secrets.SOCKLINK_TEST_VMS_ACCESS_KEY_ID }}"
+          SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY: "${{ secrets.SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY }}"
+        run: scripts/fetch_vm.sh "${{ inputs.vm }}"
 
       - name: Run tests in vm
-        run: scripts/test.sh -m ${{ inputs.vm }}
+        run: scripts/test.sh -m "${{ inputs.vm }}"
