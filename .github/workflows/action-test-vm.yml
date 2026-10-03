@@ -1,0 +1,26 @@
+name: Test
+on:
+  workflow_call:
+    inputs:
+      vm:
+        required: true
+        type: string
+      host-os:
+        required: false
+        type: string
+        default: ubuntu-26.04
+
+jobs:
+  test:
+    runs-on: ${{ inputs.host-os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Fetch vm
+        env:
+          SOCKLINK_TEST_VMS_ACCESS_KEY_ID: ${{ secrets.SOCKLINK_TEST_VMS_ACCESS_KEY_ID }}
+          SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY: ${{ secrets.SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY }}
+        run: scripts/fetch_vm.sh ${{ inputs.vm }}
+
+      - name: Run tests in vm
+        run: scripts/test.sh -m ${{ inputs.vm }}
