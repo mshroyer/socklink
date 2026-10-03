@@ -5,10 +5,14 @@ on:
       container:
         required: true
         type: string
+      host-os:
+        required: false
+        type: string
+        default: ubuntu-26.04-arm
 
 jobs:
   test:
-    runs-on: ubuntu-26.04-arm
+    runs-on: ${{ inputs.host-os }}
     steps:
       - uses: actions/checkout@v7
 

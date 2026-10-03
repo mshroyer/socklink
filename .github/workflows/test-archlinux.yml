@@ -10,3 +10,4 @@ jobs:
     uses: ./.github/workflows/action-test-container.yml
     with:
       container: archlinux
+      host-os: ubuntu-26.04
