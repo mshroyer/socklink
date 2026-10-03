@@ -3,6 +3,11 @@
 PROJECT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$PROJECT" || exit 1
 
+TEST_VMS_S3_ENDPOINT='https://5d79a0473b8621a40befe75f1eba08e8.r2.cloudflarestorage.com'
+export TEST_VMS_S3_ENDPOINT
+TEST_VMS_S3_BUCKET='socklink-test-vms'
+export TEST_VMS_S3_BUCKET
+
 find_docker() {
 	if podman -v >/dev/null 2>&1; then
 		which podman
