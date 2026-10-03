@@ -66,7 +66,7 @@ caught bugs that would have otherwise shipped with this script.
 | [macOS Latest](https://github.com/actions/runner-images)                  |          [![macOS status](https://github.com/mshroyer/socklink/actions/workflows/test-macos.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-macos.yml) |    schedule, release    |
 | [NetBSD Latest](https://man.sr.ht/builds.sr.ht/compatibility.md#netbsd)   |                                                             [![NetBSD status](https://builds.sr.ht/~mshroyer/socklink/netbsd.svg)](https://builds.sr.ht/~mshroyer/socklink/netbsd) |    schedule, release    |
 | [OpenBSD Latest](https://man.sr.ht/builds.sr.ht/compatibility.md#openbsd) |                                                          [![OpenBSD status](https://builds.sr.ht/~mshroyer/socklink/openbsd.svg)](https://builds.sr.ht/~mshroyer/socklink/openbsd) |    schedule, release    |
-| [Ubuntu 26.04](https://github.com/actions/runner-images)                  |       [![Ubuntu status](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml) | push, schedule, release |
+| [Ubuntu 26.04](https://github.com/actions/runner-images)                  |       [![Ubuntu status](https://github.com/mshroyer/socklink/actions/workflows/test-ub2604.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-ub2604.yml) | push, schedule, release |
 
 I've also observed that tests succeed on OpenIndiana Hipster, but I don't have
 automated testing there.
