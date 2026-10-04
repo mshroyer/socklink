@@ -2,8 +2,8 @@ name: test-freebsd
 on:
   workflow_call:
   workflow_dispatch:
-  # schedule:
-  #   - cron: "57 15 * * 1"
+  schedule:
+    - cron: "57 15 * * 1"
 
 jobs:
   test:
