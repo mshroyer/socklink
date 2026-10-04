@@ -13,8 +13,8 @@ permissions:
   actions: write
   contents: read
 
-# Dispatches each test workflow that doesn't already run on push, if main has
-# new commits since they last ran or if they haven't run in about a week.
+# Dispatches all the test workflows if main has new commits since they last
+# ran or if they haven't run in about a week.
 #
 # The tests are dispatched as their own workflow runs (rather than invoked via
 # workflow_call) so that each one's run history and README status badge stay
@@ -41,7 +41,7 @@ jobs:
           workflows=()
           for f in .github/workflows/test-*.yml; do
             name=$(basename "$f")
-            if [ "$name" = test-all.yml ] || grep -q '^  push:' "$f"; then
+            if [ "$name" = test-all.yml ]; then
               continue
             fi
             workflows+=("$name")
