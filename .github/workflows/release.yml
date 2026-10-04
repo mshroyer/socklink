@@ -36,15 +36,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 scripts/release.py wait-ci ${{ github.sha }}
 
-  sourcehut:
-    needs:
-      - lint_release
-      - await_ci
-    uses: ./.github/workflows/sourcehut.yml
-    secrets: inherit
-
   create_release:
-    needs: sourcehut
     runs-on: ubuntu-26.04-arm
 
     steps:
