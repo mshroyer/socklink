@@ -1,0 +1,80 @@
+name: test-all
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Run all tests even if they're up to date"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "57 15 * * *"
+
+permissions:
+  actions: write
+  contents: read
+
+# Dispatches all the test workflows if main has new commits since they last
+# ran or if they haven't run in about a week.
+#
+# The tests are dispatched as their own workflow runs (rather than invoked via
+# workflow_call) so that each one's run history and README status badge stay
+# up to date.
+jobs:
+  dispatch:
+    runs-on: ubuntu-26.04-arm
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Dispatch test workflows
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORCE: ${{ inputs.force || 'false' }}
+          # Slightly less than a week, so that scheduling jitter doesn't push
+          # the weekly run out by an extra day.
+          MAX_AGE_HOURS: 162
+        run: |
+          set -euo pipefail
+
+          head_sha=$(git rev-parse HEAD)
+          cutoff=$(date -u -d "-${MAX_AGE_HOURS} hours" +%s)
+
+          workflows=()
+          for f in .github/workflows/test-*.yml; do
+            name=$(basename "$f")
+            if [ "$name" = test-all.yml ]; then
+              continue
+            fi
+            workflows+=("$name")
+          done
+
+          stale=$FORCE
+          for wf in "${workflows[@]}"; do
+            last=$(gh run list --workflow "$wf" --branch main --limit 1 \
+                     --json headSha,createdAt \
+                     --jq '.[0] | select(.) | "\(.headSha) \(.createdAt)"')
+            if [ -z "$last" ]; then
+              echo "$wf: no previous run on main"
+              stale=true
+              continue
+            fi
+            read -r sha created <<< "$last"
+            if [ "$sha" != "$head_sha" ]; then
+              echo "$wf: last ran on $sha, main is now $head_sha"
+              stale=true
+            elif [ "$(date -u -d "$created" +%s)" -lt "$cutoff" ]; then
+              echo "$wf: last ran at $created"
+              stale=true
+            else
+              echo "$wf: up to date"
+            fi
+          done
+
+          if [ "$stale" != true ]; then
+            echo "All tests are up to date; nothing to do."
+            exit 0
+          fi
+
+          for wf in "${workflows[@]}"; do
+            echo "Dispatching $wf"
+            gh workflow run "$wf" --ref main
+          done

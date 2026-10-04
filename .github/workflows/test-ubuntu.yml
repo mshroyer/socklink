@@ -8,8 +8,6 @@ on:
     tags-ignore:
       - "**"
   pull_request:
-  schedule:
-    - cron: "57 15 * * 1"
 
 jobs:
   test:
