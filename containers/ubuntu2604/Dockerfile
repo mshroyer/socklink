@@ -3,7 +3,7 @@ FROM ubuntu:26.04
 RUN apt update
 RUN apt install -y locales procps python3 python3-venv tmux zsh
 
-RUN sed -i -e 's/^# *he_IL/he_IL/' /etc/locale.gen
+RUN sed -i -e 's/^# *he_IL/he_IL/' -e 's/^# *zh_CN/zh_CN/' /etc/locale.gen
 RUN locale-gen
 
 # Also install emacs and shellcheck so that we can dual-purpose this container

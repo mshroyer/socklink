@@ -49,18 +49,18 @@ def match_locale(desired: str) -> str | None:
     params=[
         # Default locale
         pytest.param(None),
-        pytest.param(
-            "he_IL.UTF-8",
-            marks=pytest.mark.skipif(
-                match_locale("he_IL.UTF-8") is None, reason="locale not available"
-            ),
-        ),
         # pytest.param(
-        #     "zh_CN",
+        #     "he_IL.UTF-8",
         #     marks=pytest.mark.skipif(
-        #         match_locale("zh_CN") is None, reason="locale not available"
+        #         match_locale("he_IL.UTF-8") is None, reason="locale not available"
         #     ),
         # ),
+        pytest.param(
+            "zh_CN.UTF-8",
+            marks=pytest.mark.skipif(
+                match_locale("zh_CN.UTF-8") is None, reason="locale not available"
+            ),
+        ),
     ]
 )
 def locale(request):
