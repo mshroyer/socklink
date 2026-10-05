@@ -87,7 +87,7 @@ run_tests_in_vm() {
 
 	setup_venv
 	.venv/bin/pip install -r requirements.txt
-	.venv/bin/python "$PROJECT/scripts/vm_test.py" "$vm"
+	.venv/bin/python "$PROJECT/scripts/vm_test.py" "$vm" "$PYTEST_ARG"
 }
 
 run_tests_in_all_containers_and_vms() {

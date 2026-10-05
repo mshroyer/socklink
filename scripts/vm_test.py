@@ -47,7 +47,7 @@ def strip_ansi(s: str) -> str:
     return ANSI_RE.sub("", s)
 
 
-def run_tests_in_vm(vm: str):
+def run_tests_in_vm(vm: str, pytest_arg: str):
     vm_image = PROJECT / "vms" / f"{vm}.qcow2"
     if not vm_image.exists():
         raise ValueError(f"No such VM image file: {vm_image}")
@@ -134,14 +134,18 @@ def run_tests_in_vm(vm: str):
     run("chown -R test ~test/socklink")
     run("cd ~test/socklink")
     run("su test")
-    run("scripts/test.sh", timeout=600)
+    run(f"scripts/test.sh {pytest_arg}", timeout=900)
 
     # Avoid trailing non-newline output
     print()
 
 
 def main():
-    run_tests_in_vm(sys.argv[1])
+    pytest_arg = ""
+    if len(sys.argv) >= 3:
+        pytest_arg = sys.argv[2]
+
+    run_tests_in_vm(sys.argv[1], pytest_arg)
 
 
 if __name__ == "__main__":
