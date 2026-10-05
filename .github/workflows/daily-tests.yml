@@ -1,0 +1,34 @@
+name: daily-tests
+on:
+  workflow_dispatch:
+  schedule:
+    # A few hours after test-all's weekly run, so as not to start a redundant
+    # one on the same day.
+    - cron: "57 15 * * *"
+
+permissions:
+  actions: write
+  contents: read
+
+# Runs test-all if main has new commits since it last ran.
+jobs:
+  check:
+    runs-on: ubuntu-26.04-arm
+    steps:
+      - name: Run test-all if main has changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          last=$(gh run list --workflow test-all.yml --branch main --limit 1 \
+                   --json headSha --jq '.[0].headSha // ""')
+          if [ "$last" = "$HEAD_SHA" ]; then
+            echo "test-all has already run on $HEAD_SHA; nothing to do."
+            exit 0
+          fi
+
+          echo "test-all last ran on ${last:-(never)}, main is now $HEAD_SHA"
+          gh workflow run test-all.yml --ref main
