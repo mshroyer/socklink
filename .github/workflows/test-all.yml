@@ -2,41 +2,42 @@ name: test-all
 on:
   workflow_dispatch:
     inputs:
-      force:
-        description: "Run all tests even if they're up to date"
+      skip-push-tests:
+        description: "Skip test workflows that already run on push"
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      skip-push-tests:
         type: boolean
         default: false
   schedule:
-    - cron: "57 15 * * *"
+    - cron: "57 12 * * 1"
 
 permissions:
   actions: write
   contents: read
 
-# Dispatches all the test workflows if main has new commits since they last
-# ran or if they haven't run in about a week.
+# Runs all the test workflows, failing if any of them fail.
 #
 # The tests are dispatched as their own workflow runs (rather than invoked via
 # workflow_call) so that each one's run history and README status badge stay
-# up to date.
+# up to date.  Each job here dispatches one test workflow and waits for it to
+# finish.
 jobs:
-  dispatch:
+  list:
     runs-on: ubuntu-26.04-arm
+    outputs:
+      workflows: ${{ steps.list.outputs.workflows }}
     steps:
       - uses: actions/checkout@v7
 
-      - name: Dispatch test workflows
+      - name: List test workflows
+        id: list
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          FORCE: ${{ inputs.force || 'false' }}
-          # Slightly less than a week, so that scheduling jitter doesn't push
-          # the weekly run out by an extra day.
-          MAX_AGE_HOURS: 162
+          SKIP_PUSH_TESTS: ${{ inputs.skip-push-tests || false }}
         run: |
           set -euo pipefail
-
-          head_sha=$(git rev-parse HEAD)
-          cutoff=$(date -u -d "-${MAX_AGE_HOURS} hours" +%s)
 
           workflows=()
           for f in .github/workflows/test-*.yml; do
@@ -44,37 +45,44 @@ jobs:
             if [ "$name" = test-all.yml ]; then
               continue
             fi
+            if [ "$SKIP_PUSH_TESTS" = true ] && grep -q '^  push:' "$f"; then
+              echo "Skipping $name, which runs on push"
+              continue
+            fi
             workflows+=("$name")
           done
 
-          stale=$FORCE
-          for wf in "${workflows[@]}"; do
-            last=$(gh run list --workflow "$wf" --branch main --limit 1 \
-                     --json headSha,createdAt \
-                     --jq '.[0] | select(.) | "\(.headSha) \(.createdAt)"')
-            if [ -z "$last" ]; then
-              echo "$wf: no previous run on main"
-              stale=true
-              continue
-            fi
-            read -r sha created <<< "$last"
-            if [ "$sha" != "$head_sha" ]; then
-              echo "$wf: last ran on $sha, main is now $head_sha"
-              stale=true
-            elif [ "$(date -u -d "$created" +%s)" -lt "$cutoff" ]; then
-              echo "$wf: last ran at $created"
-              stale=true
-            else
-              echo "$wf: up to date"
-            fi
-          done
+          json=$(printf '"%s",' "${workflows[@]}")
+          echo "workflows=[${json%,}]" | tee -a "$GITHUB_OUTPUT"
 
-          if [ "$stale" != true ]; then
-            echo "All tests are up to date; nothing to do."
-            exit 0
-          fi
+  test:
+    needs: list
+    runs-on: ubuntu-26.04-arm
+    strategy:
+      fail-fast: false
+      matrix:
+        workflow: ${{ fromJSON(needs.list.outputs.workflows) }}
+    name: ${{ matrix.workflow }}
+    steps:
+      - name: Run ${{ matrix.workflow }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          WORKFLOW: ${{ matrix.workflow }}
+          REF: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
 
-          for wf in "${workflows[@]}"; do
-            echo "Dispatching $wf"
-            gh workflow run "$wf" --ref main
-          done
+          out=$(gh workflow run "$WORKFLOW" --ref "$REF")
+          echo "$out"
+          run_id=$(grep -oE '/actions/runs/[0-9]+' <<< "$out" | grep -oE '[0-9]+$') || {
+            echo "Couldn't find the dispatched run's ID" >&2
+            exit 1
+          }
+
+          # Poll slowly, since all the jobs here share GITHUB_TOKEN's API rate
+          # limit.
+          status=0
+          gh run watch "$run_id" --interval 60 --exit-status > /dev/null || status=$?
+          gh run view "$run_id"
+          exit "$status"

@@ -19,7 +19,9 @@ import time
 from enum import Enum
 from pathlib import Path
 
-CI_WORKFLOWS = ["lint", "test-macos", "test-ubuntu"]
+# Workflows that run on push, which must succeed before a release.  The rest of
+# the tests are run by the release workflow itself, via test-all.
+CI_WORKFLOWS = ["lint", "test-ubuntu"]
 
 
 def last_changelog_version() -> str | None:
@@ -131,7 +133,7 @@ def pending_run_id(workflow_runs: dict) -> int | None:
             and run["event"] == "push"
         ):
             return run["id"]
-        return None
+    return None
 
 
 class CiStatus(Enum):

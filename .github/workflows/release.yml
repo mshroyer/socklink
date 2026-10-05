@@ -36,8 +36,20 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 scripts/release.py wait-ci ${{ github.sha }}
 
+  # Run the tests that don't already run on push, now that await_ci has
+  # checked the push-based ones.
+  test_all:
+    needs: [lint_release, await_ci]
+    uses: ./.github/workflows/test-all.yml
+    permissions:
+      actions: write
+      contents: read
+    with:
+      skip-push-tests: true
+
   create_release:
     runs-on: ubuntu-26.04-arm
+    needs: [lint_release, test_all]
 
     steps:
       - uses: actions/checkout@v7
