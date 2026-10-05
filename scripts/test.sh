@@ -11,6 +11,19 @@ set -e
 SCRIPTS=$(cd "$(dirname "$0")" && pwd)
 . "$SCRIPTS/lib"
 
+show_usage() {
+	cat <<'EOF'
+test.sh - Run tests for socklink.sh
+
+Usage:
+    test.sh [test_name]
+    test.sh -c container_name [test_name]
+    test.sh -m vm_name [test_name]
+    test.sh -l
+    test.sh -h
+EOF
+}
+
 PYTHON_MIN=3.11
 PYTHON_BINS="python3.15 python3.14 python3.13 python3.12 python3.11 python3 python"
 
@@ -133,10 +146,31 @@ run_tests() {
 	.venv/bin/python -m pytest $RETRIES_FLAG -v "$PYTEST_ARG"
 }
 
+list_containers_and_vms() {
+	echo "Available containers (test.sh -c):"
+	for c in "$PROJECT/containers"/*; do
+		if [ -d "$c" ]; then
+			c="$(basename "$c")"
+			echo "- $c"
+		fi
+	done
+	echo
+	echo "Available VMs (test.sh -m):"
+	for m in "$PROJECT/vms"/*.qcow2; do
+		if [ -f "$m" ]; then
+			m="$(basename "$m")"
+			m="${m%.qcow2}"
+			echo "- $m"
+		fi
+	done
+}
+
 all_flag=
 container_flag=
 vm_flag=
-while getopts ac:m:h flag
+list_flag=
+help_flag=
+while getopts ac:m:lh flag
 do
 	case "$flag" in
 		a)
@@ -151,8 +185,17 @@ do
 			vm_flag="$OPTARG"
 			;;
 
+		l)
+			list_flag=1
+			;;
+
+		h)
+			help_flag=1
+			;;
+
 		*)
 		        echo "Unknown flag: $flag" >&2
+			show_usage
 			exit 1
 			;;
 	esac
@@ -163,7 +206,13 @@ if [ -n "$1" ]; then
 	PYTEST_ARG="$1"
 fi
 
-if [ -n "$all_flag" ]; then
+if [ -n "$help_flag" ]; then
+	show_usage
+	exit
+elif [ -n "$list_flag" ]; then
+	list_containers_and_vms
+	exit
+elif [ -n "$all_flag" ]; then
 	make_ci_iso
 	run_tests_in_all_containers_and_vms
 elif [ -n "$container_flag" ]; then
