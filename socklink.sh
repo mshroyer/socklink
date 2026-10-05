@@ -66,7 +66,7 @@
 
 VERSION="0.3.2-dev"
 
-set -eC  # noclobber for lock file
+set -euC  # noclobber for lock file
 
 CONFFILE="$HOME/.socklink.conf"
 if [ -f "$CONFFILE" ]; then
@@ -76,10 +76,10 @@ fi
 
 # $UID is not totally portable
 MYUID="$(id -u)"
-if [ -z "$SOCKLINK_TMPDIR" ]; then
+if [ -z "${SOCKLINK_TMPDIR:-}" ]; then
 	SOCKLINK_TMPDIR="/tmp"
 fi
-if [ -z "$SOCKLINK_DIR" ]; then
+if [ -z "${SOCKLINK_DIR:-}" ]; then
 	SOCKLINK_DIR="$SOCKLINK_TMPDIR/socklink-$MYUID"
 fi
 SERVERSDIR="$SOCKLINK_DIR/servers"
@@ -106,7 +106,7 @@ log() {
 	if [ -n "$SOCKLINK_LOG" ]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') $1" >>"$SOCKLINK_LOG"
 	fi
-	if [ -n "$2" ]; then
+	if [ -n "${2:-}" ]; then
 		echo "$1" >&2
 	fi
 }
@@ -146,14 +146,14 @@ stat_mode() {
 
 BUSYBOX_PS=
 get_pid_uid() {
-	if [ -z "$BUSYBOX_PS" ] && [ "$(uname)" = "Linux" ]; then
+	if [ -z "${BUSYBOX_PS:-}" ] && [ "$(uname)" = "Linux" ]; then
 		ps="$(which ps)"
 		if [ -L "$ps" ] && [ "$(basename "$(readlink "$ps")")" = "busybox" ]; then
 			BUSYBOX_PS=1
 		fi
 	fi
 
-	if [ -n "$BUSYBOX_PS" ]; then
+	if [ -n "${BUSYBOX_PS:-}" ]; then
 		# The ps invocation below also works for most Linux
 		# distributions, however Alpine Linux's busybox ps
 		# implementation doesn't support -o uid.
@@ -222,13 +222,13 @@ set_tty_link() {
 	gc_tty_links
 	gc_server_links
 
-	if [ -n "$SSH_AUTH_SOCK" ] && [ -n "$(find "$SSH_AUTH_SOCK" -prune -user "$MYUID")" ]; then
+	if [ -n "${SSH_AUTH_SOCK:-}" ] && [ -n "$(find "$SSH_AUTH_SOCK" -prune -user "$MYUID")" ]; then
 		set_symlink "$SSH_AUTH_SOCK" "$(get_tty_link_path "$(tty)")"
 	fi
 }
 
 get_active_client_tty() {
-	if [ -n "$TMUX" ]; then
+	if [ -n "${TMUX:-}" ]; then
 		socket=$(echo "$TMUX" | cut -d, -f1)
 		tty=$(tmux -S "$socket" display-message -p '#{client_tty}')
 		log "get_active_client_tty $socket: $tty"
@@ -277,9 +277,9 @@ take_lock() {
 # If the optional client_tty parameter is not given, looks up the currently
 # actively client by tmux's own reckoning.
 set_server_link() {
-	log "set_server_link: cause = '$cause_flag', client_tty = '$client_tty'"
+	log "set_server_link: cause = '${cause_flag:-}', client_tty = '${client_tty:-}'"
 
-	client_tty="$1"
+	client_tty="${1:-}"
 	if [ -z "$client_tty" ] || [ "$client_tty" = "-" ]; then
 		client_tty="$(get_active_client_tty)"
 	fi
@@ -317,7 +317,7 @@ set_server_link() {
 # scenarios I've been able to reproduce, so this lookup may not be strictly
 # necessary.
 set_server_link_by_name() {
-	client_name="$1"
+	client_name="${1:-}"
 	if [ -z "$client_name" ]; then
 		log "set_server_link_by_name: client_name not given" t
 		exit 1
@@ -335,12 +335,12 @@ set_server_link_by_name() {
 # sufficient to skip also setting SSH_AUTH_SOCK within in-tmux shells' init,
 # however.
 set_tmux_env() {
-	if [ -z "$TMUX" ]; then
+	if [ -z "${TMUX:-}" ]; then
 		log "set_tmux_env: \$TMUX not set, aborting" t
 		exit 1
 	fi
 	server_link="$(get_server_link_path)"
-	tmux set-environment -g SSH_AUTH_SOCK "$server_link"
+	tmux set-environment -g SSH_AUTH_SOCK "${server_link:-}"
 }
 
 # Allow for setting the server link with a client identified by name instead
@@ -522,7 +522,7 @@ check_number_at_least() {
 # unspecified, the version of the tmux on our $PATH is queried.
 test_tmux_feature() {
 	feature="$1"
-	verstr="$2"
+	verstr="${2:-}"
 	if [ -z "$verstr" ]; then
 		verstr="$(tmux -V)"
 	fi
@@ -596,7 +596,7 @@ elif [ "$1" = "test-tmux-feature" ]; then
 elif [ "$1" = "setup" ]; then
 	log "$*"
 	setup
-elif [ -n "$SOCKLINK_TESTONLY_COMMANDS" ]; then
+elif [ -n "${SOCKLINK_TESTONLY_COMMANDS:-}" ]; then
 	if [ "$1" = "get-device-filename" ]; then
 		get_device_filename "$2"
 	elif [ "$1" = "get-filename-device" ]; then
