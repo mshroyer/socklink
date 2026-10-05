@@ -22,7 +22,7 @@ fi
 CACHE_FILE="$CACHE/${vm_name}.qcow2.zst"
 rm -f "$CACHE_FILE"
 echo "Compressing to $CACHE_FILE..."
-zstd -19 --output-dir-flat "$CACHE" "$VM"
+zstd -T0 -19 --output-dir-flat "$CACHE" "$VM"
 
 echo "Uploading to bucket..."
 env AWS_ACCESS_KEY_ID="${SOCKLINK_TEST_VMS_ACCESS_KEY_ID}" \
