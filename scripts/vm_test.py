@@ -28,6 +28,25 @@ def find_qemu_bin() -> Path:
         raise RuntimeError("Unable to locate a qemu binary")
 
 
+ANSI_RE = re.compile(
+    r"""
+    \x1B                # ESC
+    (?:
+        [@-Z\\-_]       # 7-bit C1 single-char sequences
+      |
+        \[ [0-?]* [ -/]* [@-~]   # CSI ... final byte
+      |
+        \] .*? (?:\x07|\x1B\\)   # OSC ... terminated by BEL or ST
+    )
+""",
+    re.VERBOSE | re.DOTALL,
+)
+
+
+def strip_ansi(s: str) -> str:
+    return ANSI_RE.sub("", s)
+
+
 def run_tests_in_vm(vm: str):
     vm_image = PROJECT / "vms" / f"{vm}.qcow2"
     if not vm_image.exists():
@@ -62,9 +81,13 @@ def run_tests_in_vm(vm: str):
         ],
         encoding="utf-8",
     )
-    qemu.logfile = sys.stdout
+    qemu.logfile_read = sys.stdout
 
-    PROMPT = re.compile(r"[a-zA-Z0-9-]*[#%$] ")
+    PROMPT = re.compile(r"[a-zA-Z0-9-@:~]*[#%$] ")
+
+    def read_output() -> str:
+        qemu.readline()  # Read command input
+        return strip_ansi(qemu.readline()).strip()
 
     def run(command: str, check: bool = True, timeout: int = -1):
         qemu.sendline(command)
@@ -72,8 +95,7 @@ def run_tests_in_vm(vm: str):
 
         if check:
             qemu.sendline("echo $?")
-            qemu.readline()
-            code = qemu.readline()
+            code = read_output()
             qemu.expect(PROMPT)
 
             if int(code) != 0:
@@ -85,9 +107,12 @@ def run_tests_in_vm(vm: str):
     qemu.sendline("socklink-test")
     qemu.expect(PROMPT)
 
+    # Prevent OpenIndiana in particular from adding a lot of unneeded ANSI
+    # control characters to the output for us to handle.
+    run("TERM=vt100")
+
     qemu.sendline("uname")
-    qemu.readline()  # Reads "uname"
-    uname = qemu.readline().rstrip()
+    uname = read_output()
     qemu.expect(PROMPT)
 
     run("mkdir /mnt/cdrom", check=False)
@@ -96,6 +121,11 @@ def run_tests_in_vm(vm: str):
         run("mount -t cd9660 /dev/cd0a /mnt/cdrom")
     elif uname == "FreeBSD":
         run("mount -t cd9660 /dev/cd0 /mnt/cdrom")
+    elif uname == "SunOS":
+        qemu.sendline("rmformat -l | sed -En 's/.*\\/dev\\/rdsk\\/(.*)/\\1/p'")
+        cdrom = read_output()
+        qemu.expect(PROMPT)
+        run(f"mount -F hsfs -o ro /dev/dsk/{cdrom} /mnt/cdrom", timeout=60)
     else:
         raise ValueError(f"Unsupported operating system: {uname}")
 

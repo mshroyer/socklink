@@ -1,0 +1,11 @@
+name: test-openindiana
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  test:
+    uses: ./.github/workflows/action-test-vm.yml
+    secrets: inherit
+    with:
+      vm: openindiana2604
