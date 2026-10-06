@@ -1,4 +1,10 @@
-# Contributing and development guide
+# Contribution and development guide
+
+## Submitting a PR
+
+When submitting a PR, please ensure lints and most tests pass at least when run locally: `scripts/lint.sh` if you have emacs and shellcheck installed (or alternately, use `scripts/lint.sh -c` to run lints in a docker or podman container), and `scripts/test.sh` on your local machine.
+
+If you'd like to run a fuller set of tests against your PR before submitting, see below.  I'm happy to send you my VM tester images if you'd like them, but also don't sweat submitting a PR that's only tested locally.
 
 ## Tests
 
