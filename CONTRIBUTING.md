@@ -51,7 +51,7 @@ Test runner VMs must have:
 
 If adding a new OS, [vm_test.py](./scripts/vm_test.py) must be updated to recognize its uname and understand how to mount the virtual CD-ROM.  Instructions for preparing VMs for supported OSes follow.
 
-### OpenBSD VM
+### OpenBSD VM setup
 
 [Download](https://www.openbsd.org/faq/faq4.html#Download) the latest amd64 `install*.iso`.  Prepare a disk image and boot the installer:
 
@@ -85,3 +85,49 @@ Reboot.  You should now be able to interact with OpenBSD in the terminal where `
 1. Log in as root
 2. `pkg_add python zsh bash`
 3. `echo boot >>/etc/boot.conf` to disable boot delay
+
+### FreeBSD VM setup
+
+Download and boot the installer using the same qemu commands as described above for OpenBSD.
+
+1. Use classic distribution sets, default selection
+2. Auto UFS, use full disk, MBR
+3. Configure `virtnet0` adapter
+4. Don't start sshd on boot
+5. No system hardening options
+6. Add "test" user
+
+Reboot.
+
+1. Run `sysrc -f /boot/loader.conf console=comconsole`
+2. `pkg install python314 tmux zsh bash`
+3. Append `autoboot_delay="-1"` to `/boot/loader.conf`
+
+### NetBSD VM setup
+
+1. Install using a GPT partition table
+2. Use serial port console `com0`, 115200 baud
+3. Select installation without X11
+4. Choose installation from disc media (using a `-dvd.iso` installer)
+5. Configure network as "autoconfigure"
+6. Enable installation of binary packages
+7. Add user "test"
+Reboot.
+
+1. Run `pkg install tmux zsh bash python314`
+2. Set `timeout=0` in `/boot.cfg`
+
+### OpenIndiana VM setup
+
+Download and run the text install DVD.
+
+1. Use the whole disk (EFI)
+2. Automatically configure the network
+3. Set root password and add "test" user
+
+Reboot.
+
+1. `pkg install runtime/python-314 terminal/tmux`
+2. Run `pfexec rolemod -K type=normal root` to enable console root login
+3. Edit `/boot/loader.conf.local` with `console="ttya"`, `ttya-mode="115200,8,n,1,-"`, and `autoboot_delay="0"`
+4. Run `pkg install locale/he locale/zh_cn`
