@@ -24,9 +24,6 @@ Usage:
 EOF
 }
 
-PYTHON_MIN=3.11
-PYTHON_BINS="python3.15 python3.14 python3.13 python3.12 python3.11 python3 python"
-
 RETRIES_FLAG=
 if [ "$(uname)" = "Darwin" ]; then
 	# On macOS I've been unable to find a non-flaky means of capturing
@@ -39,37 +36,6 @@ if [ "$(uname)" = "Darwin" ]; then
 	PYTEST_DEBUG_TEMPROOT=/tmp
 	export PYTEST_DEBUG_TEMPROOT
 fi
-
-python_version_at_least() {
-	result=$("$1" -c "import sys; print(float(f'{sys.version_info[0]}.{sys.version_info[1]}') >= $2)")
-	if [ "$result" != "True" ]; then
-		false
-	fi
-}
-
-# Searches Python binary candidate names for the first one matching our
-# minimum version requirement.
-get_python_bin() {
-	for bin in $PYTHON_BINS; do
-		if which "$bin" >/dev/null 2>&1 \
-				&& python_version_at_least "$bin" "$PYTHON_MIN"; then
-			ver=$("$bin" --version)
-			echo "Using bin $bin, version $ver" >&2
-			echo "$bin"
-			return
-		fi
-	done
-	echo "No supported Python version found, aborting" >&2
-	exit 1
-}
-
-setup_venv() {
-	if [ ! -d "${PROJECT}/.venv" ]; then
-		echo "Preparing venv"
-		py="$(get_python_bin)"
-		"$py" -m venv "${PROJECT}/.venv"
-	fi
-}
 
 run_tests_in_container() {
 	distro="$1"
