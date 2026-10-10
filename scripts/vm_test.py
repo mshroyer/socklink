@@ -9,6 +9,7 @@ VM.
 
 import re
 import sys
+import termios
 from pathlib import Path
 
 import pexpect
@@ -47,6 +48,15 @@ def strip_ansi(s: str) -> str:
     return ANSI_RE.sub("", s)
 
 
+def disable_onlcr():
+    # The guest's serial console already sends CRLF line endings, so don't let
+    # the pty translate them to CRCRLF, which GitHub Actions logs show as
+    # double-spaced.
+    attrs = termios.tcgetattr(1)
+    attrs[1] &= ~termios.ONLCR
+    termios.tcsetattr(1, termios.TCSANOW, attrs)
+
+
 def run_tests_in_vm(vm: str, pytest_arg: str):
     vm_image = PROJECT / "vms" / f"{vm}.qcow2"
     if not vm_image.exists():
@@ -80,6 +90,7 @@ def run_tests_in_vm(vm: str, pytest_arg: str):
             "-snapshot",
         ],
         encoding="utf-8",
+        preexec_fn=disable_onlcr,
     )
     qemu.logfile_read = sys.stdout
 
