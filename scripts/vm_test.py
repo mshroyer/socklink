@@ -9,7 +9,6 @@ VM.
 
 import re
 import sys
-import termios
 from pathlib import Path
 
 import pexpect
@@ -48,13 +47,34 @@ def strip_ansi(s: str) -> str:
     return ANSI_RE.sub("", s)
 
 
-def disable_onlcr():
-    # The guest's serial console already sends CRLF line endings, so don't let
-    # the pty translate them to CRCRLF, which GitHub Actions logs show as
-    # double-spaced.
-    attrs = termios.tcgetattr(1)
-    attrs[1] &= ~termios.ONLCR
-    termios.tcsetattr(1, termios.TCSANOW, attrs)
+class OutputWrapper:
+    """Wraps sys.stdout to suppress duplicate carriage returns
+
+    Replaces sequences of multiple carriage returns with just a single one.
+
+    """
+
+    def __init__(self, stream):
+        self.stream = stream
+        self.is_after_cr = False
+
+    def write(self, text):
+        output = []
+
+        for ch in text:
+            if ch == "\r":
+                if not self.is_after_cr:
+                    output.append(ch)
+                self.is_after_cr = True
+            else:
+                output.append(ch)
+                self.is_after_cr = False
+
+        self.stream.write("".join(output))
+        return len(text)
+
+    def flush(self):
+        self.stream.flush()
 
 
 def run_tests_in_vm(vm: str, pytest_arg: str):
@@ -90,9 +110,8 @@ def run_tests_in_vm(vm: str, pytest_arg: str):
             "-snapshot",
         ],
         encoding="utf-8",
-        preexec_fn=disable_onlcr,
     )
-    qemu.logfile_read = sys.stdout
+    qemu.logfile_read = OutputWrapper(sys.stdout)
 
     PROMPT = re.compile(r"[a-zA-Z0-9-@:~]*[#%$] ")
 
