@@ -64,7 +64,7 @@
 # SOFTWARE.
 
 
-VERSION="0.3.2-dev"
+VERSION="0.3.2"
 
 set -euC  # noclobber for lock file
 

@@ -1,9 +1,11 @@
 # socklink.sh Changelog
 
-## Unreleased
+## v0.3.2
 
 - Avoid relying on non-standard `test -O`, as per
   [SC3067](https://www.shellcheck.net/wiki/SC3067).
+- Use `set -u` (nounset)
+- Fix potential failure when handling contended lockfile.
 
 ## v0.3.1
 
