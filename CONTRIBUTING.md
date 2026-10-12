@@ -141,3 +141,16 @@ Reboot.
 2. Run `pfexec rolemod -K type=normal root` to enable console root login
 3. Edit `/boot/loader.conf.local` with `console="ttya"`, `ttya-mode="115200,8,n,1,-"`, and `autoboot_delay="0"`
 4. Run `pkg install locale/he locale/zh_cn`
+
+## GitHub Actions
+
+If setting up GitHub Actions in a new repo (such as a fork), in addition to creating test runner VMs as described above you'll need to configure access to an S3-compatible bucket containing them.
+
+On your local system, set the environment variables:
+
+- `SOCKLINK_TEST_VMS_S3_ENDPOINT` (e.g., `https://5d79a0473b8621a40befe75f1eba08e8.r2.cloudflarestorage.com`)
+- `SOCKLINK_TEST_VMS_S3_BUCKET` (e.g., `socklink-test-vms`)
+- `SOCKLINK_TEST_VMS_ACCESS_KEY_ID`
+- `SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY`
+
+Your local system's access key should allow read-write access so that the `upload_vm.sh` script can function.  Then, in GitHub, configure `SOCKLINK_TEST_VMS_S3_ENDPOINT` and `SOCKLINK_TEST_VMS_S3_BUCKET` as repository variables, and `SOCKLINK_TEST_VMS_ACCESS_KEY_ID` and `SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY` as repository secrets.
