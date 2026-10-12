@@ -1,5 +1,18 @@
 # socklink.sh
 
+[![Lint status](https://github.com/mshroyer/socklink/actions/workflows/lint.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/lint.yml)
+[![Ubuntu status](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml)
+[![OpenIndiana status](https://github.com/mshroyer/socklink/actions/workflows/test-openindiana.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-openindiana.yml)
+[![OpenBSD status](https://github.com/mshroyer/socklink/actions/workflows/test-openbsd.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-openbsd.yml)
+[![NetBSD status](https://github.com/mshroyer/socklink/actions/workflows/test-netbsd.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-netbsd.yml)
+[![macOS status](https://github.com/mshroyer/socklink/actions/workflows/test-macos.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-macos.yml)
+[![Fedora status](https://github.com/mshroyer/socklink/actions/workflows/test-freebsd.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-freebsd.yml)
+[![Fedora status](https://github.com/mshroyer/socklink/actions/workflows/test-fedora.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-fedora.yml)
+[![Debian status](https://github.com/mshroyer/socklink/actions/workflows/test-debian.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-debian.yml)
+[![Arch Linux status](https://github.com/mshroyer/socklink/actions/workflows/test-archlinux.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-archlinux.yml)
+[![Alpine Linux status](https://github.com/mshroyer/socklink/actions/workflows/test-alpine.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-alpine.yml)
+[![AlmaLinux 10 status](https://github.com/mshroyer/socklink/actions/workflows/test-el10.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-el10.yml)
+
 A zero-dependency, cross-platform `SSH_AUTH_SOCK` manager for tmux.
 
 Ensures that as you switch between different SSH clients accessing the same remote tmux session—such as multiple laptops connecting to a long-running session on a dev server—your tmux panes' SSH authentication sockets always point to your current client's auth agent, which might be something like a YubiKey requiring local proof-of-presence.  Uses tmux hooks rather than running a daemon, is cross-platform across Linux distros/macOS/BSDs, and runs in `/bin/sh` with no non-standard dependencies other than tmux itself.
