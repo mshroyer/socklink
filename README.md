@@ -2,35 +2,21 @@
 
 A zero-dependency, cross-platform `SSH_AUTH_SOCK` manager for tmux.
 
-Ensures that as you jump between different SSH clients accessing the same
-remote tmux session—such as multiple laptops connecting to a long-running
-session on a dev server—your tmux panes' SSH authentication sockets always
-point to your most recently active client's auth agent, which might be
-something like a YubiKey requiring local proof-of-presence.  Uses tmux hooks
-rather than running a daemon, is cross-platform across Linux
-distros/macOS/BSDs, and runs in `/bin/sh` with no non-standard dependencies
-other than tmux itself.
+Ensures that as you jump between different SSH clients accessing the same remote tmux session—such as multiple laptops connecting to a long-running session on a dev server—your tmux panes' SSH authentication sockets always point to your most recently active client's auth agent, which might be something like a YubiKey requiring local proof-of-presence.  Uses tmux hooks rather than running a daemon, is cross-platform across Linux distros/macOS/BSDs, and runs in `/bin/sh` with no non-standard dependencies other than tmux itself.
 
 (It's just a shell script!  The Python is all for test automation.)
 
-See [this blog post](https://markshroyer.com/2025/09/socklink/) for a more
-detailed overview.
+See [this blog post](https://markshroyer.com/2025/09/socklink/) for a more detailed overview.
 
 ## Installation
 
-Socklink only needs to be installed on the system you're SSHing into, not your
-client system.  Copy the [latest
-release](https://github.com/mshroyer/socklink/releases) to wherever you want
-to keep it on your server's filesystem, then run
+Socklink only needs to be installed on the system you're SSHing into, not your client system.  Copy the [latest release](https://github.com/mshroyer/socklink/releases) to wherever you want to keep it on your server's filesystem, then run
 
 ```sh
 ./socklink.sh setup
 ```
 
-The script will install the necessary hooks to your `.tmux.conf`, `.bashrc`,
-and `.zshrc` files.  If you're using a different interactive shell than bash
-or zsh, you can instead manually setup the hooks by adding the equivalent of
-the following to your shell's init file:
+The script will install the necessary hooks to your `.tmux.conf`, `.bashrc`, and `.zshrc` files.  If you're using a different interactive shell than bash or zsh, you can instead manually setup the hooks by adding the equivalent of the following to your shell's init file:
 
 ```sh
 if [ -n "$THIS_IS_AN_INTERACTIVE_SESSION" ]; then
@@ -44,16 +30,11 @@ fi
 
 After setup, restart any tmux sessions and any interactive shells.
 
-No additional dependencies should be needed outside of what's present in
-tested operating systems' base installations, with the exception of Fedora
-where `awk` and `which` may not necessarily be installed by default.
+No additional dependencies should be needed outside of what's present in tested operating systems' base installations, with the exception of Fedora where `awk` and `which` may not necessarily be installed by default.
 
 ## Platform support and tests
 
-Different Linux and BSD distributions can use different versions of `/bin/sh`
-and associated POSIX commands: Alpine Linux's `sh` is `ash`, Debian's is
-`dash`, Fedora's is `bash`, and so on.  Automating cross-platform testing has
-caught bugs that would have otherwise shipped with this script.
+Different Linux and BSD distributions can use different versions of `/bin/sh` and associated POSIX commands: Alpine Linux's `sh` is `ash`, Debian's is `dash`, Fedora's is `bash`, and so on.  Automating cross-platform testing has caught bugs that would have otherwise shipped with this script.
 
 | OS                                                       |                                                                                                                                                                                      Status |         Runs on         |      Runs as       |
 |----------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-----------------------:|:------------------:|
@@ -75,28 +56,19 @@ You can run the tests locally with:
 ./scripts/test.sh
 ```
 
-The tests will use your system versions of `tmux` and any shells available for
-test.
+The tests will use your system versions of `tmux` and any shells available for test.
 
 ## Limitations
 
 ### Background control clients
 
-Because the hooks installed by the `setup` command rely on tmux's accounting
-of which client is currently "active", it's possible that if you have a
-control client running in the background along with your main, interactive
-tmux client, the control client might "steal" active status from your
-interactive client and redirect your `SSH_AUTH_SOCK` away from it.
+Because the hooks installed by the `setup` command rely on tmux's accounting of which client is currently "active", it's possible that if you have a control client running in the background along with your main, interactive tmux client, the control client might "steal" active status from your interactive client and redirect your `SSH_AUTH_SOCK` away from it.
 
-I haven't tested this scenario because it's not a setup that I personally use.
-Let me know if this is a problem for anyone in practice.
+I haven't tested this scenario because it's not a setup that I personally use. Let me know if this is a problem for anyone in practice.
 
 ### Old tmux versions
 
-tmux versions older than tmux 3.4 or OpenBSD 7.1 lack the `client-active` hook
-installed by `setup`.  Without this hook, attaching a new client will still
-switch `SSH_AUTH_SOCK` over to that client, but hopping between
-still-connected clients won't work automatically.
+tmux versions older than tmux 3.4 or OpenBSD 7.1 lack the `client-active` hook installed by `setup`.  Without this hook, attaching a new client will still switch `SSH_AUTH_SOCK` over to that client, but hopping between still-connected clients won't work automatically.
 
 If needed, you can work around this by running
 
@@ -104,33 +76,23 @@ If needed, you can work around this by running
 socklink.sh set-server-link
 ```
 
-from your shell, either manually as needed or as a bash preexec, zsh periodic
-function, or so on.
+from your shell, either manually as needed or as a bash preexec, zsh periodic function, or so on.
 
 ## Troubleshooting
 
-If you're in a tmux session managed by this script and `SSH_AUTH_SOCK` still
-isn't working as expected for you, here are some things you can try:
+If you're in a tmux session managed by this script and `SSH_AUTH_SOCK` still isn't working as expected for you, here are some things you can try:
 
-1. Run `echo $SSH_AUTH_SOCK` to ensure the environment variable is set.  It should
-   have a value like `/tmp/socklink-$(uid)/servers/$PID`.  If not, it's likely
-   that your shell init is incorrect.
+1. Run `echo $SSH_AUTH_SOCK` to ensure the environment variable is set.  It should have a value like `/tmp/socklink-$(uid)/servers/$PID`.  If not, it's likely that your shell init is incorrect.
 
-2. Run `readlink $SSH_AUTH_SOCK` and look at the name of the link it points
-   to.  This link should exist, and the tty indicated by its filename should
-   match what you see when you detach tmux and run `tty`.  If not, it's likely
-   the `socklink.sh set-server-link` tmux hook isn't being invoked as
-   expected.
+2. Run `readlink $SSH_AUTH_SOCK` and look at the name of the link it points to.  This link should exist, and the tty indicated by its filename should match what you see when you detach tmux and run `tty`.  If not, it's likely the `socklink.sh set-server-link` tmux hook isn't being invoked as expected.
 
-Logging can be enabled by setting the `SOCKLINK_LOG` environment variable to a
-log file's path, or by adding
+Logging can be enabled by setting the `SOCKLINK_LOG` environment variable to a log file's path, or by adding
 
 ```sh
 SOCKLINK_LOG="/some/path/to/socklink.log"
 ```
 
-to `~/.socklink.conf`.  Heads up that there's no log rotation, so this file
-will (slowly) grow unbounded.
+to `~/.socklink.conf`.  Heads up that there's no log rotation, so this file will (slowly) grow unbounded.
 
 ## License
 
