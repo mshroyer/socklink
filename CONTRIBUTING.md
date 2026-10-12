@@ -153,4 +153,6 @@ On your local system, set the environment variables:
 - `SOCKLINK_TEST_VMS_ACCESS_KEY_ID`
 - `SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY`
 
-Your local system's access key should allow read-write access so that the `upload_vm.sh` script can function.  Then, in GitHub, configure `SOCKLINK_TEST_VMS_S3_ENDPOINT` and `SOCKLINK_TEST_VMS_S3_BUCKET` as repository variables, and `SOCKLINK_TEST_VMS_ACCESS_KEY_ID` and `SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY` as repository secrets.
+Your local system's access key should allow read-write access so that the `upload_vm.sh` script can function.
+
+Then, in GitHub, configure `SOCKLINK_TEST_VMS_S3_ENDPOINT` and `SOCKLINK_TEST_VMS_S3_BUCKET` as repository variables, and `SOCKLINK_TEST_VMS_ACCESS_KEY_ID` and `SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY` as repository secrets.  GitHub Actions only needs read access to the bucket.
