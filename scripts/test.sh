@@ -99,15 +99,15 @@ run_tests() {
 	setup_venv
 	.venv/bin/pip install -r requirements.txt
 
-	printf "\n======================================================================\n" >&2
-	printf "                        SOCKLINK TEST SUITE\n\n" >&2
+	printf "\n\n================================================================================\n" >&2
+	printf "                             SOCKLINK TEST SUITE\n\n" >&2
 	uname -a >&2
 	if [ -f /etc/os-release ]; then
 		grep PRETTY_NAME /etc/os-release >&2
 	fi
 	.venv/bin/python --version >&2
 	tmux -V >&2
-	printf "======================================================================\n\n" >&2
+	printf "================================================================================\n\n\n" >&2
 
 	.venv/bin/python -m pytest $RETRIES_FLAG -v "$PYTEST_ARG"
 }
