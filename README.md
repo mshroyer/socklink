@@ -1,17 +1,17 @@
 # socklink.sh
 
 [![Lint status](https://github.com/mshroyer/socklink/actions/workflows/lint.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/lint.yml)
-[![Ubuntu status](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml)
-[![OpenIndiana status](https://github.com/mshroyer/socklink/actions/workflows/test-openindiana.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-openindiana.yml)
-[![OpenBSD status](https://github.com/mshroyer/socklink/actions/workflows/test-openbsd.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-openbsd.yml)
-[![NetBSD status](https://github.com/mshroyer/socklink/actions/workflows/test-netbsd.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-netbsd.yml)
-[![macOS status](https://github.com/mshroyer/socklink/actions/workflows/test-macos.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-macos.yml)
-[![Fedora status](https://github.com/mshroyer/socklink/actions/workflows/test-freebsd.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-freebsd.yml)
-[![Fedora status](https://github.com/mshroyer/socklink/actions/workflows/test-fedora.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-fedora.yml)
-[![Debian status](https://github.com/mshroyer/socklink/actions/workflows/test-debian.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-debian.yml)
-[![Arch Linux status](https://github.com/mshroyer/socklink/actions/workflows/test-archlinux.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-archlinux.yml)
-[![Alpine Linux status](https://github.com/mshroyer/socklink/actions/workflows/test-alpine.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-alpine.yml)
 [![AlmaLinux 10 status](https://github.com/mshroyer/socklink/actions/workflows/test-el10.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-el10.yml)
+[![Alpine Linux status](https://github.com/mshroyer/socklink/actions/workflows/test-alpine.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-alpine.yml)
+[![Arch Linux status](https://github.com/mshroyer/socklink/actions/workflows/test-archlinux.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-archlinux.yml)
+[![Debian status](https://github.com/mshroyer/socklink/actions/workflows/test-debian.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-debian.yml)
+[![Fedora status](https://github.com/mshroyer/socklink/actions/workflows/test-fedora.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-fedora.yml)
+[![FreeBSD status](https://github.com/mshroyer/socklink/actions/workflows/test-freebsd.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-freebsd.yml)
+[![macOS status](https://github.com/mshroyer/socklink/actions/workflows/test-macos.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-macos.yml)
+[![NetBSD status](https://github.com/mshroyer/socklink/actions/workflows/test-netbsd.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-netbsd.yml)
+[![OpenBSD status](https://github.com/mshroyer/socklink/actions/workflows/test-openbsd.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-openbsd.yml)
+[![OpenIndiana status](https://github.com/mshroyer/socklink/actions/workflows/test-openindiana.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-openindiana.yml)
+[![Ubuntu status](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml)
 
 A zero-dependency, cross-platform `SSH_AUTH_SOCK` manager for tmux.
 
@@ -62,7 +62,7 @@ Different Unix-like systems use different versions of `/bin/sh` and associated P
 | [Arch Linux](https://hub.docker.com/_/archlinux/)        |      [![Arch Linux status](https://github.com/mshroyer/socklink/actions/workflows/test-archlinux.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-archlinux.yml) |     container      |    schedule, release    |
 | [Debian Testing](https://hub.docker.com/_/debian)        |                [![Debian status](https://github.com/mshroyer/socklink/actions/workflows/test-debian.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-debian.yml) |     container      |    schedule, release    |
 | [Fedora Rawhide](https://hub.docker.com/_/fedora)        |                [![Fedora status](https://github.com/mshroyer/socklink/actions/workflows/test-fedora.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-fedora.yml) |     container      |    schedule, release    |
-| [FreeBSD 15.1](https://freebsd.org/)                     |              [![Fedora status](https://github.com/mshroyer/socklink/actions/workflows/test-freebsd.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-freebsd.yml) |      qemu vm       |    schedule, release    |
+| [FreeBSD 15.1](https://freebsd.org/)                     |             [![FreeBSD status](https://github.com/mshroyer/socklink/actions/workflows/test-freebsd.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-freebsd.yml) |      qemu vm       |    schedule, release    |
 | [macOS Latest](https://github.com/actions/runner-images) |                   [![macOS status](https://github.com/mshroyer/socklink/actions/workflows/test-macos.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-macos.yml) | directly on runner |    schedule, release    |
 | [NetBSD 11](https://netbsd.org/)                         |                [![NetBSD status](https://github.com/mshroyer/socklink/actions/workflows/test-netbsd.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-netbsd.yml) |      qemu vm       |    schedule, release    |
 | [OpenBSD 7.9](https://openbsd.org/)                      |             [![OpenBSD status](https://github.com/mshroyer/socklink/actions/workflows/test-openbsd.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-openbsd.yml) |      qemu vm       |    schedule, release    |
