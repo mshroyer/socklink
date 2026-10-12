@@ -142,9 +142,9 @@ Reboot.
 3. Edit `/boot/loader.conf.local` with `console="ttya"`, `ttya-mode="115200,8,n,1,-"`, and `autoboot_delay="0"`
 4. Run `pkg install locale/he locale/zh_cn`
 
-## GitHub Actions
+## Forking and GitHub Actions
 
-If setting up GitHub Actions in a new repo (such as a fork), in addition to creating test runner VMs as described above you'll need to configure access to an S3-compatible bucket containing them.
+If setting up GitHub Actions in a new repo (such as a fork) you'll need to create the aforementioned test runner VMs and then upload them to an S3-compatible bucket that GitHub can access.
 
 On your local system, set the environment variables:
 
@@ -153,6 +153,6 @@ On your local system, set the environment variables:
 - `SOCKLINK_TEST_VMS_ACCESS_KEY_ID`
 - `SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY`
 
-Your local system's access key should allow read-write access so that the `upload_vm.sh` script can function.
+Your local system's access key should allow read-write access so that the `upload_vm.sh` script can function.  Run `upload_vm.sh` with the name of each image to upload it to your bucket.
 
 Then, in GitHub, configure `SOCKLINK_TEST_VMS_S3_ENDPOINT` and `SOCKLINK_TEST_VMS_S3_BUCKET` as repository variables, and `SOCKLINK_TEST_VMS_ACCESS_KEY_ID` and `SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY` as repository secrets.  GitHub Actions only needs read access to the bucket.
