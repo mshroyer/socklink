@@ -284,7 +284,7 @@ take_lock() {
 run_with_lock() {
 	echo "LOCKFILE=$LOCKFILE"
 	take_lock
-	command $@
+	command "$@"
 }
 
 # Links the server's PID to the tty name of its currently active client.
@@ -626,7 +626,7 @@ elif [ -n "${SOCKLINK_TESTONLY_COMMANDS:-}" ]; then
 		get_pid_uid "$2"
 	elif [ "$1" = "run-with-lock" ]; then
 		shift
-		run_with_lock $@
+		run_with_lock "$@"
 	else
 		show_usage
 		exit 1
