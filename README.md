@@ -2,7 +2,7 @@
 
 A zero-dependency, cross-platform `SSH_AUTH_SOCK` manager for tmux.
 
-Ensures that as you jump between different SSH clients accessing the same remote tmux session—such as multiple laptops connecting to a long-running session on a dev server—your tmux panes' SSH authentication sockets always point to your most recently active client's auth agent, which might be something like a YubiKey requiring local proof-of-presence.  Uses tmux hooks rather than running a daemon, is cross-platform across Linux distros/macOS/BSDs, and runs in `/bin/sh` with no non-standard dependencies other than tmux itself.
+Ensures that as you switch between different SSH clients accessing the same remote tmux session—such as multiple laptops connecting to a long-running session on a dev server—your tmux panes' SSH authentication sockets always point to your current client's auth agent, which might be something like a YubiKey requiring local proof-of-presence.  Uses tmux hooks rather than running a daemon, is cross-platform across Linux distros/macOS/BSDs, and runs in `/bin/sh` with no non-standard dependencies other than tmux itself.
 
 (It's just a shell script!  The Python is all for test automation.)
 
@@ -16,7 +16,7 @@ Socklink only needs to be installed on the system you're SSHing into, not your c
 ./socklink.sh setup
 ```
 
-The script will install the necessary hooks to your `.tmux.conf`, `.bashrc`, and `.zshrc` files.  If you're using a different interactive shell than bash or zsh, you can instead manually setup the hooks by adding the equivalent of the following to your shell's init file:
+The script will install the necessary hooks to your `.tmux.conf`, and to `.bashrc` or `.zshrc` if you're using either bash or zsh as your interactive shell.  If you're using a different interactive shell, you can instead manually setup the hooks by adding the equivalent of the following to your shell's init file:
 
 ```sh
 if [ -n "$THIS_IS_AN_INTERACTIVE_SESSION" ]; then
@@ -30,11 +30,11 @@ fi
 
 After setup, restart any tmux sessions and any interactive shells.
 
-No additional dependencies should be needed outside of what's present in tested operating systems' base installations, with the exception of Fedora where `awk` and `which` may not necessarily be installed by default.
+No additional dependencies should be needed outside of what's present in tested operating systems' base installations, with the exception of Fedora where `awk` and `which` might be missing in very bare installations.
 
 ## Platform support and tests
 
-Different Linux and BSD distributions can use different versions of `/bin/sh` and associated POSIX commands: Alpine Linux's `sh` is `ash`, Debian's is `dash`, Fedora's is `bash`, and so on.  Automating cross-platform testing has caught bugs that would have otherwise shipped with this script.
+Different Unix-like systems use different versions of `/bin/sh` and associated POSIX commands: Alpine Linux's `sh` is `ash`, Debian's is `dash`, Fedora's is `bash`, and so on.  Socklink has a Python and [pexpect](https://pexpect.readthedocs.io/en/stable/)-based test suite that hooks it up to tmux inside pseudterminals and verifies its behavior.  It's tested on the following operating systems:
 
 | OS                                                       |                                                                                                                                                                                      Status |         Runs on         |      Runs as       |
 |----------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-----------------------:|:------------------:|
@@ -56,7 +56,7 @@ You can run the tests locally with:
 ./scripts/test.sh
 ```
 
-The tests will use your system versions of `tmux` and any shells available for test.
+The tests will use your system versions of `tmux` and `/bin/sh`, as well as zsh and/or bash as a test interactive shell for `setup`.
 
 ## Limitations
 
@@ -64,7 +64,7 @@ The tests will use your system versions of `tmux` and any shells available for t
 
 Because the hooks installed by the `setup` command rely on tmux's accounting of which client is currently "active", it's possible that if you have a control client running in the background along with your main, interactive tmux client, the control client might "steal" active status from your interactive client and redirect your `SSH_AUTH_SOCK` away from it.
 
-I haven't tested this scenario because it's not a setup that I personally use. Let me know if this is a problem for anyone in practice.
+I haven't tested this scenario because it's not a setup that I personally use. Let me know if this is a problem for you in practice.
 
 ### Old tmux versions
 
@@ -76,7 +76,7 @@ If needed, you can work around this by running
 socklink.sh set-server-link
 ```
 
-from your shell, either manually as needed or as a bash preexec, zsh periodic function, or so on.
+from your shell, either manually as needed or as a bash preexec or zsh periodic function.
 
 ## Troubleshooting
 

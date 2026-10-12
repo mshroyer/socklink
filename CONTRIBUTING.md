@@ -2,17 +2,17 @@
 
 ## Submitting a PR
 
-When submitting a PR, please ensure lints and most tests pass at least when run locally: `scripts/lint.sh` if you have emacs and shellcheck installed (or alternately, use `scripts/lint.sh -c` to run lints in a docker or podman container), and `scripts/test.sh` on your local machine.
+When submitting a PR, please ensure lints and most tests pass at least when run locally: if you have emacs and shellcheck installed you can run `scripts/lint.sh` (or alternately, use `scripts/lint.sh -c` to run lints in a docker or podman container), and run `scripts/test.sh` on your local machine.
 
 If you'd like to run a fuller set of tests against your PR before submitting, see below.  I'm happy to send you my VM tester images if you'd like them, but also don't sweat submitting a PR that's only tested locally.
 
 ## Tests
 
-Because of how subtly differently Unix shell scripts can behave from one system to the next, this project relies heavily on a Python-based test suite that uses [pexpect](https://pexpect.readthedocs.io/en/stable/) to hook socklink.sh up to tmux in a pseudoterminal and run it through its paces.
+Because of how subtly differently shell scripts can behave from one Unix system to the next, this project relies heavily on a Python-based test suite that uses [pexpect](https://pexpect.readthedocs.io/en/stable/) to hook socklink.sh up to tmux in a pseudoterminal and run it through its paces.
 
-The test cases are parameterized across the set of supported shells and a handful of locale settings.
+The test cases are parameterized across the set of supported `setup` shells and a handful of locale settings.
 
-Invoke `scripts/test.sh` without arguments to run tests directly on your host.  The script will handle creating a `.venv` under the project directory and installing Python dependencies.  A single positional argument can be provided to tell pytest to run a specific test:
+Invoke `scripts/test.sh` without arguments to run tests directly on your host.  The script will handle creating a `.venv` under the project directory and installing Python dependencies there.  A single positional argument can be provided to tell pytest to run a specific test:
 
 ```sh
 scripts/test.sh tests/test_integration.py::test_gc_tty_links
@@ -32,7 +32,7 @@ Containers do not persist between test runs, but images are cached.  These can b
 
 ## Testing in VMs
 
-BSD and Illumos tests are run in x86-64 KVM virtual machines kept as .qcow2 disk images in the vms project directory, if present.  Running these require an available `qemu-kvm` or `qemu-system-x86_64` binary, plus `xorriso` to bundle the source tree for the VM.
+BSD and Illumos tests are run in x86-64 qemu/KVM virtual machines kept as .qcow2 disk images in the vms project directory, if present.  Running these require an available `qemu-kvm` or `qemu-system-x86_64` binary, plus `xorriso` to bundle the source tree for the VM.
 
 The VM disk images are *not* included in the source repo, and must be prepared as described below.  List available VMs with `test.sh -l`, and run tests in them with the `-m` flag:
 
@@ -45,9 +45,9 @@ Test runner VMs must have:
 - Serial console enabled at 115200 baud
 - An enabled root account with password `socklink-test`
 - A regular user named `test`
+- Automatic network configuration via DHCP
 - Python, zsh, and bash
 - The zh_CN locale installed and present in `locale -a`
-- Automatic network configuration via DHCP
 
 If adding a new OS, [vm_test.py](./scripts/vm_test.py) must be updated to recognize its uname and understand how to mount the virtual CD-ROM.  Instructions for preparing VMs for supported OSes follow.
 
