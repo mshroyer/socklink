@@ -585,46 +585,46 @@ do
 done
 shift $((OPTIND - 1))
 
-if [ -n "$help_flag" ] || [ "$1" = "help" ]; then
+if [ -n "$help_flag" ] || [ "${1:-}" = "help" ]; then
 	show_usage
 elif [ -n "$version_flag" ]; then
 	echo "$VERSION"
-elif [ "$1" = "set-tty-link" ]; then
+elif [ "${1:-}" = "set-tty-link" ]; then
 	log "$*"
 	set_tty_link
-elif [ "$1" = "set-server-link" ]; then
+elif [ "${1:-}" = "set-server-link" ]; then
 	log "$*"
 	shift
 	set_server_link "$@"
-elif [ "$1" = "set-server-link-by-name" ]; then
+elif [ "${1:-}" = "set-server-link-by-name" ]; then
 	log "$*"
 	shift
 	set_server_link_by_name "$@"
-elif [ "$1" = "show-server-link" ]; then
+elif [ "${1:-}" = "show-server-link" ]; then
 	get_server_link_path
-elif [ "$1" = "set-tmux-env" ]; then
+elif [ "${1:-}" = "set-tmux-env" ]; then
 	set_tmux_env
-elif [ "$1" = "test-tmux-feature" ]; then
+elif [ "${1:-}" = "test-tmux-feature" ]; then
 	log "$*"
 	shift
 	test_tmux_feature "$@"
-elif [ "$1" = "setup" ]; then
+elif [ "${1:-}" = "setup" ]; then
 	log "$*"
 	setup
 elif [ -n "${SOCKLINK_TESTONLY_COMMANDS:-}" ]; then
-	if [ "$1" = "get-device-filename" ]; then
+	if [ "${1:-}" = "get-device-filename" ]; then
 		get_device_filename "$2"
-	elif [ "$1" = "get-filename-device" ]; then
+	elif [ "${1:-}" = "get-filename-device" ]; then
 		get_filename_device "$2"
-	elif [ "$1" = "set-socklink-section" ]; then
+	elif [ "${1:-}" = "set-socklink-section" ]; then
 		set_socklink_section "$2"
-	elif [ "$1" = "has-manual-config" ]; then
+	elif [ "${1:-}" = "has-manual-config" ]; then
 		has_manual_config "$2"
-	elif [ "$1" = "stat-mode" ]; then
+	elif [ "${1:-}" = "stat-mode" ]; then
 		stat_mode "$2"
-	elif [ "$1" = "get-pid-uid" ]; then
+	elif [ "${1:-}" = "get-pid-uid" ]; then
 		get_pid_uid "$2"
-	elif [ "$1" = "run-with-lock" ]; then
+	elif [ "${1:-}" = "run-with-lock" ]; then
 		shift
 		run_with_lock "$@"
 	else
