@@ -13,6 +13,7 @@ from tests.testlib import (
     Sandbox,
     SocklinkStub,
     Term,
+    TermCommandError,
     get_project_dir,
     resolve_symlink,
 )
@@ -278,3 +279,18 @@ def test_space_in_script_path(sandbox: Sandbox, tmux_sock: Path, make_term: Make
     # Now we can reuse existing tests and make sure they still work with the
     # custom fixture.
     test_switching_connected_client(tmux_sock, make_term, stub)
+
+
+def test_lockfile_exclusion(sandbox: Sandbox, make_term: MakeTerm, socklink: Path):
+    sandbox.monkeypatch.setenv("SOCKLINK_TESTONLY_COMMANDS", "1")
+
+    term1 = make_term()
+    term2 = make_term()
+
+    term1.run(f'sh -c "{socklink} run-with-lock sleep 3 >>/dev/null 2>&1 &"')
+
+    # "run-with-lock true" should normally work (see the corresponding unit
+    # test), but if we have a concurrent instance of the script holding onto
+    # the lock then it should time out and fail:
+    with pytest.raises(TermCommandError):
+        term2.run(f"{socklink} run-with-lock true")

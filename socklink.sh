@@ -146,6 +146,13 @@ stat_mode() {
 
 BUSYBOX_PS=
 get_pid_uid() {
+	# We could get an empty PID string if we attempt to read the lock file
+	# while racing with another process.
+	if [ -z "$1" ]; then
+		echo "-1"
+		return
+	fi
+
 	if [ -z "${BUSYBOX_PS:-}" ] && [ "$(uname)" = "Linux" ]; then
 		ps="$(which ps)"
 		if [ -L "$ps" ] && [ "$(basename "$(readlink "$ps")")" = "busybox" ]; then
@@ -249,11 +256,13 @@ release_lock() {
 }
 
 take_lock() {
+	ensure_dir "$SOCKLINK_DIR"
+
 	n=10
-	locked=""
+	have_lock=""
 	while [ "$n" -gt "0" ]; do
 		if ( echo $$ >"$LOCKFILE" ) 2>>/dev/null; then
-			locked=1
+			have_lock=1
 			break
 		fi
 		sleep 0.1
@@ -265,11 +274,17 @@ take_lock() {
 		fi
 	done
 
-	if [ -z "$locked" ]; then
+	if [ -z "$have_lock" ]; then
 		log "can't take lockfile $LOCKFILE: locked by PID $(cat "$LOCKFILE")" t
 		exit 1
 	fi
 	trap release_lock INT TERM EXIT
+}
+
+run_with_lock() {
+	echo "LOCKFILE=$LOCKFILE"
+	take_lock
+	command $@
 }
 
 # Links the server's PID to the tty name of its currently active client.
@@ -609,6 +624,9 @@ elif [ -n "${SOCKLINK_TESTONLY_COMMANDS:-}" ]; then
 		stat_mode "$2"
 	elif [ "$1" = "get-pid-uid" ]; then
 		get_pid_uid "$2"
+	elif [ "$1" = "run-with-lock" ]; then
+		shift
+		run_with_lock $@
 	else
 		show_usage
 		exit 1

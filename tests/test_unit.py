@@ -289,3 +289,7 @@ def test_has_manual_config_tail(sandbox: Sandbox, stub: SocklinkStub):
         """)
     )
     assert stub.run_test("has-manual-config", rc_file)
+
+
+def test_run_with_lock(stub: SocklinkStub):
+    stub.run("run-with-lock", "true")
