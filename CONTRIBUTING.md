@@ -6,7 +6,7 @@ When submitting a PR, please ensure lints and most tests pass at least when run 
 
 If you'd like to run a fuller set of tests against your PR before submitting, see below.  I'm happy to send you my VM tester images if you'd like them, but also don't sweat submitting a PR that's only tested locally.
 
-## Types of shells
+## Interpreter vs. interactive shells
 
 The `socklink.sh` script is executed in each system's `/bin/sh`.
 
