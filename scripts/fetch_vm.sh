@@ -26,8 +26,8 @@ else
 	    AWS_DEFAULT_REGION=auto \
 	    AWS_REQUEST_CHECKSUM_CALCULATION=when_required \
 	    AWS_RESPONSE_CHECKSUM_VALIDATION=when_required \
-	    aws s3 cp "--endpoint-url=$TEST_VMS_S3_ENDPOINT" \
-	    "s3://${TEST_VMS_S3_BUCKET}/${vm_name}.qcow2.zst" "$CACHE"
+	    aws s3 cp "--endpoint-url=$SOCKLINK_TEST_VMS_S3_ENDPOINT" \
+	    "s3://${SOCKLINK_TEST_VMS_S3_BUCKET}/${vm_name}.qcow2.zst" "$CACHE"
 fi
 
 if [ ! -d "$PROJECT/vms" ]; then

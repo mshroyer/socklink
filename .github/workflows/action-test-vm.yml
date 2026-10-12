@@ -33,6 +33,8 @@ jobs:
 
       - name: Fetch vm
         env:
+          SOCKLINK_TEST_VMS_S3_ENDPOINT: "${{ env.SOCKLINK_TEST_VMS_S3_ENDPOINT }}"
+          SOCKLINK_TEST_VMS_S3_BUCKET: "${{ env.SOCKLINK_TEST_VMS_S3_BUCKET }}"
           SOCKLINK_TEST_VMS_ACCESS_KEY_ID: "${{ secrets.SOCKLINK_TEST_VMS_ACCESS_KEY_ID }}"
           SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY: "${{ secrets.SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY }}"
         run: scripts/fetch_vm.sh "${{ inputs.vm }}"
