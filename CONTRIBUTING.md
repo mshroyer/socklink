@@ -156,3 +156,12 @@ On your local system, set the environment variables:
 Your local system's access key should allow read-write access so that the `upload_vm.sh` script can function.  Run `upload_vm.sh` with the name of each image to upload it to your bucket.
 
 Then, in GitHub, configure `SOCKLINK_TEST_VMS_S3_ENDPOINT` and `SOCKLINK_TEST_VMS_S3_BUCKET` as repository variables, and `SOCKLINK_TEST_VMS_ACCESS_KEY_ID` and `SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY` as repository secrets.  GitHub Actions only needs read access to the bucket.
+
+## Releasing
+
+To mint a new release:
+
+1. Ensure [CHANGELOG.md](./CHANGELOG.md) has a section for the version you intend to release.
+2. Make sure `VERSION` is defined correctly in [socklink.sh](./socklink.sh).
+3. Commit and push to GitHub, then push a new tag of the form `v0.3.2`.  The [release workflow](./.github/workflows/release.yml) will begin, running all lints and tests.
+4. The GitHub release will be left in a draft state.  Check it and then publish manually.
