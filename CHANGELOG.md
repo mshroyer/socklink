@@ -1,5 +1,9 @@
 # socklink.sh Changelog
 
+## v0.3.3
+
+- Fix broken `-V` invocation.
+
 ## v0.3.2
 
 - Avoid relying on non-standard `test -O`, as per
