@@ -6,6 +6,12 @@ When submitting a PR, please ensure lints and most tests pass at least when run 
 
 If you'd like to run a fuller set of tests against your PR before submitting, see below.  I'm happy to send you my VM tester images if you'd like them, but also don't sweat submitting a PR that's only tested locally.
 
+## Types of shells
+
+The `socklink.sh` script is executed in each system's `/bin/sh`.
+
+You'll also see reference to bash and zsh in this project's documentation and tests.  To be clear, these are interactive shells that might be used by users, and that are supported by the `setup` subcommand.  Tests parameterized across bash and zsh are testing those as interactive shells within pexpect, but still run `socklink.sh` within `/bin/sh` on the target system—which may be bash, on some systems, but often will not be.
+
 ## Tests
 
 Because of how subtly differently shell scripts can behave from one Unix system to the next, this project relies heavily on a Python-based test suite that uses [pexpect](https://pexpect.readthedocs.io/en/stable/) to hook socklink.sh up to tmux in a pseudoterminal and run it through its paces.
