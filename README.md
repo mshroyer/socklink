@@ -44,7 +44,7 @@ fi
 
 After setup, restart any tmux sessions and any interactive shells.
 
-No additional dependencies should be needed outside of what's present in tested operating systems' base installations, with the exception of very minimalist installations of certain Linux distros like Fedora and OpenSUSE, where standard tools like `awk`, `find`, or `which` might be missing.
+No additional dependencies should be needed outside of what's present in tested operating systems' base installations, with the exception of very minimalist installations of certain Linux distros like Fedora and OpenSUSE, where standard tools like `awk`, `find`, `ps`, or `which` might be missing.
 
 ## Why a shell script?
 
@@ -54,7 +54,7 @@ I use lots of different Linux distros and BSD systems on a regular basis, and sy
 
 ## Platform support and tests
 
-Different Unix-like systems use different versions of `/bin/sh` and associated POSIX commands: Alpine Linux's `sh` is `ash`, Debian's is `dash`, Fedora's is `bash`, and so on.  Socklink has a Python and [pexpect](https://pexpect.readthedocs.io/en/stable/)-based test suite that hooks it up to tmux inside pseudterminals and verifies its behavior.
+Different Unix-like systems use different versions of `/bin/sh` and associated POSIX commands: Alpine Linux's `sh` is `ash`, Debian's is `dash`, Fedora's is `bash`, and the BSDs and Illumos all have their own.  `socklink.sh` has a Python and [pexpect](https://pexpect.readthedocs.io/en/stable/)-based test suite that hooks it up to tmux inside pseudoterminals and verifies its behavior across these different implementations.
 
 It's tested on the following operating systems:
 
