@@ -23,6 +23,13 @@ jobs:
         run: sudo apt install --no-install-recommends zsh
         if: ${{ contains(inputs.os, 'ubuntu-') }}
 
+      - name: Setup locales
+        run: |
+          sudo apt install -y locales
+          sudo sed -i -e 's/^# *he_IL/he_IL/' -e 's/^# *zh_CN/zh_CN/' /etc/locale.gen
+          sudo locale-gen
+        if: ${{ contains(inputs.os, 'ubuntu-') }}
+
       - name: Setup python
         uses: actions/setup-python@v7
         with:
