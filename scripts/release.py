@@ -12,6 +12,7 @@ https://github.com/mshroyer/coursepointer/
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -91,13 +92,24 @@ def _get_gh_json(key: str, query: str) -> str:
     )
 
 
-def get_github_repo_name() -> str:
+def get_github_repo_name(args: argparse.Namespace) -> str:
+    """Returns the GitHub repository to operate on, in OWNER/NAME form
+
+    Prefers an explicit --repo, then the repository GitHub Actions is running
+    in, before falling back on gh's own inference from the git remotes, which
+    in a fork's checkout might resolve to the upstream repo.
+
+    """
+    if args.repo:
+        return args.repo
+    if os.environ.get("GITHUB_REPOSITORY"):
+        return os.environ["GITHUB_REPOSITORY"]
     owner = _get_gh_json("owner", ".owner.login")
     name = _get_gh_json("name", ".name")
     return f"{owner}/{name}"
 
 
-def query_ci_runs(workflow: str, sha: str) -> dict:
+def query_ci_runs(repo: str, workflow: str, sha: str) -> dict:
     output = subprocess.check_output(
         [
             "gh",
@@ -106,7 +118,7 @@ def query_ci_runs(workflow: str, sha: str) -> dict:
             "Accept: application/vnd.github+json",
             "-H",
             "X-GitHub-Api-Version: 2022-11-28",
-            f"/repos/{get_github_repo_name()}/actions/workflows/{workflow}.yml/runs?head_sha={sha}",
+            f"/repos/{repo}/actions/workflows/{workflow}.yml/runs?head_sha={sha}",
         ]
     )
 
@@ -143,10 +155,10 @@ class CiStatus(Enum):
     FAILURE = 3
 
 
-def get_combined_ci_status(sha: str) -> CiStatus:
+def get_combined_ci_status(repo: str, sha: str) -> CiStatus:
     result = CiStatus.SUCCESS
     for workflow in CI_WORKFLOWS:
-        runs = query_ci_runs(workflow, sha)
+        runs = query_ci_runs(repo, workflow, sha)
         if successful_run_id(runs) is not None:
             continue
         elif pending_run_id(runs) is not None:
@@ -175,13 +187,14 @@ def lint(args: argparse.Namespace):
 
 
 def wait_ci(args: argparse.Namespace):
+    repo = get_github_repo_name(args)
     max_repeat = 180
     while True:
         # Sleep first to try to prevent racing against the CI workflow being
         # queued.
         time.sleep(5)
 
-        status = get_combined_ci_status(args.hash)
+        status = get_combined_ci_status(repo, args.hash)
         if status == CiStatus.SUCCESS:
             print(f"Found successful CI runs for commit {args.hash}")
             return
@@ -227,6 +240,8 @@ def create(args: argparse.Namespace):
             "gh",
             "release",
             "create",
+            "--repo",
+            get_github_repo_name(args),
             f"v{version}",
             "--title",
             f"v{version}",
@@ -242,7 +257,17 @@ def create(args: argparse.Namespace):
 def upload(args: argparse.Namespace):
     version = get_tagged_version("HEAD")
     subprocess.run(
-        ["gh", "release", "upload", "--clobber", f"v{version}", args.file], check=True
+        [
+            "gh",
+            "release",
+            "upload",
+            "--repo",
+            get_github_repo_name(args),
+            "--clobber",
+            f"v{version}",
+            args.file,
+        ],
+        check=True,
     )
 
 
@@ -259,7 +284,9 @@ def main():
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
-        "--repo", help="GitHub repository name, e.g. 'mshroyer/coursepointer'"
+        "--repo",
+        help="GitHub repository in OWNER/NAME form (default: $GITHUB_REPOSITORY, "
+        "or as inferred by gh)",
     )
     subparsers = parser.add_subparsers(help="Subcommand")
 
