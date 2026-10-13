@@ -81,7 +81,7 @@ You can run the tests on your own system with:
 
 The tests will use your system versions of `tmux` and `/bin/sh`, as well as zsh and/or bash as a test interactive shell for `setup`.  See [CONTRIBUTING.md](./CONTRIBUTING.md) for information about how to run the tests on other systems too.
 
-The reguarly-scheduled Debian Unstable, Fedora Rawhide, and OpenSUSE Tumbleweed tests are meant to serve as early warnings of breakage due to new software versions; the AlmaLinux and Ubuntu LTS tests ensure things keep working on older Linux distros.  It would be nice to have something like Rawhide tests for the BSDs, but this isn't feasible since these VMs must be created by hand.
+The reguarly-scheduled Debian Unstable, Fedora Rawhide, and OpenSUSE Tumbleweed tests are meant to serve as early warnings of breakage due to new software versions; the AlmaLinux and Ubuntu LTS tests ensure things keep working on older Linux distros.  It would be nice to have something like Rawhide tests for the BSDs, but that isn't feasible since these VMs must be recreated by hand, which I plan to do approximately quarterly.
 
 ## Limitations
 
