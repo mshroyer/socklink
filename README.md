@@ -73,7 +73,7 @@ It's tested on the following operating systems:
 | [OpenIndiana 2026.04](https://www.openindiana.org/)                 |    [![OpenIndiana status](https://github.com/mshroyer/socklink/actions/workflows/test-openindiana.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-openindiana.yml) |         vm         |    schedule, release    |
 | [OpenSUSE Tumbleweed](https://hub.docker.com/r/opensuse/tumbleweed) |             [![OpenSUSE status](https://github.com/mshroyer/socklink/actions/workflows/test-opensuse.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-opensuse.yml) |     container      |    schedule, release    |
 | [Ubuntu 26.04](https://github.com/actions/runner-images)            |                   [![Ubuntu status](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml) | directly on runner | push, schedule, release |
-| [Ubuntu-devel](https://hub.docker.com/_/ubuntu)                     | [![Ubuntu Devel status](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu-devel.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu-devel.yml) |     container      |    schedule, release    |
+| [Ubuntu Devel](https://hub.docker.com/_/ubuntu)                     | [![Ubuntu Devel status](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu-devel.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu-devel.yml) |     container      |    schedule, release    |
 
 You can run the tests on your own system with:
 
@@ -83,7 +83,7 @@ You can run the tests on your own system with:
 
 The tests will use your system versions of `tmux` and `/bin/sh`, as well as zsh and/or bash as a test interactive shell for `setup`.  See [CONTRIBUTING.md](./CONTRIBUTING.md) for information about how to run the tests on other systems too.
 
-The reguarly-scheduled Debian Unstable, Fedora Rawhide, and OpenSUSE Tumbleweed tests are meant to serve as early warnings of breakage due to new software versions; the AlmaLinux and Ubuntu LTS tests ensure things keep working on older Linux distros.  Testing ubuntu-devel aims to catch compatibility issues with uutils.  It would be nice to have something like Rawhide tests for the BSDs, but that isn't feasible since these VMs must be recreated by hand, which I plan to do approximately quarterly.
+The reguarly-scheduled Debian Unstable, Fedora Rawhide, and OpenSUSE Tumbleweed tests are meant to serve as early warnings of breakage due to new software versions; the AlmaLinux and Ubuntu LTS tests ensure things keep working on older Linux distros.  Testing ubuntu-devel aims to catch compatibility issues with [uutils](https://github.com/uutils).  It would be nice to have something like Rawhide tests for the BSDs, but that isn't feasible since these VMs must be recreated by hand, which I plan to do approximately quarterly.
 
 ## Limitations
 
