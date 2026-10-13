@@ -6,7 +6,7 @@ I'd be especially interested in contributions that add support for additional in
 
 ## Submitting a PR
 
-When submitting a PR, please ensure lints and most tests pass at least when run locally: if you have emacs and shellcheck installed you can run `scripts/lint.sh` (or alternately, use `scripts/lint.sh -c` to run lints in a docker or podman container), and run `scripts/test.sh` on your local machine.
+When submitting a PR, please ensure lints and tests pass at least when run locally: if you have emacs and shellcheck installed you can run `scripts/lint.sh` (or alternately, use `scripts/lint.sh -c` to run lints in a docker or podman container), and run `scripts/test.sh` on your local machine.
 
 If you'd like to run a fuller set of tests against your PR before submitting, see below.  I'm happy to send you my VM test runner images if you'd like them, but don't sweat submitting a PR that's only tested locally.
 
