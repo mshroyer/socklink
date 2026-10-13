@@ -63,7 +63,7 @@ It's tested on the following operating systems:
 | [AlmaLinux 10](https://hub.docker.com/_/almalinux)                  |              [![AlmaLinux 10 status](https://github.com/mshroyer/socklink/actions/workflows/test-el10.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-el10.yml) |     container      |    schedule, release    |
 | [Alpine Linux](https://hub.docker.com/_/alpine/)                    |          [![Alpine Linux status](https://github.com/mshroyer/socklink/actions/workflows/test-alpine.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-alpine.yml) |     container      |    schedule, release    |
 | [Arch Linux](https://hub.docker.com/_/archlinux/)                   |      [![Arch Linux status](https://github.com/mshroyer/socklink/actions/workflows/test-archlinux.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-archlinux.yml) |     container      |    schedule, release    |
-| [Debian Testing](https://hub.docker.com/_/debian)                   |                [![Debian status](https://github.com/mshroyer/socklink/actions/workflows/test-debian.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-debian.yml) |     container      |    schedule, release    |
+| [Debian Unstable](https://hub.docker.com/_/debian)                  |                [![Debian status](https://github.com/mshroyer/socklink/actions/workflows/test-debian.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-debian.yml) |     container      |    schedule, release    |
 | [Fedora Rawhide](https://hub.docker.com/_/fedora)                   |                [![Fedora status](https://github.com/mshroyer/socklink/actions/workflows/test-fedora.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-fedora.yml) |     container      |    schedule, release    |
 | [FreeBSD 15.1](https://freebsd.org/)                                |             [![FreeBSD status](https://github.com/mshroyer/socklink/actions/workflows/test-freebsd.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-freebsd.yml) |         vm         |    schedule, release    |
 | [macOS Latest](https://github.com/actions/runner-images)            |                   [![macOS status](https://github.com/mshroyer/socklink/actions/workflows/test-macos.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-macos.yml) | directly on runner |    schedule, release    |
@@ -80,6 +80,8 @@ You can run the tests on your own system with:
 ```
 
 The tests will use your system versions of `tmux` and `/bin/sh`, as well as zsh and/or bash as a test interactive shell for `setup`.  See [CONTRIBUTING.md](./CONTRIBUTING.md) for information about how to run the tests on other systems too.
+
+The reguarly-scheduled Debian Unstable, Fedora Rawhide, and OpenSUSE Tumbleweed tests in particular are meant to serve as early warnings of breakage due to new software versions; the AlmaLinux and Ubuntu LTS tests ensure things keep working on older Linux distros.  It would be nice to have something like Rawhide tests for the BSDs, but this isn't feasible since this VMs must be created by hand.
 
 ## Limitations
 

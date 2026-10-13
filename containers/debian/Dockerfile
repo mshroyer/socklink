@@ -1,4 +1,4 @@
-FROM debian:latest
+FROM debian:unstable
 
 RUN apt update
 RUN apt install -y locales procps python3 python3-venv tmux zsh
