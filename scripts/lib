@@ -3,8 +3,8 @@
 PROJECT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$PROJECT" || exit 1
 
-PYTHON_MIN=3.11
-PYTHON_BINS="python3.15 python3.14 python3.13 python3.12 python3.11 python3 python"
+PYTHON_MIN=3.12
+PYTHON_BINS="python3.15 python3.14 python3.13 python3.12 python3 python"
 
 python_version_at_least() {
 	bin="$1"
