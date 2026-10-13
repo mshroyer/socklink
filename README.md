@@ -44,7 +44,7 @@ fi
 
 After setup, restart any tmux sessions and any interactive shells.
 
-No additional dependencies should be needed outside of what's present in tested operating systems' base installations, with the exception of Fedora where `awk` and `which` might be missing in very bare installations.
+No additional dependencies should be needed outside of what's present in tested operating systems' base installations, with the exception of very minimalist installations of certain Linux distros like Fedora and OpenSUSE, where standard tools like `awk`, `find`, or `which` might be missing.
 
 ## Why a shell script?
 
