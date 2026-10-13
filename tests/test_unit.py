@@ -294,6 +294,10 @@ def test_has_manual_config_tail(sandbox: Sandbox, stub: SocklinkStub):
 def test_run_with_lock(stub: SocklinkStub):
     stub.run("run-with-lock", "true")
 
+    # Being about to run this command a second time shows that the lockfile
+    # was not left over after the first invocation:
+    stub.run("run-with-lock", "true")
+
 
 def test_version(stub: SocklinkStub):
     stub.run("-V")
