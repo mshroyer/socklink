@@ -148,14 +148,22 @@ If setting up GitHub Actions in a new repo (such as a fork) you'll need to creat
 
 On your local system, set the environment variables:
 
-- `SOCKLINK_TEST_VMS_S3_ENDPOINT` (e.g., `https://5d79a0473b8621a40befe75f1eba08e8.r2.cloudflarestorage.com`)
+- `SOCKLINK_TEST_VMS_S3_ENDPOINT` (e.g., `https://<account-id>.r2.cloudflarestorage.com` for Cloudflare R2)
 - `SOCKLINK_TEST_VMS_S3_BUCKET` (e.g., `socklink-test-vms`)
 - `SOCKLINK_TEST_VMS_ACCESS_KEY_ID`
 - `SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY`
 
 Your local system's access key should allow read-write access so that the `upload_vm.sh` script can function.  Run `upload_vm.sh` with the name of each image to upload it to your bucket.
 
-Then, in GitHub, configure `SOCKLINK_TEST_VMS_S3_ENDPOINT` and `SOCKLINK_TEST_VMS_S3_BUCKET` as repository variables, and `SOCKLINK_TEST_VMS_ACCESS_KEY_ID` and `SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY` as repository secrets.  GitHub Actions only needs read access to the bucket.
+Then, in GitHub, configure `SOCKLINK_TEST_VMS_S3_ENDPOINT` and `SOCKLINK_TEST_VMS_S3_BUCKET` as repository variables, and `SOCKLINK_TEST_VMS_ACCESS_KEY_ID` and `SOCKLINK_TEST_VMS_SECRET_ACCESS_KEY` as repository secrets.  GitHub Actions only needs read access to the bucket.  Without these, the VM test workflows (FreeBSD, NetBSD, OpenBSD, and OpenIndiana) will fail with an error pointing back here.
+
+Most workflows run on `ubuntu-26.04-arm` runners, which are free for public repositories but may not be available to a private fork.
+
+The status badges in [README.md](./README.md) point at the upstream repository's workflows, and GitHub doesn't support relative badge URLs.  To show your fork's statuses instead, retarget them with something like:
+
+```sh
+sed -i 's|mshroyer/socklink/actions|YOUR-USER/socklink/actions|g' README.md
+```
 
 ## Releasing
 
