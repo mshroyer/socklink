@@ -1,0 +1,10 @@
+name: test-opensuse
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  test:
+    uses: ./.github/workflows/action-test-container.yml
+    with:
+      container: opensuse
