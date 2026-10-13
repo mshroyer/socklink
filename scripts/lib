@@ -7,10 +7,10 @@ PYTHON_MIN=3.11
 PYTHON_BINS="python3.15 python3.14 python3.13 python3.12 python3.11 python3 python"
 
 python_version_at_least() {
-	result=$("$1" -c "import sys; print(float(f'{sys.version_info[0]}.{sys.version_info[1]}') >= $2)")
-	if [ "$result" != "True" ]; then
-		false
-	fi
+	bin="$1"
+	ver="$2"
+
+	"$bin" -c "import sys; major = int('$ver'.split('.')[0]); minor = int('$ver'.split('.')[1]); sys.version_info[0] > major or (sys.version_info[0] == major and sys.version_info[1] >= minor) or sys.exit(1)"
 }
 
 # Searches Python binary candidate names for the first one matching our
