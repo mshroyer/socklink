@@ -24,13 +24,13 @@ See [this blog post](https://markshroyer.com/2025/09/socklink/) for a more detai
 
 ## Installation
 
-Socklink only needs to be installed on the system you're SSHing into, not your client system.  Copy the [latest release](https://github.com/mshroyer/socklink/releases) to wherever you want to keep it on your server's filesystem, then run
+`socklink.sh` only needs to be installed on the system you're SSHing into, not your client system.  Copy the [latest release](https://github.com/mshroyer/socklink/releases) to wherever you want to keep it on your server's filesystem, then run:
 
 ```sh
 ./socklink.sh setup
 ```
 
-The script will install the necessary hooks to your `.tmux.conf`, and to `.bashrc` or `.zshrc` if you're using either bash or zsh as your interactive shell.  If you're using a different interactive shell, you can instead manually setup the hooks by adding the equivalent of the following to your shell's init file:
+The script will install the necessary hooks to your `.tmux.conf`, and to `.bashrc` or `.zshrc` if you're using either of those as your interactive shell.  If you're using a different interactive shell, you can instead manually setup the hooks by adding the equivalent of the following to your shell's init file:
 
 ```sh
 if [ -n "$THIS_IS_AN_INTERACTIVE_SESSION" ]; then
@@ -50,7 +50,7 @@ No additional dependencies should be needed outside of what's present in tested 
 
 Implementing this as a shell script [proved to be](https://markshroyer.com/2025/09/socklink/) much more challenging than it would have been as a Python script, so why make a shell script?
 
-I use lots of different Linux distros and BSD systems on a regular basis, and I use git to synchronize a [shared set of dotfiles](https://github.com/mshroyer/config) across them.  Some of these systems don't have Python, so it's useful to me to have a plain shell script that I can drop on any Unix-like system and expect it to work.
+I use lots of different Linux distros and BSD systems on a regular basis, and synchronize a [shared set of dotfiles](https://github.com/mshroyer/config) across them.  Some of these systems don't have Python or even Perl, so it's useful to me to have a plain shell script that I can drop on any Unix-like system and expect to work.
 
 ## Platform support and tests
 
@@ -73,13 +73,13 @@ It's tested on the following operating systems:
 | [OpenSUSE Tumbleweed](https://hub.docker.com/r/opensuse/tumbleweed) |          [![OpenSUSE status](https://github.com/mshroyer/socklink/actions/workflows/test-opensuse.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-opensuse.yml) |     container      |    schedule, release    |
 | [Ubuntu 26.04](https://github.com/actions/runner-images)            |                [![Ubuntu status](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml) | directly on runner | push, schedule, release |
 
-You can run the tests locally with:
+You can run the tests on your own system with:
 
 ```sh
 ./scripts/test.sh
 ```
 
-The tests will use your system versions of `tmux` and `/bin/sh`, as well as zsh and/or bash as a test interactive shell for `setup`.
+The tests will use your system versions of `tmux` and `/bin/sh`, as well as zsh and/or bash as a test interactive shell for `setup`.  See [CONTRIBUTING.md](./CONTRIBUTING.md) for information about how to run the tests on other systems too.
 
 ## Limitations
 
