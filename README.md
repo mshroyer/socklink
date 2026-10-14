@@ -1,4 +1,4 @@
-# socklink.sh: Keep your SSH agent forwarded from your current tmux client
+# socklink.sh: Keep your SSH agent forwarded to your active tmux client
 
 [![Lint status](https://github.com/mshroyer/socklink/actions/workflows/lint.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/lint.yml)
 [![AlmaLinux 10 status](https://github.com/mshroyer/socklink/actions/workflows/test-el10.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-el10.yml)
