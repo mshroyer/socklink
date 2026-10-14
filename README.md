@@ -15,13 +15,13 @@
 [![Ubuntu status](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml)
 [![Ubuntu Devel status](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu-devel.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu-devel.yml)
 
-Ever reconnect to a long-running remote tmux session and find you can no longer `git push` or `scp` because your SSH agent forwarding is broken?  This is especially troublesome when using YubiKeys with proof-of-presence: In that case it matters that the agent is forwarded to the client you're at right now, and not to some other connected client where your YubiKey starts blinking, hopelessly waiting for someone to touch it.
+Ever reconnect to a long-running remote tmux session and find you can no longer `git push` or `scp` because your SSH agent forwarding is broken?  This happens because your tmux panes inherit the `SSH_AUTH_SOCK` environment variable from to the SSH client where you started tmux.  That works initially, but when you disconnect that client or connect another, the variable  may point to the incorrect authentication socket or none at all.
 
-This happens because your tmux panes inherit the `SSH_AUTH_SOCK` environment variable corresponding to the SSH client where you started the tmux session.  That will work initially, but when you disconnect that client or connect another one, the variable's value may point to the incorrect authentication socket or none at all.
+This is extra troublesome when using YubiKeys with proof-of-presence: In that case it matters that the agent forwards to the client you're at right now, and not to some other connected client where a YubiKey starts blinking, hopelessly waiting for someone to touch it.
 
-[socklink.sh](./socklink.sh) is a single-file shell script that does bookkeeping of symlinks and environment variables so that the `SSH_AUTH_SOCK` in your tmux panes always points at your current client.  It does this through some invocations you add to your interactive shell's initialization script (such as `.zshrc` or `.bashrc`) and tmux hooks configured in `.tmux.conf`; there's no daemon to run in the background.  It uses tmux's relatively new `client-active` hook so that even if you have two clients concurrently connected, SSH auth should "just work" when you sit down at one computer or the other.
+[socklink.sh](./socklink.sh) is a single-file shell script that bookkeeps symlinks and environment variables so that the `SSH_AUTH_SOCK` in your tmux panes always points at your current client.  It does this through some invocations you add to your interactive shell's initialization script (such as `.zshrc` or `.bashrc`) and tmux hooks configured in `.tmux.conf`; there's no daemon to run in the background.  It uses tmux's relatively new `client-active` hook so that even if you have two clients simultaneously connected, SSH auth will "just work" when you sit down at one computer or the other.
 
-See [this blog post](https://markshroyer.com/2025/09/socklink/) for a more detailed design description.
+See [this blog post](https://markshroyer.com/2025/09/socklink/) for a more detailed description of the design.
 
 ## Setup
 
@@ -43,16 +43,7 @@ if [ -n "$THIS_IS_AN_INTERACTIVE_SESSION" ]; then
 fi
 ```
 
-The tmux hooks can also be added manually instead of by running `setup`, and look like:
-
-```
-if-shell -b '"$PATH_TO/socklink.sh" test-tmux-feature client-active-hook' {
-	set-hook -ga client-active 'run-shell "\"$PATH_TO/socklink.sh\" -c client-active set-server-link-by-name \"#{hook_client}\""'
-}
-set-hook -ga client-attached 'run-shell "\"$PATH_TO/socklink.sh\" -c client-attached set-server-link \"#{client_tty}\""'
-set-hook -ga session-created 'run-shell "\"$PATH_TO/socklink.sh\" -c session-created set-server-link \"#{client_tty}\""'
-set-hook -ga session-created 'run-shell "\"$PATH_TO/socklink.sh\" -c session-created set-tmux-env"'
-```
+See my [.zshrc](https://github.com/mshroyer/config/blob/e1ae07ee20263a413b9a3b49ff5cd9cb49e15a7e/.zshrc#L154-L162) and [.tmux.conf](https://github.com/mshroyer/config/blob/e1ae07ee20263a413b9a3b49ff5cd9cb49e15a7e/.tmux.conf#L84-L91) for examples of what these hooks look like.
 
 After setup, restart any tmux sessions and any interactive shells.
 
