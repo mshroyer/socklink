@@ -70,12 +70,6 @@ And in that tmp directory:
 
 There's now a two-level mapping from an `SSH_AUTH_SOCK` tied to your tmux server's identity to your current tmux client, and from that to the corresponding SSH authentication socket (if any).  The hooks in your shell initialization and `.tmux.conf` will keep this mapping up-to-date through the lifecycle of your tmux session.
 
-## Why a shell script?
-
-Implementing this as a shell script [proved to be](https://markshroyer.com/2025/09/socklink/) much more challenging than it would have been as a Python script, so why make a shell script?
-
-I use lots of different Linux distros and BSD systems on a regular basis, and synchronize a [shared set of dotfiles](https://github.com/mshroyer/config) across them.  Some of these systems don't have Python or even Perl, so it's useful to me to have a plain shell script that I can drop on any Unix-like system and expect to work.
-
 ## Platform support and tests
 
 Different Unix-like systems use different versions of `/bin/sh` and associated POSIX commands: Alpine Linux's `sh` is `ash`, Debian's is `dash`, Fedora's is `bash`, and the BSDs and Illumos all have their own.  `socklink.sh` has a Python and [pexpect](https://pexpect.readthedocs.io/en/stable/)-based test suite that hooks it up to tmux inside pseudoterminals and verifies its behavior across these different implementations.
@@ -107,6 +101,12 @@ You can run the tests on your own system with:
 The tests will use your system versions of `tmux` and `/bin/sh`, as well as zsh and/or bash as a test interactive shell for `setup`.  See [CONTRIBUTING.md](./CONTRIBUTING.md) for information about how to run the tests on other systems too.
 
 The reguarly-scheduled Debian Unstable, Fedora Rawhide, and OpenSUSE Tumbleweed tests are meant to serve as early warnings of breakage due to new software versions; the AlmaLinux and Ubuntu LTS tests ensure things keep working on older Linux distros.  Testing ubuntu-devel aims to catch compatibility issues with [uutils](https://github.com/uutils).  It would be nice to have something like Rawhide tests for the BSDs, but that isn't feasible since these VMs must be recreated by hand, which I plan to do approximately quarterly.
+
+## Why a shell script?
+
+Implementing this as a shell script [proved to be](https://markshroyer.com/2025/09/socklink/) much more challenging than it would have been as a Python script, so why make a shell script?
+
+I use lots of different Linux distros and BSD systems on a regular basis, and synchronize a [shared set of dotfiles](https://github.com/mshroyer/config) across them.  Some of these systems don't have Python or even Perl, so it's useful to me to have a plain shell script that I can drop on any Unix-like system and expect to work.
 
 ## Limitations
 
