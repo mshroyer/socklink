@@ -25,7 +25,7 @@ See [this blog post](https://markshroyer.com/2025/09/socklink/) for a more detai
 
 ## Setup
 
-`socklink.sh` only needs to be present on the system you're SSHing into, not your client system.  Copy the [latest release](https://github.com/mshroyer/socklink/releases) to wherever you want to keep it on your server's filesystem, then run:
+`socklink.sh` only needs to be present on the system you're SSHing into, not your client system.  The easiest way to get started is to copy the [latest release](https://github.com/mshroyer/socklink/releases) to wherever you want to keep it on your server's filesystem, then run:
 
 ```sh
 ./socklink.sh setup
