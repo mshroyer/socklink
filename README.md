@@ -15,7 +15,7 @@
 [![Ubuntu status](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml)
 [![Ubuntu Devel status](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu-devel.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu-devel.yml)
 
-Ever reconnect to a long-running remote tmux session and find you can no longer `git push` or `scp` because your SSH agent forwarding is broken?  This is especially troublesome when using YubiKeys with proof-of-presence: In that case matters that the agent is forwarded to the client you're at right now, and not to some other connected client where your YubiKey starts blinking, hopelessly waiting for someone to touch it.
+Ever reconnect to a long-running remote tmux session and find you can no longer `git push` or `scp` because your SSH agent forwarding is broken?  This is especially troublesome when using YubiKeys with proof-of-presence: In that case it matters that the agent is forwarded to the client you're at right now, and not to some other connected client where your YubiKey starts blinking, hopelessly waiting for someone to touch it.
 
 This happens because your tmux panes inherit the `SSH_AUTH_SOCK` environment variable corresponding to the SSH client where you started the tmux session.  That will work initially, but when you disconnect that client or connect another one, the variable's value may point to the incorrect authentication socket or none at all.
 
