@@ -132,6 +132,10 @@ SOCKLINK_LOG="/some/path/to/socklink.log"
 
 to `~/.socklink.conf`.  Heads up that there's no log rotation, so this file will (slowly) grow unbounded.
 
+## See also
+
+There's also [ssh-agent-switcher](https://github.com/jmmv/ssh-agent-switcher), which runs as a Rust daemon and solves the subtly different problem of ensuring `SSH_AUTH_SOCK` always points to *some* active agent (not specifically the one corresponding to the currently active tmux client).
+
 ## License
 
 [MIT License](LICENSE.txt)
