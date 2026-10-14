@@ -43,11 +43,32 @@ if [ -n "$THIS_IS_AN_INTERACTIVE_SESSION" ]; then
 fi
 ```
 
-See my [.zshrc](https://github.com/mshroyer/config/blob/e1ae07ee20263a413b9a3b49ff5cd9cb49e15a7e/.zshrc#L154-L162) and [.tmux.conf](https://github.com/mshroyer/config/blob/e1ae07ee20263a413b9a3b49ff5cd9cb49e15a7e/.tmux.conf#L84-L91) for examples of what these hooks look like.
-
-After setup, restart any tmux sessions and any interactive shells.
+See my personal [.zshrc](https://github.com/mshroyer/config/blob/e1ae07ee20263a413b9a3b49ff5cd9cb49e15a7e/.zshrc#L154-L162) and [.tmux.conf](https://github.com/mshroyer/config/blob/e1ae07ee20263a413b9a3b49ff5cd9cb49e15a7e/.tmux.conf#L84-L91) for examples of what these hooks look like.
 
 No additional dependencies should be needed outside of what's present in tested operating systems' base installations, with the exception of very minimalist installations of certain Linux distros like Fedora and OpenSUSE, where standard tools like `awk`, `find`, `ps`, or `which` might be missing.
+
+## Using
+
+After setup, restart any tmux sessions and any interactive shells.  In a new tmux session, you'll now see something like:
+
+```sh
+% echo $SSH_AUTH_SOCK
+/tmp/socklink-33464/servers/28729
+```
+
+And in that tmp directory:
+
+```sh
+% tree /tmp/socklink-$UID
+/tmp/socklink-33464
+|-- servers
+|   `-- 28729 -> /tmp/socklink-33464/ttys/dev+pts+23
+`-- ttys
+    |-- dev+pts+15 -> /sdf/arpa/gm/m/mshroyer/.ssh/agent/s.hlEVTJZFWM.sshd.3eznnaiHSU
+    `-- dev+pts+23 -> /sdf/arpa/gm/m/mshroyer/.ssh/agent/s.hlEVTJZFWM.sshd.gfQPJwZt3C
+```
+
+There's now a two-level mapping from an `SSH_AUTH_SOCK` tied to your tmux server's identity to your current tmux client, and from that to the corresponding SSH authentication socket (if any).  The hooks in your shell initialization and `.tmux.conf` will keep this mapping up-to-date through the lifecycle of your tmux session.
 
 ## Why a shell script?
 
