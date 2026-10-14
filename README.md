@@ -36,9 +36,9 @@ The script will install the necessary hooks to your `.tmux.conf`, `.bashrc`, and
 ```sh
 if [ -n "$THIS_IS_AN_INTERACTIVE_SESSION" ]; then
         if [ -z "$TMUX" ]; then
-                socklink.sh set-tty-link -c shell-init
+                $PATH_TO/socklink.sh set-tty-link -c shell-init
         else
-                export SSH_AUTH_SOCK="$(socklink.sh show-server-link)"
+                export SSH_AUTH_SOCK="$($PATH_TO/socklink.sh show-server-link)"
         fi
 fi
 ```
@@ -46,12 +46,12 @@ fi
 The tmux hooks can also be added manually instead of by running `setup`, and look like:
 
 ```
-if-shell -b '"$HOME/cfg.bin/socklink.sh" test-tmux-feature client-active-hook' {
-	set-hook -ga client-active 'run-shell "\"$HOME/cfg.bin/socklink.sh\" -c client-active set-server-link-by-name \"#{hook_client}\""'
+if-shell -b '"$PATH_TO/socklink.sh" test-tmux-feature client-active-hook' {
+	set-hook -ga client-active 'run-shell "\"$PATH_TO/socklink.sh\" -c client-active set-server-link-by-name \"#{hook_client}\""'
 }
-set-hook -ga client-attached 'run-shell "\"$HOME/cfg.bin/socklink.sh\" -c client-attached set-server-link \"#{client_tty}\""'
-set-hook -ga session-created 'run-shell "\"$HOME/cfg.bin/socklink.sh\" -c session-created set-server-link \"#{client_tty}\""'
-set-hook -ga session-created 'run-shell "\"$HOME/cfg.bin/socklink.sh\" -c session-created set-tmux-env"'
+set-hook -ga client-attached 'run-shell "\"$PATH_TO/socklink.sh\" -c client-attached set-server-link \"#{client_tty}\""'
+set-hook -ga session-created 'run-shell "\"$PATH_TO/socklink.sh\" -c session-created set-server-link \"#{client_tty}\""'
+set-hook -ga session-created 'run-shell "\"$PATH_TO/socklink.sh\" -c session-created set-tmux-env"'
 ```
 
 After setup, restart any tmux sessions and any interactive shells.
