@@ -1,4 +1,4 @@
-# socklink.sh
+# socklink.sh — Keeps SSH agent forwarding working when switching tmux clients
 
 [![Lint status](https://github.com/mshroyer/socklink/actions/workflows/lint.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/lint.yml)
 [![AlmaLinux 10 status](https://github.com/mshroyer/socklink/actions/workflows/test-el10.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-el10.yml)
@@ -15,11 +15,11 @@
 [![Ubuntu status](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml)
 [![Ubuntu Devel status](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu-devel.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu-devel.yml)
 
-A zero-dependency, cross-platform `SSH_AUTH_SOCK` manager for tmux.
+Ever reconnect to a long-running remote tmux session and find that SSH agent forwarding no longer works in tmux?  This is especially troublesome when using YubiKeys with proof-of-presence: In that case matters that the agent is forwarded to the client you're at right now, and not some other connected client where your YubiKey starts blinking, hopelessly waiting for someone to touch it.
 
-Ensures that as you switch between different SSH clients accessing the same remote tmux session—such as multiple laptops connecting to a long-running session on a dev server—your tmux panes' SSH authentication sockets always point to your current client's auth agent, which might be something like a YubiKey requiring local proof-of-presence.  Uses tmux hooks rather than running a daemon, is cross-platform across Linux distros/macOS/BSDs, and runs in `/bin/sh` with no non-standard dependencies other than tmux itself.
+This happens because your tmux panes inherit the `SSH_AUTH_SOCK` environment variable corresponding to the SSH client where you started the tmux session.  That will work initially, but when you disconnect that client or connect another one, the variable's value may point to the incorrect authentication socket or none at all.
 
-(It's just a shell script!  The Python is all for test automation.)
+[socklink.sh](./socklink.sh) is a single-file shell script that handles bookkeeping of symlinks and environment variables so that the `SSH_AUTH_SOCK` in your tmux panes always points at your current client.  It does this through some invocations you add to your interactive shell's initialization script (such as `.zshrc` or `.bashrc`) and tmux hooks configured in `.tmux.conf`; there's no daemon to run in the background.  It uses tmux's relatively new `client-active` hook so that even if you have two clients concurrently connected, SSH auth should "just work" when you sit down at one computer or the other.
 
 See [this blog post](https://markshroyer.com/2025/09/socklink/) for a more detailed overview.
 
