@@ -100,7 +100,7 @@ def test_default_setup(tmux_sock: Path, make_term: MakeTerm, stub: SocklinkStub)
     term.enter_tmux(f"tmux -S {tmux_sock}")
 
     auth_sock = term.get_auth_sock()
-    assert resolve_symlink(auth_sock) == term.login_auth_sock
+    assert wait_until(lambda: resolve_symlink(auth_sock) == term.login_auth_sock)
 
     # Additionally to in the shell running within tmux, the server itself
     # should have SSH_AUTH_SOCK set in its global environment.
@@ -143,7 +143,7 @@ def test_switching_connected_client(
     term1 = make_term(login_sock=True)
     term1.enter_tmux(f"tmux -S {tmux_sock}")
     auth_sock = term1.get_auth_sock()
-    assert resolve_symlink(auth_sock) == term1.login_auth_sock
+    assert wait_until(lambda: resolve_symlink(auth_sock) == term1.login_auth_sock)
     term1.exit_tmux()
 
     term2 = make_term(login_sock=True)
@@ -163,7 +163,7 @@ def test_switching_active_client(
     term1 = make_term(login_sock=True)
     term1.enter_tmux(f"tmux -S {tmux_sock}")
     auth_sock = term1.get_auth_sock()
-    assert resolve_symlink(auth_sock) == term1.login_auth_sock
+    assert wait_until(lambda: resolve_symlink(auth_sock) == term1.login_auth_sock)
 
     term2 = make_term(login_sock=True)
     term2.enter_tmux(f"tmux -S {tmux_sock} attach")
