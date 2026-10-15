@@ -1,5 +1,11 @@
 # socklink.sh Changelog
 
+## v0.3.4
+
+- Fixes an issue (due to recently added use of `set -u`) where leaving
+  `SOCKLINK_LOG` unset would cause the `set-tty-link` to exit with an error.
+- Suppress spurious stderr output when checking files' ownership.
+
 ## v0.3.3
 
 - Fix broken `-V` invocation.
