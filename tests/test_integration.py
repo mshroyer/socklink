@@ -1,10 +1,10 @@
 import os
-import platform
 import re
 import shutil
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
-from time import sleep
+from time import monotonic, sleep
 
 import pytest
 
@@ -48,15 +48,19 @@ def _expose_shell(monkeypatch, shell):
     monkeypatch.setenv("TEST_SHELL", shell)
 
 
-def delay():
-    """Wait some amount of time in hopes tmux hooks have settled"""
+def wait_until(predicate: Callable[[], bool], timeout: float = 10.0) -> bool:
+    """Polls until predicate is true, to give tmux hooks time to settle
 
-    if platform.system() == "Darwin":
-        # macOS is flakier than the others when it comes to reading the
-        # updated target of the server symlink
-        sleep(0.5)
-    else:
-        sleep(0.25)
+    Returns the predicate's final value.
+
+    """
+
+    deadline = monotonic() + timeout
+    while not predicate():
+        if monotonic() > deadline:
+            return False
+        sleep(0.05)
+    return True
 
 
 def test_show_server_link_unset(term: Term, socklink: Path):
@@ -83,7 +87,7 @@ def test_login_sock_set(term: Term):
 
 def test_tmux_session(sandbox: Sandbox, term: Term):
     socket = sandbox.reserve_tmux_socket()
-    term.run(f"tmux -S {socket}")
+    term.enter_tmux(f"tmux -S {socket}")
     assert term.get_auth_sock() is not None
 
 
@@ -93,20 +97,22 @@ def test_default_setup(tmux_sock: Path, make_term: MakeTerm, stub: SocklinkStub)
     # When testing setup, we have to explicilty make the terminal after
     # running setup so that its newly-setup login shell hooks run.
     term = make_term()
-    term.run(f"tmux -S {tmux_sock}")
+    term.enter_tmux(f"tmux -S {tmux_sock}")
 
     auth_sock = term.get_auth_sock()
     assert resolve_symlink(auth_sock) == term.login_auth_sock
 
     # Additionally to in the shell running within tmux, the server itself
     # should have SSH_AUTH_SOCK set in its global environment.
-    env = subprocess.check_output(
-        ["tmux", "-S", tmux_sock, "show-environment", "-g"]
-    ).decode("utf-8")
-    pat = re.compile(r"^SSH_AUTH_SOCK=(.*)$", re.MULTILINE)
-    m = pat.search(env)
-    assert m is not None
-    assert Path(m.group(1)) == auth_sock
+    def server_auth_sock() -> Path | None:
+        env = subprocess.check_output(
+            ["tmux", "-S", tmux_sock, "show-environment", "-g"]
+        ).decode("utf-8")
+        pat = re.compile(r"^SSH_AUTH_SOCK=(.*)$", re.MULTILINE)
+        m = pat.search(env)
+        return Path(m.group(1)) if m is not None else None
+
+    assert wait_until(lambda: server_auth_sock() == auth_sock)
 
 
 def test_second_concurrent_client(
@@ -115,20 +121,18 @@ def test_second_concurrent_client(
     stub.run("setup")
 
     term1 = make_term(login_sock=True)
-    term1.run(f"tmux -S {tmux_sock}")
+    term1.enter_tmux(f"tmux -S {tmux_sock}")
     auth_sock = term1.get_auth_sock()
-    delay()
-    assert resolve_symlink(auth_sock) == term1.login_auth_sock
+    assert wait_until(lambda: resolve_symlink(auth_sock) == term1.login_auth_sock)
 
     term2 = make_term(login_sock=True)
-    term2.run(f"tmux -S {tmux_sock} attach")
+    term2.enter_tmux(f"tmux -S {tmux_sock} attach")
     assert auth_sock == term2.get_auth_sock()
-    delay()
 
     # Attaching a second client should immediately redirect the server
     # link to the new client
+    assert wait_until(lambda: resolve_symlink(auth_sock) == term2.login_auth_sock)
     assert resolve_symlink(auth_sock) != term1.login_auth_sock
-    assert resolve_symlink(auth_sock) == term2.login_auth_sock
 
 
 def test_switching_connected_client(
@@ -137,20 +141,18 @@ def test_switching_connected_client(
     stub.run("setup")
 
     term1 = make_term(login_sock=True)
-    term1.run(f"tmux -S {tmux_sock}")
+    term1.enter_tmux(f"tmux -S {tmux_sock}")
     auth_sock = term1.get_auth_sock()
     assert resolve_symlink(auth_sock) == term1.login_auth_sock
-    term1.run("tmux detach")
+    term1.exit_tmux()
 
     term2 = make_term(login_sock=True)
-    term2.run(f"tmux -S {tmux_sock} attach")
-    delay()
-    assert resolve_symlink(auth_sock) == term2.login_auth_sock
-    term2.run("tmux detach")
+    term2.enter_tmux(f"tmux -S {tmux_sock} attach")
+    assert wait_until(lambda: resolve_symlink(auth_sock) == term2.login_auth_sock)
+    term2.exit_tmux()
 
-    term1.run(f"tmux -S {tmux_sock} attach")
-    delay()
-    assert resolve_symlink(auth_sock) == term1.login_auth_sock
+    term1.enter_tmux(f"tmux -S {tmux_sock} attach")
+    assert wait_until(lambda: resolve_symlink(auth_sock) == term1.login_auth_sock)
 
 
 def test_switching_active_client(
@@ -159,20 +161,18 @@ def test_switching_active_client(
     stub.run("setup")
 
     term1 = make_term(login_sock=True)
-    term1.run(f"tmux -S {tmux_sock}")
+    term1.enter_tmux(f"tmux -S {tmux_sock}")
     auth_sock = term1.get_auth_sock()
     assert resolve_symlink(auth_sock) == term1.login_auth_sock
 
     term2 = make_term(login_sock=True)
-    term2.run(f"tmux -S {tmux_sock} attach")
+    term2.enter_tmux(f"tmux -S {tmux_sock} attach")
     term2.run("echo hi")
 
     # When the first terminal becomes active again, the server link should
     # end up pointing back at it once the hook has a moment to run.
     term1.run("echo hi")
-    delay()
-
-    assert resolve_symlink(auth_sock) == term1.login_auth_sock
+    assert wait_until(lambda: resolve_symlink(auth_sock) == term1.login_auth_sock)
     assert resolve_symlink(auth_sock) != term2.login_auth_sock
 
 
@@ -182,7 +182,7 @@ def test_client_without_login_sock(
     stub.run("setup")
 
     term1 = make_term(login_sock=True)
-    term1.run(f"tmux -S {tmux_sock}")
+    term1.enter_tmux(f"tmux -S {tmux_sock}")
     auth_sock = term1.get_auth_sock()
 
     # Connecting the second client without an SSH_AUTH_SOCK of its own
@@ -192,20 +192,19 @@ def test_client_without_login_sock(
     # sitting at client 2, and may fall back to other authentication
     # methods if possible.
     term2 = make_term(login_sock=False)
-    term2.run(f"tmux -S {tmux_sock} attach")
-    delay()
-    assert resolve_symlink(auth_sock) is None
+    term2.enter_tmux(f"tmux -S {tmux_sock} attach")
+    assert wait_until(lambda: resolve_symlink(auth_sock) is None)
 
 
 def test_multiple_sessions(tmux_sock: Path, make_term: MakeTerm, stub: SocklinkStub):
     stub.run("setup")
 
     term1 = make_term(login_sock=True)
-    term1.run(f"tmux -S {tmux_sock} new-session -s sess1")
+    term1.enter_tmux(f"tmux -S {tmux_sock} new-session -s sess1")
     auth_sock1 = term1.get_auth_sock()
 
     term2 = make_term(login_sock=True)
-    term2.run(f"tmux -S {tmux_sock} new-session -s sess2")
+    term2.enter_tmux(f"tmux -S {tmux_sock} new-session -s sess2")
     auth_sock2 = term2.get_auth_sock()
 
     # Shells running in the two sessions should share the same
@@ -253,10 +252,9 @@ def test_gc_server_links(
     servers = sandbox.root / "tmp" / "socklink" / "servers"
 
     with make_term(login_sock=True) as term1:
-        term1.run(f"tmux -S {tmux_sock}")
-        delay()
-        assert len(list(servers.glob("*"))) == 1
-        term1.run("exit")
+        term1.enter_tmux(f"tmux -S {tmux_sock}")
+        assert wait_until(lambda: len(list(servers.glob("*"))) == 1)
+        term1.exit_tmux("exit")
 
     # It should have terminated after exiting, but anyhow
     subprocess.run(["tmux", "-S", tmux_sock, "kill-server"], check=False)
