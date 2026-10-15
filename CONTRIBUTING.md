@@ -142,6 +142,15 @@ Reboot.
 3. Edit `/boot/loader.conf.local` with `console="ttya"`, `ttya-mode="115200,8,n,1,-"`, and `autoboot_delay="0"`
 4. Run `pkg install locale/he locale/zh_cn`
 
+## Updating Python test dependencies
+
+In the venv, use `pip list --outdated` to check for outdated dependencies.  To update to the latest versions:
+
+```sh
+scripts/pip-compile.sh -U
+pip-sync
+```
+
 ## Forking and GitHub Actions
 
 If setting up GitHub Actions in a new repo (such as a fork) you'll need to create the aforementioned test runner VMs and then upload them to an S3-compatible bucket that GitHub can access.
