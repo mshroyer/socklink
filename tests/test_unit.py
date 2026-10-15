@@ -27,7 +27,7 @@ def test_stat_mode(sandbox: Sandbox, stub: SocklinkStub):
     assert stub.run("stat-mode", path) == "644"
 
 
-def test_exists_and_is_owned(sandbox: Sandbox, stub: SocklinkStub):
+def test_exists_and_we_own(sandbox: Sandbox, stub: SocklinkStub):
     path = sandbox.root / "foo.txt"
     path.touch()
 
