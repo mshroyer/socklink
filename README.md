@@ -1,19 +1,7 @@
 # socklink.sh: Keep `SSH_AUTH_SOCK` talking to your current tmux client
 
 [![Lint status](https://github.com/mshroyer/socklink/actions/workflows/lint.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/lint.yml)
-[![AlmaLinux 10 status](https://github.com/mshroyer/socklink/actions/workflows/test-el10.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-el10.yml)
-[![Alpine Linux status](https://github.com/mshroyer/socklink/actions/workflows/test-alpine.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-alpine.yml)
-[![Arch Linux status](https://github.com/mshroyer/socklink/actions/workflows/test-archlinux.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-archlinux.yml)
-[![Debian status](https://github.com/mshroyer/socklink/actions/workflows/test-debian.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-debian.yml)
-[![Fedora status](https://github.com/mshroyer/socklink/actions/workflows/test-fedora.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-fedora.yml)
-[![FreeBSD status](https://github.com/mshroyer/socklink/actions/workflows/test-freebsd.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-freebsd.yml)
-[![macOS status](https://github.com/mshroyer/socklink/actions/workflows/test-macos.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-macos.yml)
-[![NetBSD status](https://github.com/mshroyer/socklink/actions/workflows/test-netbsd.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-netbsd.yml)
-[![OpenBSD status](https://github.com/mshroyer/socklink/actions/workflows/test-openbsd.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-openbsd.yml)
-[![OpenIndiana status](https://github.com/mshroyer/socklink/actions/workflows/test-openindiana.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-openindiana.yml)
-[![OpenSUSE status](https://github.com/mshroyer/socklink/actions/workflows/test-opensuse.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-opensuse.yml)
-[![Ubuntu status](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu.yml)
-[![Ubuntu Devel status](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu-devel.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-ubuntu-devel.yml)
+[![All platform test status](https://github.com/mshroyer/socklink/actions/workflows/test-all.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-all.yml)
 
 Ever reconnect to a remote tmux session and find you can no longer `git push` or `scp` because your SSH agent forwarding is broken?  This happens because your tmux panes inherit the `SSH_AUTH_SOCK` environment variable from the SSH client where you started tmux.  That works initially, but when you disconnect that client or connect another, the variable will point to the incorrect authentication socket or none at all.
 
