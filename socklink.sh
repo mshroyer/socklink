@@ -33,8 +33,8 @@
 #             fi
 #     fi
 #
-# Works on Debian 12, AlmaLinux 10, OpenBSD 7.7, FreeBSD 14.3, NetBSD 9.3, and
-# macOS Sequoia 15.4, among others.
+# Works on Debian, AlmaLinux 10, OpenBSD 7.9, FreeBSD 15.1, NetBSD 11, macOS
+# 27, and OpenIndiana 2026.04, among others.
 #
 # For the latest release or more info see:
 # https://github.com/mshroyer/socklink/
@@ -43,7 +43,7 @@
 # cluster, or at ~mshroyer/socklink.sh on MetaArray.
 #
 #
-# Copyright (c) 2025-26 Mark Shroyer
+# Copyright (c) 2025-2026 Mark Shroyer
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
