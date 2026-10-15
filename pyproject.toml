@@ -15,3 +15,8 @@ dev = [
     "pip-tools>=7.5.0",
     "ruff>=0.12.9",
 ]
+
+[tool.ruff]
+extend-exclude = [
+    "containers/",
+]
