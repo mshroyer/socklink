@@ -2,12 +2,10 @@
 
 import os
 import re
+import shlex
 import subprocess
 import tempfile
-import time
-from datetime import timedelta
 from pathlib import Path
-from typing import TextIO
 
 import pexpect
 import pytest
@@ -19,6 +17,12 @@ PROMPT_MAGIC = "ThisIsThePrompt"
 
 # Pattern for matching the prompt and the previous command's exit code.
 PROMPT_RE = re.compile(f".*{re.escape(PROMPT_MAGIC)} (\\d+).*")
+
+# Printed along with a unique per-command token and exit status after each
+# command run by Term.  Unlike the prompt, which tmux may redraw at any time
+# (e.g. when a client attaches or the window is resized), this lets us tell
+# exactly which command has finished.
+DONE_MAGIC = "ThisCommandIsDone"
 
 
 def get_project_dir() -> Path:
@@ -135,7 +139,8 @@ class Term:
     child: pexpect.spawn
     tty: str
     login_auth_sock: Path | None
-    _fifo_w: TextIO
+    _seq: int
+    _tmux_tokens: list[str]
 
     def __init__(
         self,
@@ -147,6 +152,8 @@ class Term:
         self.sandbox = sandbox
         self.shell = os.getenv("TEST_SHELL") or "bash"
         self.debug_filename = f"{name}-debug.txt"
+        self._seq = 0
+        self._tmux_tokens = []
 
         self.login_auth_sock = None
         if login_sock:
@@ -157,7 +164,6 @@ class Term:
         self._write_debug(f"Spawning shell {self.shell}")
         self.child = pexpect.spawn(self.shell, maxread=4096)
 
-        self._output_lines = []
         self._drain_read_buffer()
 
         self.tty = self.run("tty", stdout=True) or ""
@@ -167,55 +173,122 @@ class Term:
     def run(
         self, command: str, stdout: bool = False, stderr: bool = True
     ) -> str | None:
-        """Sends a command to the pexpect child
+        """Sends a command to the pexpect child and waits for it to finish
 
-        If stdout is True, the output will be piped to a file and then
-        returned as a string.  Otherwise, output is discarded.
+        If stdout is True, the output will be redirected to a file and then
+        returned as a string.  Otherwise, it goes to the terminal.
+
+        Don't use this for commands that enter or leave a tmux client; use
+        enter_tmux() and exit_tmux() instead.
 
         """
 
-        stdout_txt = self.sandbox.root / f"{self.name}-stdout.txt"
-        stdout_txt.unlink(missing_ok=True)
-        stderr_txt = self.sandbox.root / f"{self.name}-stderr.txt"
-        stderr_txt.unlink(missing_ok=True)
+        token, stdout_txt, stderr_txt = self._next_command()
+        command = self._wrap_command(
+            command,
+            stdout_txt if stdout else None,
+            stderr_txt if stderr else None,
+            token,
+        )
 
-        # Instead of capturing output with pexpect, pipe it into a file so we
-        # don't have to deal with tmux window decorations.
-        if stderr:
-            command = f"{command} 2> >(tee '{stderr_txt}.tmp' >&2 && mv '{stderr_txt}.tmp' '{stderr_txt}')"
-        if stdout:
-            command = f"{command} > >(tee '{stdout_txt}.tmp' && mv '{stdout_txt}.tmp' '{stdout_txt}')"
-
-        self._drain_read_buffer()
         self._write_debug(f"command = {command}")
         self.child.sendline(command)
 
-        exit_code = self._wait_for_prompt()
+        exit_code = self._wait_for_done(token)
+
+        # Also wait for the subsequent prompt, so that any prompt hooks have
+        # finished running before we return.
+        self._wait_for_prompt()
 
         if exit_code != 0:
             raise TermCommandError(
-                exit_code, self._read_output(stderr_txt).rstrip("\n") if stderr else ""
+                exit_code, stderr_txt.read_text().rstrip("\n") if stderr else ""
             )
 
-        if exit_code == 0 and stdout:
-            return self._read_output(stdout_txt).rstrip("\n")
-
         self._write_debug("")
+        if stdout:
+            return stdout_txt.read_text().rstrip("\n")
+
+    def enter_tmux(self, command: str):
+        """Runs a tmux command that attaches this terminal as a client
+
+        Returns once the shell in the attached tmux pane is ready to accept
+        commands.
+
+        """
+
+        token, _, stderr_txt = self._next_command()
+        command = self._wrap_command(command, None, stderr_txt, token)
+
+        self._write_debug(f"tmux command = {command}")
+        self.child.sendline(command)
+
+        # Any prompt seen now must have been drawn by tmux, though it may be a
+        # redraw of existing pane contents rather than a fresh prompt.  Either
+        # way, it means the client is up and will forward our input to the
+        # pane, which we then sync with by running a no-op command there.
+        done_re = self._done_re(token)
+        i = self.child.expect([PROMPT_MAGIC + r" (\d+):", done_re])
+        if i == 1:
+            raise TermCommandError(
+                int(self.child.match.group(1)), stderr_txt.read_text().rstrip("\n")
+            )
+
+        self._tmux_tokens.append(token)
+        self.run(":")
+
+    def exit_tmux(self, command: str = "tmux detach"):
+        """Runs a command in tmux that causes this terminal's client to exit
+
+        Waits for the tmux command previously run by enter_tmux() to finish.
+
+        """
+
+        token = self._tmux_tokens.pop()
+
+        self._write_debug(f"exit tmux command = {command}")
+        self.child.sendline(command)
+
+        exit_code = self._wait_for_done(token)
+        self._wait_for_prompt()
+
+        if exit_code != 0:
+            stderr_txt = self.sandbox.root / f"{token}-stderr.txt"
+            raise TermCommandError(exit_code, stderr_txt.read_text().rstrip("\n"))
+
+    def _next_command(self) -> tuple[str, Path, Path]:
+        self._seq += 1
+        token = f"{self.name}-{self._seq}"
+        return (
+            token,
+            self.sandbox.root / f"{token}-stdout.txt",
+            self.sandbox.root / f"{token}-stderr.txt",
+        )
 
     @staticmethod
-    def _read_output(path: Path) -> str:
-        poll_interval = timedelta(milliseconds=25)
-        max_wait = timedelta(seconds=46)
-        start = time.monotonic()
+    def _wrap_command(
+        command: str, stdout_txt: Path | None, stderr_txt: Path | None, token: str
+    ) -> str:
+        # Redirect straight to files rather than through pipes, so that when
+        # the shell gets to the printf the output is complete, regardless of
+        # whether something else (e.g. a backgrounded process or the tmux
+        # server) is still holding onto the command's stdout or stderr.
+        #
+        # The printf's format string splits DONE_MAGIC from the token so that
+        # the terminal's echo of the command line itself doesn't match.
+        if stdout_txt is not None:
+            command = f"{{ {command}; }} >{shlex.quote(str(stdout_txt))}"
+        if stderr_txt is not None:
+            command = f"{{ {command}; }} 2>{shlex.quote(str(stderr_txt))}"
+        return f"{command}; printf '\\n%s%s %s\\n' {DONE_MAGIC} {token} \"$?\""
 
-        while True:
-            try:
-                return path.read_text()
-            except FileNotFoundError:
-                now = time.monotonic()
-                if (now - start) > max_wait.total_seconds():
-                    raise
-                time.sleep(poll_interval.total_seconds())
+    @staticmethod
+    def _done_re(token: str) -> str:
+        return re.escape(DONE_MAGIC + token) + r" (\d+)"
+
+    def _wait_for_done(self, token: str) -> int:
+        self.child.expect(self._done_re(token))
+        return int(self.child.match.group(1))
 
     def _wait_for_prompt(self) -> int:
         self.child.expect(PROMPT_MAGIC + r" (\d+):")

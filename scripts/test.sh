@@ -24,14 +24,7 @@ Usage:
 EOF
 }
 
-RETRIES_FLAG=
 if [ "$(uname)" = "Darwin" ]; then
-	# On macOS I've been unable to find a non-flaky means of capturing
-	# stdout from shell commands run within tmux in pexpect sessions, so
-	# let's specifically enable retries there to minimize workflow
-	# failures.
-	RETRIES_FLAG='--retries=2'
-
 	# Fix max path issues.
 	PYTEST_DEBUG_TEMPROOT=/tmp
 	export PYTEST_DEBUG_TEMPROOT
@@ -109,7 +102,7 @@ run_tests() {
 	tmux -V >&2
 	printf "================================================================================\n\n\n" >&2
 
-	.venv/bin/python -m pytest $RETRIES_FLAG -v "$PYTEST_ARG"
+	.venv/bin/python -m pytest -v "$PYTEST_ARG"
 }
 
 list_containers_and_vms() {
