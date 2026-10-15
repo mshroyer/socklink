@@ -1,5 +1,6 @@
 import os
 import subprocess
+from pathlib import Path
 from textwrap import dedent
 
 import pytest
@@ -45,12 +46,16 @@ def test_exists_and_is_owned(sandbox: Sandbox, stub: SocklinkStub):
     assert exc_info.value.stdout.decode("utf-8") == ""
 
     # File or directory exists, but is not owned by us.
+    unowned_file = Path("/etc/passwd")
+    assert unowned_file.exists()
     with pytest.raises(subprocess.CalledProcessError) as exc_info:
-        stub.run("exists-and-we-own", "/etc/fstab")
+        stub.run("exists-and-we-own", unowned_file)
     assert exc_info.value.stdout.decode("utf-8") == ""
 
+    unowned_dir = Path("/etc")
+    assert unowned_dir.exists()
     with pytest.raises(subprocess.CalledProcessError) as exc_info:
-        stub.run("exists-and-we-own", "/etc")
+        stub.run("exists-and-we-own", unowned_dir)
     assert exc_info.value.stdout.decode("utf-8") == ""
 
 
