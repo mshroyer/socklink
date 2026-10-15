@@ -2,6 +2,8 @@ import os
 import subprocess
 from textwrap import dedent
 
+import pytest
+
 from tests.testlib import (
     Sandbox,
     SocklinkStub,
@@ -22,6 +24,34 @@ def test_stat_mode(sandbox: Sandbox, stub: SocklinkStub):
     path.chmod(0o644)
 
     assert stub.run("stat-mode", path) == "644"
+
+
+def test_exists_and_is_owned(sandbox: Sandbox, stub: SocklinkStub):
+    path = sandbox.root / "foo.txt"
+    path.touch()
+
+    # File or directory exists and is owned by us.
+    stub.run("exists-and-we-own", sandbox.root / "foo.txt")
+    stub.run("exists-and-we-own", sandbox.root)
+
+    # File or directory does not exist.  We also verify that the underlying
+    # find invocation doesn't emit spurious stderr output.
+    with pytest.raises(subprocess.CalledProcessError) as exc_info:
+        stub.run("exists-and-we-own", sandbox.root / "bar.txt")
+    assert exc_info.value.stdout.decode("utf-8") == ""
+
+    with pytest.raises(subprocess.CalledProcessError) as exc_info:
+        stub.run("exists-and-we-own", sandbox.root / "baz")
+    assert exc_info.value.stdout.decode("utf-8") == ""
+
+    # File or directory exists, but is not owned by us.
+    with pytest.raises(subprocess.CalledProcessError) as exc_info:
+        stub.run("exists-and-we-own", "/etc/fstab")
+    assert exc_info.value.stdout.decode("utf-8") == ""
+
+    with pytest.raises(subprocess.CalledProcessError) as exc_info:
+        stub.run("exists-and-we-own", "/etc")
+    assert exc_info.value.stdout.decode("utf-8") == ""
 
 
 def test_get_pid_uid(stub: SocklinkStub):

@@ -301,7 +301,11 @@ class SocklinkStub:
 
         in_bytes = stdin.encode("utf-8") if stdin is not None else None
         return (
-            subprocess.check_output([self.path] + list(map(str, args)), input=in_bytes)
+            subprocess.check_output(
+                [self.path] + list(map(str, args)),
+                input=in_bytes,
+                stderr=subprocess.STDOUT,
+            )
             .decode("utf-8")
             .rstrip()
         )
