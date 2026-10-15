@@ -301,3 +301,8 @@ def test_run_with_lock(stub: SocklinkStub):
 
 def test_version(stub: SocklinkStub):
     stub.run("-V")
+
+
+def test_unset_socklink_log(sandbox: Sandbox, stub: SocklinkStub):
+    sandbox.monkeypatch.delenv("SOCKLINK_LOG", raising=False)
+    stub.run("log", "hello")

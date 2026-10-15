@@ -103,7 +103,7 @@ EOF
 }
 
 log() {
-	if [ -n "$SOCKLINK_LOG" ]; then
+	if [ -n "${SOCKLINK_LOG:-}" ]; then
 		echo "$(date +'%Y-%m-%d %H:%M:%S') $1" >>"$SOCKLINK_LOG"
 	fi
 	if [ -n "${2:-}" ]; then
@@ -627,6 +627,8 @@ elif [ -n "${SOCKLINK_TESTONLY_COMMANDS:-}" ]; then
 	elif [ "${1:-}" = "run-with-lock" ]; then
 		shift
 		run_with_lock "$@"
+	elif [ "${1:-}" = "log" ]; then
+		log "${2:-}"
 	else
 		show_usage
 		exit 1
