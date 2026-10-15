@@ -1,7 +1,7 @@
-# socklink.sh: Keep `SSH_AUTH_SOCK` talking to your current tmux client
-
 [![Lint status](https://github.com/mshroyer/socklink/actions/workflows/lint.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/lint.yml)
 [![All platform test status](https://github.com/mshroyer/socklink/actions/workflows/test-all.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-all.yml)
+
+# socklink.sh: Keep `SSH_AUTH_SOCK` talking to your current tmux client
 
 Ever reconnect to a remote tmux session and find you can no longer `git push` or `scp` because your SSH agent forwarding is broken?  This happens because your tmux panes inherit the `SSH_AUTH_SOCK` environment variable from the SSH client where you started tmux.  That works initially, but when you disconnect that client or connect another, the variable will point to the incorrect authentication socket or none at all.
 
