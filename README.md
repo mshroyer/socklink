@@ -60,9 +60,11 @@ There's now a two-level mapping from an `SSH_AUTH_SOCK` tied to your tmux server
 
 ## Platform support and tests
 
-Different Unix-like systems use different versions of `/bin/sh` and associated POSIX commands: Alpine Linux's `sh` is `ash`, Debian's is `dash`, Fedora's is `bash`, and the BSDs and Illumos all have their own.  `socklink.sh` has a Python and [pexpect](https://pexpect.readthedocs.io/en/stable/)-based test suite that hooks it up to tmux inside pseudoterminals and verifies its behavior across these different implementations.
+Socklink should work on most Unix-like systems capable of running tmux.
 
-It's tested on the following operating systems:
+But cross-platform shell script compatibility is difficult.  Different Unix-like systems use different versions of `/bin/sh` and associated POSIX commands: Alpine Linux's `sh` is `ash`, Debian's is `dash`, Fedora's is `bash`, and the BSDs and Illumos all have their own.  `socklink.sh` has a Python and [pexpect](https://pexpect.readthedocs.io/en/stable/)-based test suite that hooks it up to tmux inside pseudoterminals and verifies its behavior across these different implementations.
+
+To ensure broad compatibility, socklink is tested on the following operating systems:
 
 | OS                                                                  |                                                                                                                                                                                         Status |      Runs as       |         Runs on         |
 |---------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:------------------:|:-----------------------:|
