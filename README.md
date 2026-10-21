@@ -1,7 +1,7 @@
 [![Lint status](https://github.com/mshroyer/socklink/actions/workflows/lint.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/lint.yml)
 [![All platform test status](https://github.com/mshroyer/socklink/actions/workflows/test-all.yml/badge.svg)](https://github.com/mshroyer/socklink/actions/workflows/test-all.yml)
 
-# socklink.sh: Keep `SSH_AUTH_SOCK` talking to your current tmux client
+# socklink.sh: Keep `SSH_AUTH_SOCK` linked to your active tmux client
 
 Ever reconnect to a remote tmux session and find you can no longer `git push` or `scp` because your SSH agent forwarding is broken?  This happens because your tmux panes inherit the `SSH_AUTH_SOCK` environment variable from the SSH client where you started tmux.  That works initially, but when you disconnect that client or connect another, the variable will point to the incorrect authentication socket or none at all.
 
@@ -60,11 +60,9 @@ There's now a two-level mapping from an `SSH_AUTH_SOCK` tied to your tmux server
 
 ## Platform support and tests
 
-Socklink should work on most Unix-like systems capable of running tmux.
+`socklink.sh` should work on most Unix-like systems capable of running tmux.
 
-But cross-platform shell script compatibility is difficult.  Different Unix-like systems use different versions of `/bin/sh` and associated POSIX commands: Alpine Linux's `sh` is `ash`, Debian's is `dash`, Fedora's is `bash`, and the BSDs and Illumos all have their own.  `socklink.sh` has a Python and [pexpect](https://pexpect.readthedocs.io/en/stable/)-based test suite that hooks it up to tmux inside pseudoterminals and verifies its behavior across these different implementations.
-
-To ensure broad compatibility, socklink is tested on the following operating systems:
+But cross-platform shell script compatibility is difficult.  Different Unix-like systems use different versions of `/bin/sh` with their own quirks: Alpine Linux's `sh` is `ash`, Debian's is `dash`, Fedora's is `bash`, and the BSDs and Illumos all have their own.  Even standard system tools like `ps` and `grep` can exhibit divergent behavior.  To address this, `socklink.sh` has a Python and [pexpect](https://pexpect.readthedocs.io/en/stable/)-based test suite that hooks it up to tmux inside pseudoterminals and verifies its behavior.  These tests are run on the following operating systems in order to ensure broad compatibility:
 
 | OS                                                                  |                                                                                                                                                                                         Status |      Runs as       |         Runs on         |
 |---------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:------------------:|:-----------------------:|
