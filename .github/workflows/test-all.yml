@@ -80,6 +80,10 @@ jobs:
             exit 1
           }
 
+          # Maybe sleeping here will work around a transient 404 when
+          # attempting to fetch run info?
+          sleep 4
+
           # Poll slowly, since all the jobs here share GITHUB_TOKEN's API rate
           # limit.
           status=0
